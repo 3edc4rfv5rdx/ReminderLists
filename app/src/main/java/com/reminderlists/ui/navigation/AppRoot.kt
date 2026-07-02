@@ -1,0 +1,74 @@
+package com.reminderlists.ui.navigation
+
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.reminderlists.ui.screens.filters.FiltersScreen
+import com.reminderlists.ui.screens.filters.TagFilterScreen
+import com.reminderlists.ui.screens.lists.ListsScreen
+import com.reminderlists.ui.screens.notes.NotesScreen
+import com.reminderlists.ui.screens.reminders.RemindersScreen
+import com.reminderlists.ui.screens.settings.SettingsScreen
+
+// Root: single Scaffold + bottom navigation shared by all tabs (TZ 3.9). Tab state is
+// preserved via saveState/restoreState. Service screens are separate routes.
+@Composable
+fun AppRoot() {
+    val navController = rememberNavController()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination
+
+    val onTabRoute = Tab.entries.any { tab ->
+        currentRoute?.hierarchy?.any { it.route == tab.route } == true
+    }
+
+    Scaffold(
+        bottomBar = {
+            if (onTabRoute) {
+                NavigationBar {
+                    Tab.entries.forEach { tab ->
+                        val selected = currentRoute?.hierarchy?.any { it.route == tab.route } == true
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                navController.navigate(tab.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            icon = { androidx.compose.material3.Icon(tab.icon, contentDescription = null) },
+                            label = { Text(stringResource(tab.labelRes)) },
+                        )
+                    }
+                }
+            }
+        },
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = Tab.LISTS.route,
+        ) {
+            composable(Tab.LISTS.route) { ListsScreen(navController, padding) }
+            composable(Tab.REMINDERS.route) { RemindersScreen(navController, padding) }
+            composable(Tab.NOTES.route) { NotesScreen(navController, padding) }
+
+            composable(Routes.SETTINGS) { SettingsScreen(navController) }
+            composable(Routes.FILTERS) { FiltersScreen(navController) }
+            composable(Routes.TAG_FILTER) { TagFilterScreen(navController) }
+            // Welcome (TZ 4.8) is a dialog, not a route — see WelcomeDialog.
+        }
+    }
+}

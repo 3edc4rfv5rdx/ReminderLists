@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base theme for the Activity window; real colors come from Compose MaterialTheme (TZ 8). -->
+    <style name="Theme.ReminderLists" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Splash screen via androidx.core.splashscreen (TZ 7). -->
+    <style name="Theme.ReminderLists.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.ReminderLists</item>
+    </style>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Shared photo module capture target (TZ 8): internal storage photos/. -->
+    <files-path
+        name="photos"
+        path="photos/" />
+    <cache-path
+        name="camera_temp"
+        path="camera/" />
+</paths>

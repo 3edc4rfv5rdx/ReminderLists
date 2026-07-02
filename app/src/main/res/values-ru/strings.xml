@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_lists">Списки</string>
+    <string name="tab_reminders">Напоминания</string>
+    <string name="tab_notes">Заметки</string>
+
+    <string name="folder_once">Разовые</string>
+    <string name="folder_daily">Ежедневные</string>
+    <string name="folder_periods">Периоды</string>
+    <string name="folder_monthly">Ежемесячные</string>
+    <string name="folder_yearly">Ежегодные</string>
+
+    <string name="action_menu">Меню</string>
+    <string name="action_back">Назад</string>
+    <string name="action_save">Сохранить</string>
+    <string name="action_today">Сегодня</string>
+    <string name="menu_settings">Настройки</string>
+    <string name="menu_about">О приложении</string>
+    <string name="menu_filters">Фильтры</string>
+    <string name="menu_tag_filter">Фильтр по тегам</string>
+    <string name="menu_clear_filters">Сбросить фильтры</string>
+    <string name="menu_dictionary">Словарь</string>
+    <string name="menu_backup_restore">Резервная копия</string>
+
+    <string name="fab_new_list">Новый список</string>
+    <string name="fab_new_note">Новая заметка</string>
+    <string name="fab_new_reminder">Новое напоминание</string>
+    <string name="fab_new_folder">Новая папка</string>
+
+    <string name="empty_lists">Пока нет списков</string>
+    <string name="empty_reminders">Здесь нет напоминаний</string>
+    <string name="empty_notes">Пока нет заметок</string>
+    <string name="empty_today">Нет напоминаний на сегодня</string>
+
+    <string name="settings_theme">Тема</string>
+    <string name="settings_language">Язык</string>
+    <string name="settings_enable_reminders">Включить напоминания</string>
+    <string name="settings_welcome_screen">Экран приветствия</string>
+    <string name="settings_keep_screen_on">Не гасить экран в режиме крупного шрифта</string>
+    <string name="settings_write_logs">Писать логи в файл</string>
+    <string name="settings_time_presets">Пресеты времени</string>
+    <string name="settings_default_sound">Звук по умолчанию</string>
+    <string name="settings_default_pin">PIN по умолчанию</string>
+
+    <string name="about_description">Списки и напоминания. Локально, без облака</string>
+    <string name="about_version">Версия</string>
+    <string name="about_build">Сборка</string>
+</resources>

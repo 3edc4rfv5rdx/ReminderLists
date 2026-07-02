@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_lists">Списки</string>
+    <string name="tab_reminders">Нагадування</string>
+    <string name="tab_notes">Нотатки</string>
+
+    <string name="folder_once">Разові</string>
+    <string name="folder_daily">Щоденні</string>
+    <string name="folder_periods">Періоди</string>
+    <string name="folder_monthly">Щомісячні</string>
+    <string name="folder_yearly">Щорічні</string>
+
+    <string name="action_menu">Меню</string>
+    <string name="action_back">Назад</string>
+    <string name="action_save">Зберегти</string>
+    <string name="action_today">Сьогодні</string>
+    <string name="menu_settings">Налаштування</string>
+    <string name="menu_about">Про застосунок</string>
+    <string name="menu_filters">Фільтри</string>
+    <string name="menu_tag_filter">Фільтр за тегами</string>
+    <string name="menu_clear_filters">Скинути фільтри</string>
+    <string name="menu_dictionary">Словник</string>
+    <string name="menu_backup_restore">Резервна копія</string>
+
+    <string name="fab_new_list">Новий список</string>
+    <string name="fab_new_note">Нова нотатка</string>
+    <string name="fab_new_reminder">Нове нагадування</string>
+    <string name="fab_new_folder">Нова папка</string>
+
+    <string name="empty_lists">Ще немає списків</string>
+    <string name="empty_reminders">Тут немає нагадувань</string>
+    <string name="empty_notes">Ще немає нотаток</string>
+    <string name="empty_today">Немає нагадувань на сьогодні</string>
+
+    <string name="settings_theme">Тема</string>
+    <string name="settings_language">Мова</string>
+    <string name="settings_enable_reminders">Увімкнути нагадування</string>
+    <string name="settings_welcome_screen">Екран привітання</string>
+    <string name="settings_keep_screen_on">Не гасити екран у режимі великого шрифту</string>
+    <string name="settings_write_logs">Писати логи у файл</string>
+    <string name="settings_time_presets">Пресети часу</string>
+    <string name="settings_default_sound">Звук за замовчуванням</string>
+    <string name="settings_default_pin">PIN за замовчуванням</string>
+
+    <string name="about_description">Списки та нагадування. Локально, без хмари</string>
+    <string name="about_version">Версія</string>
+    <string name="about_build">Збірка</string>
+</resources>
