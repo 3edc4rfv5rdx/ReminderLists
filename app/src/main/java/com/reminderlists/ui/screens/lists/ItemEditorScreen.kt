@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -24,6 +25,7 @@ import androidx.navigation.NavController
 import com.reminderlists.R
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.FloatingLabelTextField
+import com.reminderlists.ui.components.menuContainerColor
 import com.reminderlists.util.Limits
 
 // Item add/edit window (TZ 3.3): Name / Quantity / Unit, up-bar with Back and Save.
@@ -61,15 +63,26 @@ fun ItemEditorScreen(navController: NavController, listId: Long, itemId: Long) {
                 autoFocus = true,
             )
             // Dictionary autocomplete drop-down (TZ 3.4): tap substitutes the text.
-            vm.suggestions.forEach { suggestion ->
-                Text(
-                    text = suggestion,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { vm.pickSuggestion(suggestion) }
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                )
+            // Same background as all menus (TZ 8).
+            if (vm.suggestions.isNotEmpty()) {
+                Surface(
+                    color = menuContainerColor,
+                    shape = MaterialTheme.shapes.extraSmall,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column {
+                        vm.suggestions.forEach { suggestion ->
+                            Text(
+                                text = suggestion,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { vm.pickSuggestion(suggestion) }
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                            )
+                        }
+                    }
+                }
             }
             FloatingLabelTextField(
                 value = vm.quantity,

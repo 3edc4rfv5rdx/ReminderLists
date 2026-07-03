@@ -1,8 +1,6 @@
 package com.reminderlists.ui.screens.lists
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,8 +16,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,10 +42,13 @@ import androidx.navigation.NavController
 import com.reminderlists.R
 import com.reminderlists.data.db.entity.FolderEntity
 import com.reminderlists.data.db.entity.ListEntity
+import com.reminderlists.ui.components.AppDropdownMenu
 import com.reminderlists.ui.components.AppFab
 import com.reminderlists.ui.components.AppSmallFab
 import com.reminderlists.ui.components.FabLevel
+import com.reminderlists.ui.components.LongPressMenuBox
 import com.reminderlists.ui.components.AppTopBar
+import com.reminderlists.ui.components.CommentFooter
 import com.reminderlists.ui.components.ConfirmDialog
 import com.reminderlists.ui.components.DeleteFolderDialog
 import com.reminderlists.ui.components.EditTextDialog
@@ -100,7 +101,7 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                     IconButton(onClick = { topMenuOpen = true }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.action_menu))
                     }
-                    DropdownMenu(expanded = topMenuOpen, onDismissRequest = { topMenuOpen = false }) {
+                    AppDropdownMenu(expanded = topMenuOpen, onDismissRequest = { topMenuOpen = false }) {
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_settings)) },
                             onClick = {
@@ -127,23 +128,13 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                 },
             )
 
-            val currentComment = currentFolder?.comment
-            if (currentComment != null) {
-                Text(
-                    text = currentComment,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                )
-            }
-
             if (lists.isEmpty() && (inFolder || folders.isEmpty())) {
                 EmptyState(
                     icon = Icons.AutoMirrored.Filled.ListAlt,
                     text = stringResource(R.string.empty_lists),
+                    modifier = Modifier.weight(1f),
                 )
+                CommentFooter(currentFolder?.comment)
             } else {
                 LazyColumn(Modifier.fillMaxSize()) {
                     if (!inFolder) {
@@ -180,6 +171,11 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                             onMove = { dialog = ListsDialog.MoveList(list) },
                             onDelete = { dialog = ListsDialog.DeleteList(list) },
                         )
+                    }
+                    // Folder comment goes at the bottom, after the lists and a divider (user rule).
+                    val folderComment = currentFolder?.comment
+                    if (inFolder && folderComment != null) {
+                        item(key = "folder-comment") { CommentFooter(folderComment) }
                     }
                 }
             }
@@ -306,8 +302,7 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
     }
 }
 
-// Folder row (TZ 3.1): tap opens, long-press or «⋮» shows the actions menu.
-@OptIn(ExperimentalFoundationApi::class)
+// Folder row (TZ 3.1): tap opens; long-press = menu at the touch point, «⋯» = menu at the button.
 @Composable
 private fun FolderRow(
     folder: FolderEntity,
@@ -318,35 +313,49 @@ private fun FolderRow(
     onEditComment: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    var menuOpen by remember { mutableStateOf(false) }
-    ListItem(
-        headlineContent = {
-            RowTitle(name = folder.name, countsText = countsText, fontWeight = fontWeight, textDecoration = null)
-        },
-        supportingContent = folder.comment?.let {
-            { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-        },
-        leadingContent = {
-            Icon(Icons.Filled.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-        },
-        trailingContent = {
-            Box {
-                IconButton(onClick = { menuOpen = true }) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.action_menu))
+    var buttonMenuOpen by remember { mutableStateOf(false) }
+    LongPressMenuBox(
+        onTap = onOpen,
+        menuContent = { dismiss -> FolderMenuItems(dismiss, onRename, onEditComment, onDelete) },
+    ) {
+        ListItem(
+            headlineContent = {
+                RowTitle(name = folder.name, countsText = countsText, fontWeight = fontWeight, textDecoration = null)
+            },
+            supportingContent = folder.comment?.let {
+                { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            },
+            leadingContent = {
+                Icon(Icons.Filled.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            },
+            trailingContent = {
+                Box {
+                    IconButton(onClick = { buttonMenuOpen = true }) {
+                        Icon(Icons.Filled.MoreHoriz, contentDescription = stringResource(R.string.action_menu))
+                    }
+                    AppDropdownMenu(expanded = buttonMenuOpen, onDismissRequest = { buttonMenuOpen = false }) {
+                        FolderMenuItems({ buttonMenuOpen = false }, onRename, onEditComment, onDelete)
+                    }
                 }
-                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                    MenuItem(R.string.action_rename) { menuOpen = false; onRename() }
-                    MenuItem(R.string.action_edit_comment) { menuOpen = false; onEditComment() }
-                    MenuItem(R.string.action_delete) { menuOpen = false; onDelete() }
-                }
-            }
-        },
-        modifier = Modifier.combinedClickable(onClick = onOpen, onLongClick = { menuOpen = true }),
-    )
+            },
+        )
+    }
+}
+
+@Composable
+private fun FolderMenuItems(
+    dismiss: () -> Unit,
+    onRename: () -> Unit,
+    onEditComment: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    MenuItem(R.string.action_rename) { dismiss(); onRename() }
+    MenuItem(R.string.action_edit_comment) { dismiss(); onEditComment() }
+    MenuItem(R.string.action_delete) { dismiss(); onDelete() }
 }
 
 // List row (TZ 3.2): lock icon marks a PIN-protected list (TZ 3.6).
-@OptIn(ExperimentalFoundationApi::class)
+// Tap opens; long-press = menu at the touch point, «⋯» = menu at the button.
 @Composable
 private fun ListRow(
     list: ListEntity,
@@ -358,42 +367,56 @@ private fun ListRow(
     onMove: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    var menuOpen by remember { mutableStateOf(false) }
-    ListItem(
-        headlineContent = {
-            RowTitle(name = list.name, countsText = countsText, fontWeight = fontWeight, textDecoration = textDecoration)
-        },
-        supportingContent = list.comment?.let {
-            { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-        },
-        leadingContent = {
-            Icon(Icons.AutoMirrored.Filled.ListAlt, contentDescription = null)
-        },
-        trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (list.pinEnabled) {
-                    Icon(
-                        Icons.Filled.Lock,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.outline,
-                    )
-                }
-                Box {
-                    IconButton(onClick = { menuOpen = true }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.action_menu))
+    var buttonMenuOpen by remember { mutableStateOf(false) }
+    LongPressMenuBox(
+        onTap = onOpen,
+        menuContent = { dismiss -> ListMenuItems(dismiss, onEdit, onMove, onDelete) },
+    ) {
+        ListItem(
+            headlineContent = {
+                RowTitle(name = list.name, countsText = countsText, fontWeight = fontWeight, textDecoration = textDecoration)
+            },
+            supportingContent = list.comment?.let {
+                { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            },
+            leadingContent = {
+                Icon(Icons.AutoMirrored.Filled.ListAlt, contentDescription = null)
+            },
+            trailingContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (list.pinEnabled) {
+                        Icon(
+                            Icons.Filled.Lock,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.outline,
+                        )
                     }
-                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                        MenuItem(R.string.action_edit) { menuOpen = false; onEdit() }
-                        MenuItem(R.string.action_move_to_folder) { menuOpen = false; onMove() }
-                        // TODO "Protect" menu item (PIN on/off) — TZ 3.6, next feature.
-                        MenuItem(R.string.action_delete) { menuOpen = false; onDelete() }
+                    Box {
+                        IconButton(onClick = { buttonMenuOpen = true }) {
+                            Icon(Icons.Filled.MoreHoriz, contentDescription = stringResource(R.string.action_menu))
+                        }
+                        AppDropdownMenu(expanded = buttonMenuOpen, onDismissRequest = { buttonMenuOpen = false }) {
+                            ListMenuItems({ buttonMenuOpen = false }, onEdit, onMove, onDelete)
+                        }
                     }
                 }
-            }
-        },
-        modifier = Modifier.combinedClickable(onClick = onOpen, onLongClick = { menuOpen = true }),
-    )
+            },
+        )
+    }
+}
+
+@Composable
+private fun ListMenuItems(
+    dismiss: () -> Unit,
+    onEdit: () -> Unit,
+    onMove: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    MenuItem(R.string.action_edit) { dismiss(); onEdit() }
+    MenuItem(R.string.action_move_to_folder) { dismiss(); onMove() }
+    // TODO "Protect" menu item (PIN on/off) — TZ 3.6, next feature.
+    MenuItem(R.string.action_delete) { dismiss(); onDelete() }
 }
 
 // Row title: name + optional "(counts)" — one size, one color, shared weight/strikethrough (TZ 8).

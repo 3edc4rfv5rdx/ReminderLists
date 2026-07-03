@@ -8,6 +8,7 @@ import com.reminderlists.data.db.entity.ListEntity
 import com.reminderlists.data.lists.DictionaryRepository
 import com.reminderlists.data.lists.ListsRepository
 import com.reminderlists.ui.appViewModelFactory
+import com.reminderlists.util.TextFormat
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -67,8 +68,9 @@ class ListDetailViewModel(
         }
     }
 
+    // Dictionary entry includes the unit as a " /unit" suffix when present (TZ 3.4).
     fun addToDictionary(item: ItemEntity) {
-        viewModelScope.launch { dictRepo.add(item.text) }
+        viewModelScope.launch { dictRepo.add(TextFormat.toDictionaryEntry(item.text, item.unit)) }
     }
 
     fun deleteItem(item: ItemEntity) {

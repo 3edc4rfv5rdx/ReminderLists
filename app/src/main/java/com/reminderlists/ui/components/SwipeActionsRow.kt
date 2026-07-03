@@ -31,18 +31,20 @@ fun SwipeActionsRow(
     content: @Composable RowScope.() -> Unit,
 ) {
     val dismissState = rememberSwipeToDismissBoxState()
-    // confirmValueChange is deprecated: react to the settled value and snap the row back.
+    // confirmValueChange is deprecated: react to the settled value instead.
+    // Order matters: the action goes FIRST — snapTo changes currentValue, which restarts
+    // this keyed effect and would cancel anything scheduled after it. snapTo (instant,
+    // unlike the animated reset) can't get stuck on the colored background when the
+    // action navigates away.
     LaunchedEffect(dismissState.currentValue) {
-        when (dismissState.currentValue) {
-            SwipeToDismissBoxValue.StartToEnd -> {
-                onEdit()
-                dismissState.reset()
+        val value = dismissState.currentValue
+        if (value != SwipeToDismissBoxValue.Settled) {
+            when (value) {
+                SwipeToDismissBoxValue.StartToEnd -> onEdit()
+                SwipeToDismissBoxValue.EndToStart -> onDelete()
+                SwipeToDismissBoxValue.Settled -> {}
             }
-            SwipeToDismissBoxValue.EndToStart -> {
-                onDelete()
-                dismissState.reset()
-            }
-            SwipeToDismissBoxValue.Settled -> {}
+            dismissState.snapTo(SwipeToDismissBoxValue.Settled)
         }
     }
     SwipeToDismissBox(

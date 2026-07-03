@@ -51,6 +51,7 @@
     <string name="dictionary_new_entry">Новая запись</string>
     <string name="delete_entry_title">Удалить запись</string>
     <string name="empty_dictionary">Словарь пуст</string>
+    <string name="field_search">Поиск</string>
     <string name="action_add_to_dictionary">В словарь</string>
     <string name="menu_delete_checked">Удалить отмеченные</string>
     <string name="menu_uncheck_all">Снять отметки</string>

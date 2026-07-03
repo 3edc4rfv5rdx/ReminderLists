@@ -60,6 +60,7 @@
     <string name="dictionary_new_entry">New entry</string>
     <string name="delete_entry_title">Delete entry</string>
     <string name="empty_dictionary">Dictionary is empty</string>
+    <string name="field_search">Search</string>
     <string name="action_add_to_dictionary">To dictionary</string>
     <string name="menu_delete_checked">Delete checked</string>
     <string name="menu_uncheck_all">Uncheck all</string>

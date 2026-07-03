@@ -41,7 +41,11 @@ class ItemEditorViewModel(
     }
 
     fun pickSuggestion(text: String) {
-        name = text
+        // Entry may carry a unit suffix ("Молоко /kg") — fill both fields (TZ 3.4).
+        val (pickedName, pickedUnit) = TextFormat.splitDictionaryEntry(text)
+        // Entries are stored capitalized ("Xxxx"); enforce the form on insert anyway.
+        name = TextFormat.toDictionaryForm(pickedName)
+        if (pickedUnit != null) unit = pickedUnit
         suggestions = emptyList()
     }
 
