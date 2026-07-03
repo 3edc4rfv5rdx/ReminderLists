@@ -1,5 +1,6 @@
 package com.reminderlists.ui.navigation
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -36,6 +37,9 @@ fun AppRoot() {
     }
 
     Scaffold(
+        // Status-bar inset is handled by AppTopBar itself; without this the content padding
+        // would add it a second time and push the top bar down.
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (onTabRoute) {
                 NavigationBar {

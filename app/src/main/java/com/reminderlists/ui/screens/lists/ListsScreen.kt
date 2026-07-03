@@ -261,7 +261,7 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
 
         is ListsDialog.DeleteList -> ConfirmDialog(
             title = stringResource(R.string.delete_list_title),
-            text = "«${d.list.name}»?",
+            text = d.list.name,
             confirmLabel = stringResource(R.string.action_delete),
             onConfirm = {
                 vm.deleteList(d.list)

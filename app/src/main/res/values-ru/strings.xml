@@ -59,7 +59,7 @@
     <string name="settings_default_sound">Звук по умолчанию</string>
     <string name="settings_default_pin">PIN по умолчанию</string>
 
-    <string name="about_description">Списки и напоминания. Локально, без облака</string>
+    <string name="about_description">Списки, напоминания и заметки. Локально, без облака</string>
     <string name="about_version">Версия</string>
     <string name="about_build">Сборка</string>
 </resources>

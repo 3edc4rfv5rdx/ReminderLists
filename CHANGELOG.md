@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- Fix top bar pushed down by a doubled status-bar inset.
+- Confirmation dialogs show the object name without quotes and question mark.
+- About dialog description mentions all three modules.
 - Lists module: folders and lists CRUD (create/rename/comment/move/delete, alphabetical order, folder navigation in-tab), list detail placeholder screen.
 - Shared UI: colored dialog buttons (primary/secondary/error), theme-colored FABs, autofocus on the first field of every input dialog.
 - Project scaffold: Gradle Kotlin DSL build, Compose + Room + Coil stack (minSdk 33), three-tab shell (Lists · Reminders · Notes), full Room schema, shared UI components and reminder-engine stubs per TZ.

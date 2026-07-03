@@ -69,7 +69,7 @@
     <string name="settings_default_pin">Default PIN</string>
 
     <!-- About (TZ 4.9) -->
-    <string name="about_description">Lists and reminders. Local, no cloud</string>
+    <string name="about_description">Lists, Reminders and Notes. Local, no cloud</string>
     <string name="about_version">Version</string>
     <string name="about_build">Build</string>
 </resources>

@@ -143,7 +143,7 @@ fun DeleteFolderDialog(
         title = { Text(stringResource(R.string.delete_folder_title)) },
         text = {
             Column {
-                Text("«$folderName»?")
+                Text(folderName)
                 RadioRow(
                     text = stringResource(R.string.delete_folder_keep_lists),
                     selected = !deleteContents,
