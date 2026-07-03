@@ -53,6 +53,13 @@
     <string name="empty_dictionary">Словник порожній</string>
     <string name="field_search">Пошук</string>
     <string name="action_add_to_dictionary">До словника</string>
+
+    <string name="action_add_photo">Додати фото</string>
+    <string name="action_photos">Фото</string>
+    <string name="photo_source_camera">Камера</string>
+    <string name="photo_source_gallery">Галерея</string>
+    <string name="delete_photo_title">Видалити фото</string>
+    <string name="save_to_gallery">Зберегти в галерею</string>
     <string name="menu_delete_checked">Видалити позначені</string>
     <string name="menu_uncheck_all">Зняти позначки</string>
 

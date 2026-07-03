@@ -62,6 +62,14 @@
     <string name="empty_dictionary">Dictionary is empty</string>
     <string name="field_search">Search</string>
     <string name="action_add_to_dictionary">To dictionary</string>
+
+    <!-- Photos (TZ 3.3 / 8) -->
+    <string name="action_add_photo">Add photo</string>
+    <string name="action_photos">Photos</string>
+    <string name="photo_source_camera">Camera</string>
+    <string name="photo_source_gallery">Gallery</string>
+    <string name="delete_photo_title">Delete photo</string>
+    <string name="save_to_gallery">Save to gallery</string>
     <string name="menu_delete_checked">Delete checked</string>
     <string name="menu_uncheck_all">Uncheck all</string>
 

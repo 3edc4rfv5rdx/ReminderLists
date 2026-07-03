@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Shared photo module (TZ 8): camera/gallery without permissions, EXIF-corrected import, thumbnails in the item editor, photo icon on item rows, fullscreen pager viewer, cascade file cleanup and startup orphan sweep.
+- Photo delete dialog with a "save to gallery" checkbox (MediaStore export).
 - Dictionary entries can include a unit suffix ("Молоко /kg"): to-dictionary saves it, autocomplete fills Name and Unit, amounts display as "5/kg".
 - Dictionary screen: search field at the top.
 - Context menus open at the touch point; single menu component with themed colored background (also used by the autocomplete drop-down); row menus use horizontal dots.

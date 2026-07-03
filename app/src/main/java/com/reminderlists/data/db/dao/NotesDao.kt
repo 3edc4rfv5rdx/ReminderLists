@@ -41,6 +41,10 @@ interface NotesDao {
     @Query("SELECT * FROM note_photos WHERE noteId = :noteId ORDER BY position")
     fun observePhotos(noteId: Long): Flow<List<NotePhotoEntity>>
 
+    // For the photo orphan sweep (TZ 8).
+    @Query("SELECT filePath FROM note_photos")
+    suspend fun allPhotoNames(): List<String>
+
     @Insert
     suspend fun insertPhoto(photo: NotePhotoEntity): Long
 

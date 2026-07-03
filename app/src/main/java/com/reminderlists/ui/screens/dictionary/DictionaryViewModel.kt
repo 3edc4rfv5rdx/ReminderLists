@@ -37,6 +37,6 @@ class DictionaryViewModel(private val repo: DictionaryRepository) : ViewModel() 
     }
 
     companion object {
-        val Factory = appViewModelFactory { db -> DictionaryViewModel(DictionaryRepository(db)) }
+        val Factory = appViewModelFactory { db, _ -> DictionaryViewModel(DictionaryRepository(db)) }
     }
 }

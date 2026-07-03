@@ -17,14 +17,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.reminderlists.R
+import com.reminderlists.data.photo.PhotoManager
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.FloatingLabelTextField
+import com.reminderlists.ui.components.PhotoStrip
+import com.reminderlists.ui.components.PhotoViewerDialog
 import com.reminderlists.ui.components.menuContainerColor
 import com.reminderlists.util.Limits
 
@@ -33,6 +41,8 @@ import com.reminderlists.util.Limits
 @Composable
 fun ItemEditorScreen(navController: NavController, listId: Long, itemId: Long) {
     val vm: ItemEditorViewModel = viewModel(factory = ItemEditorViewModel.factory(listId, itemId))
+    val context = LocalContext.current
+    var viewerIndex by remember { mutableStateOf<Int?>(null) }
 
     Column(Modifier.fillMaxSize()) {
         AppTopBar(
@@ -98,6 +108,26 @@ fun ItemEditorScreen(navController: NavController, listId: Long, itemId: Long) {
                 maxLength = Limits.UNIT,
                 modifier = Modifier.padding(top = 8.dp),
             )
+            // Photos (TZ 3.3): up to Limits.MAX_PHOTOS, camera or gallery (shared module, TZ 8).
+            val photoFiles = vm.photos.map { PhotoManager.fileFor(context, it.fileName) }
+            PhotoStrip(
+                files = photoFiles,
+                canAdd = vm.photos.size < Limits.MAX_PHOTOS,
+                onPicked = vm::addPhoto,
+                onOpen = { index -> viewerIndex = index },
+                modifier = Modifier.padding(top = 16.dp),
+            )
         }
+    }
+
+    viewerIndex?.let { startIndex ->
+        PhotoViewerDialog(
+            files = vm.photos.map { PhotoManager.fileFor(context, it.fileName) },
+            canAdd = vm.photos.size < Limits.MAX_PHOTOS,
+            onPicked = vm::addPhoto,
+            onDelete = vm::deletePhoto,
+            onDismiss = { viewerIndex = null },
+            initialPage = startIndex,
+        )
     }
 }

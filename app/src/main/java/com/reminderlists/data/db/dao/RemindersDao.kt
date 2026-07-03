@@ -49,6 +49,10 @@ interface RemindersDao {
     @Query("SELECT * FROM reminder_photos WHERE reminderId = :reminderId ORDER BY position")
     fun observePhotos(reminderId: Long): Flow<List<ReminderPhotoEntity>>
 
+    // For the photo orphan sweep (TZ 8).
+    @Query("SELECT filePath FROM reminder_photos")
+    suspend fun allPhotoNames(): List<String>
+
     @Insert
     suspend fun insertPhoto(photo: ReminderPhotoEntity): Long
 

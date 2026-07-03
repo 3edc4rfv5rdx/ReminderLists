@@ -1,17 +1,23 @@
 package com.reminderlists.data.lists
 
+import android.content.Context
 import androidx.room.withTransaction
 import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.db.dao.FolderListCount
+import com.reminderlists.data.db.dao.ItemPhotoCount
 import com.reminderlists.data.db.dao.ListItemCounts
 import com.reminderlists.data.db.entity.FolderEntity
 import com.reminderlists.data.db.entity.ItemEntity
+import com.reminderlists.data.db.entity.ItemPhotoEntity
 import com.reminderlists.data.db.entity.ListEntity
+import com.reminderlists.data.photo.PhotoManager
 import kotlinx.coroutines.flow.Flow
 
-// Lists module data operations (TZ 3.1 / 3.2). Item-level operations arrive with TZ 3.3.
-class ListsRepository(private val db: AppDatabase) {
+// Lists module data operations (TZ 3.1 / 3.2 / 3.3). Holds a context because deleting
+// records must also delete their photo files — Room CASCADE only clears rows (TZ 8).
+class ListsRepository(private val db: AppDatabase, context: Context) {
 
+    private val appContext = context.applicationContext
     private val dao = db.listsDao()
 
     // Folders (TZ 3.1)
@@ -38,10 +44,12 @@ class ListsRepository(private val db: AppDatabase) {
 
     // Delete folder; lists inside are either deleted or moved to root (FK SET_NULL) — TZ 3.1.
     suspend fun deleteFolder(folder: FolderEntity, deleteLists: Boolean) {
+        val photoNames = if (deleteLists) dao.photoNamesForFolder(folder.id) else emptyList()
         db.withTransaction {
             if (deleteLists) dao.deleteListsInFolder(folder.id)
             dao.deleteFolder(folder)
         }
+        PhotoManager.deleteAll(appContext, photoNames)
     }
 
     // Lists (TZ 3.2)
@@ -81,7 +89,11 @@ class ListsRepository(private val db: AppDatabase) {
         dao.updateList(list.copy(folderId = folderId, updatedAt = System.currentTimeMillis()))
     }
 
-    suspend fun deleteList(list: ListEntity) = dao.deleteList(list)
+    suspend fun deleteList(list: ListEntity) {
+        val photoNames = dao.photoNamesForList(list.id)
+        dao.deleteList(list)
+        PhotoManager.deleteAll(appContext, photoNames)
+    }
 
     // Items (TZ 3.3). Positions are group-local: active and done items each keep their own
     // sequence; ordering key is (isDone, position), so gaps inside a group are harmless.
@@ -90,7 +102,7 @@ class ListsRepository(private val db: AppDatabase) {
 
     suspend fun getItem(id: Long): ItemEntity? = dao.getItem(id)
 
-    suspend fun addItem(listId: Long, text: String, quantity: String?, unit: String?) {
+    suspend fun addItem(listId: Long, text: String, quantity: String?, unit: String?): Long =
         db.withTransaction {
             dao.upsertItem(
                 ItemEntity(
@@ -103,7 +115,6 @@ class ListsRepository(private val db: AppDatabase) {
                 ),
             )
         }
-    }
 
     suspend fun editItem(item: ItemEntity, text: String, quantity: String?, unit: String?) {
         dao.updateItem(
@@ -136,13 +147,47 @@ class ListsRepository(private val db: AppDatabase) {
         }
     }
 
-    suspend fun deleteItem(item: ItemEntity) = dao.deleteItem(item)
+    suspend fun deleteItem(item: ItemEntity) {
+        val photoNames = dao.photoNamesForItem(item.id)
+        dao.deleteItem(item)
+        PhotoManager.deleteAll(appContext, photoNames)
+    }
 
-    suspend fun deleteDoneItems(listId: Long) = dao.deleteDoneItems(listId)
+    suspend fun deleteDoneItems(listId: Long) {
+        val photoNames = dao.photoNamesForDoneItems(listId)
+        dao.deleteDoneItems(listId)
+        PhotoManager.deleteAll(appContext, photoNames)
+    }
 
     suspend fun uncheckAll(listId: Long) {
         db.withTransaction {
             dao.uncheckAllDone(listId, dao.nextActivePosition(listId))
         }
+    }
+
+    // Item photos (TZ 3.3, shared photo module TZ 8).
+
+    fun observeItemPhotos(itemId: Long): Flow<List<ItemPhotoEntity>> = dao.observeItemPhotos(itemId)
+
+    fun observeItemPhotoCounts(listId: Long): Flow<List<ItemPhotoCount>> =
+        dao.observeItemPhotoCounts(listId)
+
+    suspend fun getItemPhotos(itemId: Long): List<ItemPhotoEntity> = dao.getItemPhotos(itemId)
+
+    suspend fun addItemPhoto(itemId: Long, fileName: String) {
+        db.withTransaction {
+            dao.insertItemPhoto(
+                ItemPhotoEntity(
+                    itemId = itemId,
+                    filePath = fileName,
+                    position = dao.nextPhotoPosition(itemId),
+                ),
+            )
+        }
+    }
+
+    suspend fun deleteItemPhoto(photo: ItemPhotoEntity) {
+        dao.deleteItemPhoto(photo)
+        PhotoManager.delete(appContext, photo.filePath)
     }
 }

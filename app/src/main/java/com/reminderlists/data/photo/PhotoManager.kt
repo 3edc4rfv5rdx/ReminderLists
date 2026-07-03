@@ -1,12 +1,16 @@
 package com.reminderlists.data.photo
 
+import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import androidx.exifinterface.media.ExifInterface
+import com.reminderlists.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -40,13 +44,14 @@ object PhotoManager {
 
     // Import a picked/captured image: downsample + resize to MAX_SIDE, bake in the EXIF
     // orientation, save as JPEG into photos/. Returns the stored file name, null on failure.
-    suspend fun import(context: Context, source: Uri): String? = withContext(Dispatchers.IO) {
+    suspend fun importPhoto(context: Context, source: Uri): String? = withContext(Dispatchers.IO) {
         try {
             val resolver = context.contentResolver
 
+            // Bounds-only decode intentionally returns null — do not chain ?: off its result.
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            resolver.openInputStream(source)?.use { BitmapFactory.decodeStream(it, null, bounds) }
-                ?: return@withContext null
+            val boundsStream = resolver.openInputStream(source) ?: return@withContext null
+            boundsStream.use { BitmapFactory.decodeStream(it, null, bounds) }
             if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@withContext null
 
             var sampleSize = 1
@@ -105,6 +110,37 @@ object PhotoManager {
         }
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
+
+    // Copy a stored photo into the system gallery (Pictures/<app>) via MediaStore —
+    // no permissions needed for own inserts (TZ 8: delete dialog "save to gallery" checkbox).
+    suspend fun exportToGallery(context: Context, fileName: String): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                val file = fileFor(context, fileName)
+                if (!file.exists()) return@withContext false
+                val resolver = context.contentResolver
+                val values = ContentValues().apply {
+                    put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                    put(
+                        MediaStore.Images.Media.RELATIVE_PATH,
+                        Environment.DIRECTORY_PICTURES + "/" + context.getString(R.string.app_name),
+                    )
+                    put(MediaStore.Images.Media.IS_PENDING, 1)
+                }
+                val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                    ?: return@withContext false
+                resolver.openOutputStream(uri)?.use { out ->
+                    file.inputStream().use { it.copyTo(out) }
+                } ?: return@withContext false
+                values.clear()
+                values.put(MediaStore.Images.Media.IS_PENDING, 0)
+                resolver.update(uri, values, null, null)
+                true
+            } catch (_: Exception) {
+                false
+            }
+        }
 
     // Room CASCADE only clears rows — files are removed here (TZ 8).
     fun delete(context: Context, fileName: String) {

@@ -18,6 +18,9 @@ data class ListItemCounts(val listId: Long, val done: Int, val total: Int)
 // Lists-per-folder counters for the folders overview: "(N)" (TZ 3.1).
 data class FolderListCount(val folderId: Long, val total: Int)
 
+// Photos-per-item counters for the item rows photo icon (TZ 3.3).
+data class ItemPhotoCount(val itemId: Long, val count: Int)
+
 @Dao
 interface ListsDao {
 
@@ -99,6 +102,41 @@ interface ListsDao {
 
     @Query("SELECT * FROM item_photos WHERE itemId = :itemId ORDER BY position")
     fun observeItemPhotos(itemId: Long): Flow<List<ItemPhotoEntity>>
+
+    @Query("SELECT * FROM item_photos WHERE itemId = :itemId ORDER BY position")
+    suspend fun getItemPhotos(itemId: Long): List<ItemPhotoEntity>
+
+    @Query("SELECT COALESCE(MAX(position) + 1, 0) FROM item_photos WHERE itemId = :itemId")
+    suspend fun nextPhotoPosition(itemId: Long): Int
+
+    // Per-item photo counts of a list — drives the photo icon in item rows (TZ 3.3 p.3).
+    @Query(
+        "SELECT p.itemId AS itemId, COUNT(*) AS count FROM item_photos p " +
+            "JOIN items i ON p.itemId = i.id WHERE i.listId = :listId GROUP BY p.itemId",
+    )
+    fun observeItemPhotoCounts(listId: Long): Flow<List<ItemPhotoCount>>
+
+    // File names for cascade cleanup — Room CASCADE clears rows, files are deleted by hand (TZ 8).
+    @Query("SELECT filePath FROM item_photos WHERE itemId = :itemId")
+    suspend fun photoNamesForItem(itemId: Long): List<String>
+
+    @Query("SELECT p.filePath FROM item_photos p JOIN items i ON p.itemId = i.id WHERE i.listId = :listId")
+    suspend fun photoNamesForList(listId: Long): List<String>
+
+    @Query(
+        "SELECT p.filePath FROM item_photos p JOIN items i ON p.itemId = i.id " +
+            "WHERE i.listId = :listId AND i.isDone = 1",
+    )
+    suspend fun photoNamesForDoneItems(listId: Long): List<String>
+
+    @Query(
+        "SELECT p.filePath FROM item_photos p JOIN items i ON p.itemId = i.id " +
+            "JOIN lists l ON i.listId = l.id WHERE l.folderId = :folderId",
+    )
+    suspend fun photoNamesForFolder(folderId: Long): List<String>
+
+    @Query("SELECT filePath FROM item_photos")
+    suspend fun allPhotoNames(): List<String>
 
     @Insert
     suspend fun insertItemPhoto(photo: ItemPhotoEntity): Long

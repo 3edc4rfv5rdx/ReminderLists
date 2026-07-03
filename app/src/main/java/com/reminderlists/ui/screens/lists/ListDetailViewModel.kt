@@ -1,14 +1,19 @@
 package com.reminderlists.ui.screens.lists
 
+import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.reminderlists.data.db.entity.ItemEntity
+import com.reminderlists.data.db.entity.ItemPhotoEntity
 import com.reminderlists.data.db.entity.ListEntity
 import com.reminderlists.data.lists.DictionaryRepository
 import com.reminderlists.data.lists.ListsRepository
+import com.reminderlists.data.photo.PhotoManager
 import com.reminderlists.ui.appViewModelFactory
 import com.reminderlists.util.TextFormat
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,8 +28,11 @@ import kotlinx.coroutines.launch
 class ListDetailViewModel(
     private val repo: ListsRepository,
     private val dictRepo: DictionaryRepository,
+    application: Application,
     private val listId: Long,
 ) : ViewModel() {
+
+    private val appContext = application.applicationContext
 
     val list: StateFlow<ListEntity?> =
         repo.observeList(listId).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -68,6 +76,25 @@ class ListDetailViewModel(
         }
     }
 
+    // itemId -> photo count: drives the photo icon in item rows (TZ 3.3 p.3).
+    val photoCounts: StateFlow<Map<Long, Int>> =
+        repo.observeItemPhotoCounts(listId)
+            .map { counts -> counts.associate { it.itemId to it.count } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    fun itemPhotos(itemId: Long): Flow<List<ItemPhotoEntity>> = repo.observeItemPhotos(itemId)
+
+    fun addPhoto(item: ItemEntity, source: Uri) {
+        viewModelScope.launch {
+            val fileName = PhotoManager.importPhoto(appContext, source) ?: return@launch
+            repo.addItemPhoto(item.id, fileName)
+        }
+    }
+
+    fun deletePhoto(photo: ItemPhotoEntity) {
+        viewModelScope.launch { repo.deleteItemPhoto(photo) }
+    }
+
     // Dictionary entry includes the unit as a " /unit" suffix when present (TZ 3.4).
     fun addToDictionary(item: ItemEntity) {
         viewModelScope.launch { dictRepo.add(TextFormat.toDictionaryEntry(item.text, item.unit)) }
@@ -87,8 +114,8 @@ class ListDetailViewModel(
 
     companion object {
         fun factory(listId: Long): ViewModelProvider.Factory =
-            appViewModelFactory { db ->
-                ListDetailViewModel(ListsRepository(db), DictionaryRepository(db), listId)
+            appViewModelFactory { db, app ->
+                ListDetailViewModel(ListsRepository(db, app), DictionaryRepository(db), app, listId)
             }
     }
 }

@@ -85,6 +85,6 @@ class ListsViewModel(private val repo: ListsRepository) : ViewModel() {
     }
 
     companion object {
-        val Factory = appViewModelFactory { db -> ListsViewModel(ListsRepository(db)) }
+        val Factory = appViewModelFactory { db, app -> ListsViewModel(ListsRepository(db, app)) }
     }
 }

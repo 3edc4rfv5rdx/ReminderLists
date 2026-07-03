@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -34,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -43,6 +45,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.reminderlists.R
 import com.reminderlists.data.db.entity.ItemEntity
+import com.reminderlists.data.photo.PhotoManager
 import com.reminderlists.ui.components.AppDropdownMenu
 import com.reminderlists.ui.components.AppFab
 import com.reminderlists.ui.components.AppTopBar
@@ -52,9 +55,11 @@ import com.reminderlists.ui.components.LongPressEditDeleteBox
 import com.reminderlists.ui.components.DragReorderState
 import com.reminderlists.ui.components.FabLevel
 import com.reminderlists.ui.components.EmptyState
+import com.reminderlists.ui.components.PhotoViewerDialog
 import com.reminderlists.ui.components.SwipeActionsRow
 import com.reminderlists.ui.components.rememberDragReorderState
 import com.reminderlists.ui.navigation.Routes
+import com.reminderlists.util.Limits
 import com.reminderlists.util.TextFormat
 
 private const val ACTIVE_KEY_PREFIX = "a-"
@@ -68,9 +73,12 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
     val activeItems by vm.activeItems.collectAsState()
     val doneItems by vm.doneItems.collectAsState()
     val dictionaryTexts by vm.dictionaryTexts.collectAsState()
+    val photoCounts by vm.photoCounts.collectAsState()
+    val context = LocalContext.current
 
     var topMenuOpen by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<ItemEntity?>(null) }
+    var photoViewerItem by remember { mutableStateOf<ItemEntity?>(null) }
 
     // launchSingleTop: a swipe can fire the edit callback several times before the
     // navigation happens — without it the editor stacks up and Back "does not work".
@@ -129,10 +137,12 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                             dragState = dragState,
                             rowKey = ACTIVE_KEY_PREFIX + item.id,
                             inDictionary = TextFormat.toDictionaryEntry(item.text, item.unit) in dictionaryTexts,
+                            photoCount = photoCounts[item.id] ?: 0,
                             onToggle = { vm.toggleDone(item) },
                             onEdit = { openEditor(item.id) },
                             onDelete = { pendingDelete = item },
                             onAddToDictionary = { vm.addToDictionary(item) },
+                            onOpenPhotos = { photoViewerItem = item },
                         )
                     }
                     if (doneItems.isNotEmpty()) {
@@ -151,10 +161,12 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                             dragState = null,
                             rowKey = DONE_KEY_PREFIX + item.id,
                             inDictionary = TextFormat.toDictionaryEntry(item.text, item.unit) in dictionaryTexts,
+                            photoCount = photoCounts[item.id] ?: 0,
                             onToggle = { vm.toggleDone(item) },
                             onEdit = { openEditor(item.id) },
                             onDelete = { pendingDelete = item },
                             onAddToDictionary = { vm.addToDictionary(item) },
+                            onOpenPhotos = { photoViewerItem = item },
                         )
                     }
                     // List comment at the bottom, after the items and a divider (user rule).
@@ -190,6 +202,21 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
             onDismiss = { pendingDelete = null },
         )
     }
+
+    // Fullscreen photo viewer for an item (TZ 3.3 p.3): view, add more, delete.
+    photoViewerItem?.let { item ->
+        val photos by remember(item.id) { vm.itemPhotos(item.id) }.collectAsState(initial = null)
+        val loaded = photos
+        if (loaded != null) {
+            PhotoViewerDialog(
+                files = loaded.map { PhotoManager.fileFor(context, it.filePath) },
+                canAdd = loaded.size < Limits.MAX_PHOTOS,
+                onPicked = { uri -> vm.addPhoto(item, uri) },
+                onDelete = { index -> loaded.getOrNull(index)?.let(vm::deletePhoto) },
+                onDismiss = { photoViewerItem = null },
+            )
+        }
+    }
 }
 
 // Item row (TZ 3.3): checkbox · text (strikethrough when done) · "to dictionary" button
@@ -202,10 +229,12 @@ private fun ItemRow(
     dragState: DragReorderState?,
     rowKey: String,
     inDictionary: Boolean,
+    photoCount: Int,
     onToggle: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onAddToDictionary: () -> Unit,
+    onOpenPhotos: () -> Unit,
 ) {
     val isDragging = dragState?.draggingKey == rowKey
     SwipeActionsRow(
@@ -216,7 +245,10 @@ private fun ItemRow(
             // isDragging == true implies dragState != null (K2 smart cast through the local val).
             .graphicsLayer { translationY = if (isDragging) dragState.draggingOffset else 0f },
     ) {
-        ItemRowContent(item, dragState, rowKey, inDictionary, onToggle, onEdit, onDelete, onAddToDictionary)
+        ItemRowContent(
+            item, dragState, rowKey, inDictionary, photoCount,
+            onToggle, onEdit, onDelete, onAddToDictionary, onOpenPhotos,
+        )
     }
 }
 
@@ -226,10 +258,12 @@ private fun ItemRowContent(
     dragState: DragReorderState?,
     rowKey: String,
     inDictionary: Boolean,
+    photoCount: Int,
     onToggle: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onAddToDictionary: () -> Unit,
+    onOpenPhotos: () -> Unit,
 ) {
     // Long-press = edit/delete menu at the touch point (TZ 8); short tap is reserved (TZ 3.3).
     LongPressEditDeleteBox(onEdit = onEdit, onDelete = onDelete) {
@@ -262,6 +296,16 @@ private fun ItemRowContent(
                     maxLines = 1,
                     modifier = Modifier.padding(start = 8.dp),
                 )
+            }
+            if (photoCount > 0) {
+                // Photo icon only when the item already has photos (TZ 3.3 p.3).
+                IconButton(onClick = onOpenPhotos) {
+                    Icon(
+                        imageVector = Icons.Filled.Photo,
+                        contentDescription = stringResource(R.string.action_photos),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
             if (!inDictionary) {
                 // "To dictionary": saves the formatted text as a dictionary entry (TZ 3.3 p.4).
