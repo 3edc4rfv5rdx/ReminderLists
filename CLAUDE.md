@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Тулчейн и скрипты — как в сиблинг-проектах (`../myplayer`, `../memlists`): AGP 9.1.1, Gradle 9.3.1, JDK 17/21, compileSdk 36, **minSdk 33** (ТЗ 9). Версии — в `gradle/libs.versions.toml`.
 
-**Отличие от myplayer/memlists:** здесь нужен Room, а он генерирует код через KSP, который требует явный плагин `org.jetbrains.kotlin.android` (в отличие от built-in Kotlin, который используют сиблинги). Поэтому применяются `kotlin-android` + `kotlin-compose` + `ksp`, а built-in Kotlin из AGP автоматически отключается. Версии согласованы: **Kotlin 2.3.20 + KSP 2.3.9 + Room 2.8.4** (KSP 2.3.9 собран ровно под Kotlin 2.3.20). Schema-export Room — `app/schemas` (`room.schemaLocation`).
+**Отличие от myplayer/memlists:** здесь нужен Room (генерирует код через KSP). AGP 9 использует built-in Kotlin — плагин `org.jetbrains.kotlin.android` запрещён (AGP падает с ошибкой, если его применить). Поэтому применяются только `kotlin-compose` + `ksp` (как у сиблингов, плюс KSP). Версию Kotlin задаёт compose-плагин, и KSP обязан ей соответствовать: **Kotlin 2.3.20 + KSP 2.3.9 + Room 2.8.4** (KSP 2.3.9 собран ровно под Kotlin 2.3.20). Schema-export Room — `app/schemas` (`room.schemaLocation`).
 
 Скрипты (пользователь запускает сам — не собирать/устанавливать автоматически):
 - `10-MakeRelease.sh` — бампит `build_number.txt`, `./gradlew assembleRelease`, ABI-сплиты + universal, переименование в `reminderlists-<version>+<code>-release-*.apk`.

@@ -8,8 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Notes
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -19,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.reminderlists.R
+import com.reminderlists.ui.components.AppFab
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.EmptyState
 
@@ -37,15 +37,15 @@ fun NotesScreen(navController: NavController, contentPadding: PaddingValues) {
                 },
             )
             EmptyState(
-                icon = Icons.Filled.Notes,
+                icon = Icons.AutoMirrored.Filled.Notes,
                 text = stringResource(R.string.empty_notes),
             )
         }
-        FloatingActionButton(
+        AppFab(
+            icon = Icons.Filled.Add,
+            contentDescription = stringResource(R.string.fab_new_note),
             onClick = { /* TODO new note (TZ 3.9) */ },
             modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
-        ) {
-            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.fab_new_note))
-        }
+        )
     }
 }

@@ -32,6 +32,24 @@
     <string name="fab_new_note">New note</string>
     <string name="fab_new_reminder">New reminder</string>
     <string name="fab_new_folder">New folder</string>
+    <string name="fab_new_item">New item</string>
+
+    <!-- Folders and lists (TZ 3.1 / 3.2) -->
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_rename">Rename</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_edit_comment">Edit comment</string>
+    <string name="action_move_to_folder">To folder</string>
+    <string name="field_name">Name</string>
+    <string name="field_comment">Comment</string>
+    <string name="folder_root">Root</string>
+    <string name="delete_folder_title">Delete folder</string>
+    <string name="delete_folder_keep_lists">Move lists to root</string>
+    <string name="delete_folder_delete_lists">Delete lists inside</string>
+    <string name="delete_list_title">Delete list</string>
+    <string name="empty_items">No items yet</string>
 
     <!-- Empty states (TZ 8) -->
     <string name="empty_lists">No lists yet</string>

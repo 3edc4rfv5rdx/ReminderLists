@@ -9,12 +9,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.reminderlists.ui.screens.filters.FiltersScreen
 import com.reminderlists.ui.screens.filters.TagFilterScreen
+import com.reminderlists.ui.screens.lists.ListDetailScreen
 import com.reminderlists.ui.screens.lists.ListsScreen
 import com.reminderlists.ui.screens.notes.NotesScreen
 import com.reminderlists.ui.screens.reminders.RemindersScreen
@@ -64,6 +67,13 @@ fun AppRoot() {
             composable(Tab.LISTS.route) { ListsScreen(navController, padding) }
             composable(Tab.REMINDERS.route) { RemindersScreen(navController, padding) }
             composable(Tab.NOTES.route) { NotesScreen(navController, padding) }
+
+            composable(
+                Routes.LIST_DETAIL,
+                arguments = listOf(navArgument("listId") { type = NavType.LongType }),
+            ) { entry ->
+                ListDetailScreen(navController, entry.arguments?.getLong("listId") ?: 0L)
+            }
 
             composable(Routes.SETTINGS) { SettingsScreen(navController) }
             composable(Routes.FILTERS) { FiltersScreen(navController) }

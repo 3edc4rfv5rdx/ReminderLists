@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Alarm
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -20,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.reminderlists.R
+import com.reminderlists.ui.components.AppFab
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.EmptyState
 
@@ -45,11 +45,11 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
                 text = stringResource(R.string.empty_reminders),
             )
         }
-        FloatingActionButton(
+        AppFab(
+            icon = Icons.Filled.Add,
+            contentDescription = stringResource(R.string.fab_new_reminder),
             onClick = { /* TODO new reminder, prefilled by folder type (TZ 3.9) */ },
             modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
-        ) {
-            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.fab_new_reminder))
-        }
+        )
     }
 }

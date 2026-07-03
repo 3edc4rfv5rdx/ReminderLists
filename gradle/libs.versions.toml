@@ -43,8 +43,7 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-# Room needs KSP, and KSP needs the explicit Kotlin Android plugin (this auto-disables
-# AGP's built-in Kotlin). kotlin/compose/ksp versions are aligned: KSP 2.3.9 targets Kotlin 2.3.20.
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+# AGP 9 uses built-in Kotlin (the kotlin-android plugin is forbidden). The compose plugin
+# version sets the Kotlin version; KSP must match it: KSP 2.3.9 targets Kotlin 2.3.20.
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

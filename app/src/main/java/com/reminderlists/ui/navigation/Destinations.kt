@@ -2,7 +2,7 @@ package com.reminderlists.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
-import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.reminderlists.R
@@ -11,7 +11,7 @@ import com.reminderlists.R
 enum class Tab(val route: String, val labelRes: Int, val icon: ImageVector) {
     LISTS("lists", R.string.tab_lists, Icons.AutoMirrored.Filled.ListAlt),
     REMINDERS("reminders", R.string.tab_reminders, Icons.Filled.Notifications),
-    NOTES("notes", R.string.tab_notes, Icons.Filled.Notes),
+    NOTES("notes", R.string.tab_notes, Icons.AutoMirrored.Filled.Notes),
 }
 
 // Non-tab service routes (TZ 3.9): separate destinations, not tabs.
@@ -21,4 +21,8 @@ object Routes {
     const val TAG_FILTER = "tag_filter"
     const val DICTIONARY = "dictionary"
     // Welcome (TZ 4.8) is shown as a dialog, not a route.
+
+    // Opened list (TZ 3.2); folder browsing is in-tab state, not a route.
+    const val LIST_DETAIL = "list/{listId}"
+    fun listDetail(listId: Long) = "list/$listId"
 }

@@ -4,13 +4,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.reminderlists.BuildConfig
 import com.reminderlists.R
+import com.reminderlists.ui.components.DialogConfirmButton
 
 // About dialog (TZ 4.9). Version/build come from Gradle (BuildConfig), not the DB.
 @Composable
@@ -29,7 +29,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("OK") }
+            DialogConfirmButton(stringResource(R.string.action_ok), onDismiss)
         },
     )
 }

@@ -26,6 +26,23 @@
     <string name="fab_new_note">Новая заметка</string>
     <string name="fab_new_reminder">Новое напоминание</string>
     <string name="fab_new_folder">Новая папка</string>
+    <string name="fab_new_item">Новый элемент</string>
+
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_delete">Удалить</string>
+    <string name="action_rename">Переименовать</string>
+    <string name="action_edit">Изменить</string>
+    <string name="action_edit_comment">Изменить комментарий</string>
+    <string name="action_move_to_folder">В папку</string>
+    <string name="field_name">Название</string>
+    <string name="field_comment">Комментарий</string>
+    <string name="folder_root">Корень</string>
+    <string name="delete_folder_title">Удалить папку</string>
+    <string name="delete_folder_keep_lists">Переместить списки в корень</string>
+    <string name="delete_folder_delete_lists">Удалить списки внутри</string>
+    <string name="delete_list_title">Удалить список</string>
+    <string name="empty_items">Пока нет элементов</string>
 
     <string name="empty_lists">Пока нет списков</string>
     <string name="empty_reminders">Здесь нет напоминаний</string>

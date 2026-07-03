@@ -25,12 +25,21 @@ interface ListsDao {
     @Delete
     suspend fun deleteFolder(folder: FolderEntity)
 
+    @Query("SELECT * FROM folders WHERE id = :id")
+    suspend fun getFolder(id: Long): FolderEntity?
+
     // Lists — sorted alphabetically within folder/root (TZ 3.2).
     @Query("SELECT * FROM lists WHERE folderId IS :folderId ORDER BY name COLLATE NOCASE")
     fun observeLists(folderId: Long?): Flow<List<ListEntity>>
 
     @Query("SELECT * FROM lists WHERE id = :id")
     suspend fun getList(id: Long): ListEntity?
+
+    @Query("SELECT * FROM lists WHERE id = :id")
+    fun observeList(id: Long): Flow<ListEntity?>
+
+    @Query("DELETE FROM lists WHERE folderId = :folderId")
+    suspend fun deleteListsInFolder(folderId: Long)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertList(list: ListEntity): Long
