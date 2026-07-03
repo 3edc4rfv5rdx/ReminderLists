@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.reminderlists.data.db.dao.SettingsDao
 import com.reminderlists.data.db.entity.ItemEntity
 import com.reminderlists.data.db.entity.ItemPhotoEntity
 import com.reminderlists.data.db.entity.ListEntity
@@ -12,6 +13,7 @@ import com.reminderlists.data.lists.DictionaryRepository
 import com.reminderlists.data.lists.ListsRepository
 import com.reminderlists.data.photo.PhotoManager
 import com.reminderlists.ui.appViewModelFactory
+import com.reminderlists.util.SettingsKeys
 import com.reminderlists.util.TextFormat
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,11 +30,18 @@ import kotlinx.coroutines.launch
 class ListDetailViewModel(
     private val repo: ListsRepository,
     private val dictRepo: DictionaryRepository,
+    settingsDao: SettingsDao,
     application: Application,
     private val listId: Long,
 ) : ViewModel() {
 
     private val appContext = application.applicationContext
+
+    // "Keep screen on (in large font mode)" toggle, default ON (TZ 3.5 / 5).
+    val keepScreenOn: StateFlow<Boolean> =
+        settingsDao.observe(SettingsKeys.KEEP_SCREEN_ON_LARGE_FONT)
+            .map { it != "false" }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     val list: StateFlow<ListEntity?> =
         repo.observeList(listId).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -115,7 +124,13 @@ class ListDetailViewModel(
     companion object {
         fun factory(listId: Long): ViewModelProvider.Factory =
             appViewModelFactory { db, app ->
-                ListDetailViewModel(ListsRepository(db, app), DictionaryRepository(db), app, listId)
+                ListDetailViewModel(
+                    ListsRepository(db, app),
+                    DictionaryRepository(db),
+                    db.settingsDao(),
+                    app,
+                    listId,
+                )
             }
     }
 }

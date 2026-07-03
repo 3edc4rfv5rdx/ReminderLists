@@ -12,12 +12,15 @@ class DictionaryRepository(db: AppDatabase) {
 
     fun observeAll(): Flow<List<DictionaryEntity>> = dao.observeAll()
 
-    // Prefix suggestions from 2 typed characters. The query is normalized to the dictionary
-    // form first — SQLite LIKE is not case-insensitive for Cyrillic, entries are stored formatted.
+    // Suggestions from the first typed character: case-insensitive substring match (Cyrillic
+    // included), prefix matches ranked first (TZ 3.4). The dictionary is small — in-memory filter.
     suspend fun suggest(input: String): List<String> {
-        val query = TextFormat.toDictionaryForm(input)
-        if (query.length < 2) return emptyList()
-        return dao.suggest(query).map { it.text }
+        val needle = input.trim().lowercase()
+        if (needle.isEmpty()) return emptyList()
+        return dao.getAllTexts()
+            .filter { needle in it.lowercase() }
+            .sortedBy { !it.lowercase().startsWith(needle) }
+            .take(10)
     }
 
     // Add with formatting; duplicate forms are silently ignored (unique index, TZ 3.4).

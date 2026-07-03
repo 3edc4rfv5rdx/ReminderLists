@@ -1,6 +1,10 @@
 package com.reminderlists.ui.screens.lists
 
+import android.view.WindowManager
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Add
@@ -26,10 +32,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +67,7 @@ import com.reminderlists.ui.components.PhotoViewerDialog
 import com.reminderlists.ui.components.SwipeActionsRow
 import com.reminderlists.ui.components.rememberDragReorderState
 import com.reminderlists.ui.navigation.Routes
+import com.reminderlists.ui.theme.LargeItemTextStyle
 import com.reminderlists.util.Limits
 import com.reminderlists.util.TextFormat
 
@@ -79,6 +88,19 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
     var topMenuOpen by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<ItemEntity?>(null) }
     var photoViewerItem by remember { mutableStateOf<ItemEntity?>(null) }
+
+    // Large font / presentation mode (TZ 3.5): long-press on the FAB toggles, Back exits too.
+    var largeFont by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = largeFont) { largeFont = false }
+
+    val keepScreenOn by vm.keepScreenOn.collectAsState()
+    val activity = LocalActivity.current
+    DisposableEffect(largeFont, keepScreenOn) {
+        if (largeFont && keepScreenOn) {
+            activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        onDispose { activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+    }
 
     // launchSingleTop: a swipe can fire the edit callback several times before the
     // navigation happens — without it the editor stacks up and Back "does not work".
@@ -121,6 +143,25 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                     modifier = Modifier.weight(1f),
                 )
                 CommentFooter(list?.comment)
+            } else if (largeFont) {
+                // Large font mode (TZ 3.5): view + toggle only, no editing.
+                LazyColumn(Modifier.fillMaxSize()) {
+                    items(activeItems, key = { ACTIVE_KEY_PREFIX + it.id }) { item ->
+                        LargeFontRow(item = item, onToggle = { vm.toggleDone(item) })
+                    }
+                    if (doneItems.isNotEmpty()) {
+                        item(key = "divider") {
+                            HorizontalDivider(
+                                thickness = 3.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant,
+                                modifier = Modifier.padding(vertical = 4.dp),
+                            )
+                        }
+                    }
+                    items(doneItems, key = { DONE_KEY_PREFIX + it.id }) { item ->
+                        LargeFontRow(item = item, onToggle = { vm.toggleDone(item) })
+                    }
+                }
             } else {
                 val listState = rememberLazyListState()
                 val dragState = rememberDragReorderState(
@@ -180,8 +221,9 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
         AppFab(
             icon = Icons.Filled.Add,
             contentDescription = stringResource(R.string.fab_new_item),
-            onClick = { openEditor(0) },
-            // TODO long-press = large font mode (TZ 3.5).
+            // No editing in large font mode (TZ 3.5) — a tap does nothing there.
+            onClick = { if (!largeFont) openEditor(0) },
+            onLongClick = { largeFont = !largeFont },
             // Fixed FAB level from the window bottom (TZ 8) — same as on tab screens.
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -216,6 +258,35 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                 onDismiss = { photoViewerItem = null },
             )
         }
+    }
+}
+
+// Large font mode row (TZ 3.5): thick bullet dot + huge text, tap toggles done, nothing else.
+@Composable
+private fun LargeFontRow(item: ItemEntity, onToggle: () -> Unit) {
+    val amount = TextFormat.formatAmount(item.quantity, item.unit)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+    ) {
+        Box(
+            Modifier
+                .size(14.dp)
+                .background(
+                    color = if (item.isDone) MaterialTheme.colorScheme.outlineVariant else MaterialTheme.colorScheme.primary,
+                    shape = CircleShape,
+                ),
+        )
+        Text(
+            text = if (amount.isEmpty()) item.text else "${item.text} $amount",
+            style = LargeItemTextStyle,
+            textDecoration = if (item.isDone) TextDecoration.LineThrough else null,
+            color = if (item.isDone) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(start = 14.dp),
+        )
     }
 }
 

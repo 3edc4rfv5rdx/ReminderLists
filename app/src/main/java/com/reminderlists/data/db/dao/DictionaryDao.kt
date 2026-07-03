@@ -15,9 +15,10 @@ interface DictionaryDao {
     @Query("SELECT * FROM dictionary ORDER BY text COLLATE NOCASE")
     fun observeAll(): Flow<List<DictionaryEntity>>
 
-    // Autocomplete suggestions by prefix/substring (TZ 3.4).
-    @Query("SELECT * FROM dictionary WHERE text LIKE :query || '%' ORDER BY text COLLATE NOCASE LIMIT 10")
-    suspend fun suggest(query: String): List<DictionaryEntity>
+    // All texts for in-memory suggestion filtering — SQLite LIKE/lower() are ASCII-only,
+    // Cyrillic case-insensitive matching is done in Kotlin (TZ 3.4).
+    @Query("SELECT text FROM dictionary ORDER BY text COLLATE NOCASE")
+    suspend fun getAllTexts(): List<String>
 
     @Query("SELECT EXISTS(SELECT 1 FROM dictionary WHERE text = :text)")
     suspend fun exists(text: String): Boolean

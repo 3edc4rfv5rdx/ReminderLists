@@ -9,7 +9,7 @@ import androidx.compose.ui.unit.sp
 val AppTypography = Typography()
 
 val LargeItemTextStyle = TextStyle(
-    fontSize = 34.sp,
-    lineHeight = 42.sp,
+    fontSize = 30.sp,
+    lineHeight = 38.sp,
     fontWeight = FontWeight.Medium,
 )
