@@ -2,7 +2,10 @@ package com.reminderlists.data.lists
 
 import androidx.room.withTransaction
 import com.reminderlists.data.db.AppDatabase
+import com.reminderlists.data.db.dao.FolderListCount
+import com.reminderlists.data.db.dao.ListItemCounts
 import com.reminderlists.data.db.entity.FolderEntity
+import com.reminderlists.data.db.entity.ItemEntity
 import com.reminderlists.data.db.entity.ListEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -47,6 +50,10 @@ class ListsRepository(private val db: AppDatabase) {
 
     fun observeList(id: Long): Flow<ListEntity?> = dao.observeList(id)
 
+    fun observeListItemCounts(): Flow<List<ListItemCounts>> = dao.observeListItemCounts()
+
+    fun observeFolderListCounts(): Flow<List<FolderListCount>> = dao.observeFolderListCounts()
+
     suspend fun createList(folderId: Long?, name: String, comment: String?) {
         val now = System.currentTimeMillis()
         dao.upsertList(
@@ -75,4 +82,67 @@ class ListsRepository(private val db: AppDatabase) {
     }
 
     suspend fun deleteList(list: ListEntity) = dao.deleteList(list)
+
+    // Items (TZ 3.3). Positions are group-local: active and done items each keep their own
+    // sequence; ordering key is (isDone, position), so gaps inside a group are harmless.
+
+    fun observeItems(listId: Long): Flow<List<ItemEntity>> = dao.observeItems(listId)
+
+    suspend fun getItem(id: Long): ItemEntity? = dao.getItem(id)
+
+    suspend fun addItem(listId: Long, text: String, quantity: String?, unit: String?) {
+        db.withTransaction {
+            dao.upsertItem(
+                ItemEntity(
+                    listId = listId,
+                    text = text,
+                    quantity = quantity?.trim()?.takeIf { it.isNotEmpty() },
+                    unit = unit?.trim()?.takeIf { it.isNotEmpty() },
+                    position = dao.nextActivePosition(listId),
+                    createdAt = System.currentTimeMillis(),
+                ),
+            )
+        }
+    }
+
+    suspend fun editItem(item: ItemEntity, text: String, quantity: String?, unit: String?) {
+        dao.updateItem(
+            item.copy(
+                text = text,
+                quantity = quantity?.trim()?.takeIf { it.isNotEmpty() },
+                unit = unit?.trim()?.takeIf { it.isNotEmpty() },
+            ),
+        )
+    }
+
+    // Check: item becomes the first of the done group. Uncheck: goes to the end of the
+    // active group (TZ 3.3 default).
+    suspend fun setItemDone(item: ItemEntity, done: Boolean) {
+        db.withTransaction {
+            if (done) {
+                dao.shiftDoneItemsDown(item.listId)
+                dao.updateItem(item.copy(isDone = true, position = 0, doneAt = System.currentTimeMillis()))
+            } else {
+                val end = dao.nextActivePosition(item.listId)
+                dao.updateItem(item.copy(isDone = false, position = end, doneAt = null))
+            }
+        }
+    }
+
+    // Manual drag order of the active group (TZ 3.3).
+    suspend fun reorderActiveItems(orderedIds: List<Long>) {
+        db.withTransaction {
+            orderedIds.forEachIndexed { index, id -> dao.setItemPosition(id, index) }
+        }
+    }
+
+    suspend fun deleteItem(item: ItemEntity) = dao.deleteItem(item)
+
+    suspend fun deleteDoneItems(listId: Long) = dao.deleteDoneItems(listId)
+
+    suspend fun uncheckAll(listId: Long) {
+        db.withTransaction {
+            dao.uncheckAllDone(listId, dao.nextActivePosition(listId))
+        }
+    }
 }

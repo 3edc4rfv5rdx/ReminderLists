@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- List items (TZ 3.3): checkbox with done divider, drag-handle reorder, item editor (Name/Quantity/Unit), swipe right/left for edit/delete, long-press menu, delete-checked and uncheck-all menu actions.
+- Lists tab counters: "(done/total)" after list names, "(N)" after folders; non-empty bold, fully done struck through.
+- FAB pinned at one level on all screens (bottom bar height measured at startup).
 - Fix top bar pushed down by a doubled status-bar inset.
 - Confirmation dialogs show the object name without quotes and question mark.
 - About dialog description mentions all three modules.

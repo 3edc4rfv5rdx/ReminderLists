@@ -2,6 +2,7 @@ package com.reminderlists.ui.screens.lists
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.reminderlists.data.db.dao.ListItemCounts
 import com.reminderlists.data.db.entity.FolderEntity
 import com.reminderlists.data.db.entity.ListEntity
 import com.reminderlists.data.lists.ListsRepository
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -33,6 +35,18 @@ class ListsViewModel(private val repo: ListsRepository) : ViewModel() {
     val lists: StateFlow<List<ListEntity>> =
         currentFolder.flatMapLatest { repo.observeLists(it?.id) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // listId -> (done/total) counters shown next to list names (TZ 3.2).
+    val itemCounts: StateFlow<Map<Long, ListItemCounts>> =
+        repo.observeListItemCounts()
+            .map { counts -> counts.associateBy { it.listId } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    // folderId -> lists count shown next to folder names (TZ 3.1).
+    val folderCounts: StateFlow<Map<Long, Int>> =
+        repo.observeFolderListCounts()
+            .map { counts -> counts.associate { it.folderId to it.total } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     fun openFolder(folder: FolderEntity?) {
         currentFolderId.value = folder?.id

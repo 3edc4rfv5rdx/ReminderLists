@@ -21,13 +21,14 @@ import androidx.navigation.NavController
 import com.reminderlists.R
 import com.reminderlists.ui.components.AppFab
 import com.reminderlists.ui.components.AppTopBar
+import com.reminderlists.ui.components.FabLevel
 import com.reminderlists.ui.components.EmptyState
 
 // Reminders tab (TZ 4): five fixed type-folders. Today + filter indicator live here.
 @Composable
 fun RemindersScreen(navController: NavController, contentPadding: PaddingValues) {
-    Box(Modifier.fillMaxSize().padding(contentPadding)) {
-        Column(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().padding(contentPadding)) {
             AppTopBar(
                 title = stringResource(R.string.app_name),
                 actions = {
@@ -49,7 +50,11 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
             icon = Icons.Filled.Add,
             contentDescription = stringResource(R.string.fab_new_reminder),
             onClick = { /* TODO new reminder, prefilled by folder type (TZ 3.9) */ },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+            // Fixed FAB level from the window bottom (TZ 8).
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp)
+                .padding(bottom = FabLevel.barHeight + 16.dp),
         )
     }
 }

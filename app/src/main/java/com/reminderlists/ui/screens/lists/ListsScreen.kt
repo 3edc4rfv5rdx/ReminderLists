@@ -34,6 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.collectAsState
@@ -44,6 +46,7 @@ import com.reminderlists.data.db.entity.FolderEntity
 import com.reminderlists.data.db.entity.ListEntity
 import com.reminderlists.ui.components.AppFab
 import com.reminderlists.ui.components.AppSmallFab
+import com.reminderlists.ui.components.FabLevel
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.ConfirmDialog
 import com.reminderlists.ui.components.DeleteFolderDialog
@@ -75,6 +78,8 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
     val folders by vm.folders.collectAsState()
     val lists by vm.lists.collectAsState()
     val currentFolder by vm.currentFolder.collectAsState()
+    val itemCounts by vm.itemCounts.collectAsState()
+    val folderCounts by vm.folderCounts.collectAsState()
 
     var dialog by remember { mutableStateOf<ListsDialog?>(null) }
     var topMenuOpen by remember { mutableStateOf(false) }
@@ -82,8 +87,8 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
     val inFolder = currentFolder != null
     BackHandler(enabled = inFolder) { vm.openFolder(null) }
 
-    Box(Modifier.fillMaxSize().padding(contentPadding)) {
-        Column(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().padding(contentPadding)) {
             AppTopBar(
                 title = currentFolder?.name ?: stringResource(R.string.tab_lists),
                 onBack = if (inFolder) {
@@ -136,8 +141,12 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                 LazyColumn(Modifier.fillMaxSize()) {
                     if (!inFolder) {
                         items(folders, key = { "folder-${it.id}" }) { folder ->
+                            val listCount = folderCounts[folder.id] ?: 0
                             FolderRow(
                                 folder = folder,
+                                // No counter for an empty folder; non-empty is bold (TZ 3.1).
+                                countsText = if (listCount > 0) "($listCount)" else null,
+                                fontWeight = if (listCount > 0) FontWeight.Bold else null,
                                 onOpen = { vm.openFolder(folder) },
                                 onRename = { dialog = ListsDialog.RenameFolder(folder) },
                                 onEditComment = { dialog = ListsDialog.FolderComment(folder) },
@@ -146,9 +155,20 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                         }
                     }
                     items(lists, key = { "list-${it.id}" }) { list ->
+                        val counts = itemCounts[list.id]
+                        val total = counts?.total ?: 0
+                        val done = counts?.done ?: 0
+                        val allDone = total > 0 && done == total
                         ListRow(
                             list = list,
-                            onOpen = { navController.navigate(Routes.listDetail(list.id)) },
+                            // No counter for an empty list; in-progress is bold, fully done is
+                            // regular weight with strikethrough (TZ 3.2).
+                            countsText = if (total > 0) "($done/$total)" else null,
+                            fontWeight = if (total > 0 && !allDone) FontWeight.Bold else null,
+                            textDecoration = if (allDone) TextDecoration.LineThrough else null,
+                            onOpen = {
+                                navController.navigate(Routes.listDetail(list.id)) { launchSingleTop = true }
+                            },
                             onEdit = { dialog = ListsDialog.EditList(list) },
                             onMove = { dialog = ListsDialog.MoveList(list) },
                             onDelete = { dialog = ListsDialog.DeleteList(list) },
@@ -158,7 +178,14 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
             }
         }
 
-        Column(Modifier.align(Alignment.BottomEnd).padding(16.dp), horizontalAlignment = Alignment.End) {
+        Column(
+            // Fixed FAB level from the window bottom (TZ 8) — independent of the bottom bar.
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp)
+                .padding(bottom = FabLevel.barHeight + 16.dp),
+            horizontalAlignment = Alignment.End,
+        ) {
             if (!inFolder) {
                 AppSmallFab(
                     icon = Icons.Filled.CreateNewFolder,
@@ -277,6 +304,8 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
 @Composable
 private fun FolderRow(
     folder: FolderEntity,
+    countsText: String?,
+    fontWeight: FontWeight?,
     onOpen: () -> Unit,
     onRename: () -> Unit,
     onEditComment: () -> Unit,
@@ -284,7 +313,9 @@ private fun FolderRow(
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     ListItem(
-        headlineContent = { Text(folder.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        headlineContent = {
+            RowTitle(name = folder.name, countsText = countsText, fontWeight = fontWeight, textDecoration = null)
+        },
         supportingContent = folder.comment?.let {
             { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
         },
@@ -312,6 +343,9 @@ private fun FolderRow(
 @Composable
 private fun ListRow(
     list: ListEntity,
+    countsText: String?,
+    fontWeight: FontWeight?,
+    textDecoration: TextDecoration?,
     onOpen: () -> Unit,
     onEdit: () -> Unit,
     onMove: () -> Unit,
@@ -319,7 +353,9 @@ private fun ListRow(
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     ListItem(
-        headlineContent = { Text(list.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        headlineContent = {
+            RowTitle(name = list.name, countsText = countsText, fontWeight = fontWeight, textDecoration = textDecoration)
+        },
         supportingContent = list.comment?.let {
             { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
         },
@@ -351,6 +387,34 @@ private fun ListRow(
         },
         modifier = Modifier.combinedClickable(onClick = onOpen, onLongClick = { menuOpen = true }),
     )
+}
+
+// Row title: name + optional "(counts)" — one size, one color, shared weight/strikethrough (TZ 8).
+@Composable
+private fun RowTitle(
+    name: String,
+    countsText: String?,
+    fontWeight: FontWeight?,
+    textDecoration: TextDecoration?,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = name,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontWeight = fontWeight,
+            textDecoration = textDecoration,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+        if (countsText != null) {
+            Text(
+                text = " $countsText",
+                maxLines = 1,
+                fontWeight = fontWeight,
+                textDecoration = textDecoration,
+            )
+        }
+    }
 }
 
 @Composable

@@ -51,6 +51,13 @@
     <string name="delete_list_title">Delete list</string>
     <string name="empty_items">No items yet</string>
 
+    <!-- Items (TZ 3.3) -->
+    <string name="field_quantity">Quantity</string>
+    <string name="field_unit">Unit</string>
+    <string name="delete_item_title">Delete item</string>
+    <string name="menu_delete_checked">Delete checked</string>
+    <string name="menu_uncheck_all">Uncheck all</string>
+
     <!-- Empty states (TZ 8) -->
     <string name="empty_lists">No lists yet</string>
     <string name="empty_reminders">No reminders here</string>

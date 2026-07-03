@@ -44,6 +44,12 @@
     <string name="delete_list_title">Видалити список</string>
     <string name="empty_items">Ще немає елементів</string>
 
+    <string name="field_quantity">Кількість</string>
+    <string name="field_unit">Одиниця виміру</string>
+    <string name="delete_item_title">Видалити елемент</string>
+    <string name="menu_delete_checked">Видалити позначені</string>
+    <string name="menu_uncheck_all">Зняти позначки</string>
+
     <string name="empty_lists">Ще немає списків</string>
     <string name="empty_reminders">Тут немає нагадувань</string>
     <string name="empty_notes">Ще немає нотаток</string>

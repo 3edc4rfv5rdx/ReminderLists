@@ -25,4 +25,8 @@ object Routes {
     // Opened list (TZ 3.2); folder browsing is in-tab state, not a route.
     const val LIST_DETAIL = "list/{listId}"
     fun listDetail(listId: Long) = "list/$listId"
+
+    // Item add/edit window (TZ 3.3); itemId <= 0 means a new item.
+    const val ITEM_EDITOR = "item_editor/{listId}?itemId={itemId}"
+    fun itemEditor(listId: Long, itemId: Long = 0) = "item_editor/$listId?itemId=$itemId"
 }

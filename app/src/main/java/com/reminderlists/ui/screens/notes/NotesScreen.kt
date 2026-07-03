@@ -20,13 +20,14 @@ import androidx.navigation.NavController
 import com.reminderlists.R
 import com.reminderlists.ui.components.AppFab
 import com.reminderlists.ui.components.AppTopBar
+import com.reminderlists.ui.components.FabLevel
 import com.reminderlists.ui.components.EmptyState
 
 // Notes tab (TZ 4A): folders + root note cards, no firing. Own filter state + indicator.
 @Composable
 fun NotesScreen(navController: NavController, contentPadding: PaddingValues) {
-    Box(Modifier.fillMaxSize().padding(contentPadding)) {
-        Column(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().padding(contentPadding)) {
             AppTopBar(
                 title = stringResource(R.string.app_name),
                 actions = {
@@ -45,7 +46,11 @@ fun NotesScreen(navController: NavController, contentPadding: PaddingValues) {
             icon = Icons.Filled.Add,
             contentDescription = stringResource(R.string.fab_new_note),
             onClick = { /* TODO new note (TZ 3.9) */ },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+            // Fixed FAB level from the window bottom (TZ 8).
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp)
+                .padding(bottom = FabLevel.barHeight + 16.dp),
         )
     }
 }

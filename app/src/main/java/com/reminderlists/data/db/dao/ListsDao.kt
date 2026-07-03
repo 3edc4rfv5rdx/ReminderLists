@@ -12,6 +12,12 @@ import com.reminderlists.data.db.entity.ItemPhotoEntity
 import com.reminderlists.data.db.entity.ListEntity
 import kotlinx.coroutines.flow.Flow
 
+// Per-list item counters for the lists overview: "(done/total)" (TZ 3.2).
+data class ListItemCounts(val listId: Long, val done: Int, val total: Int)
+
+// Lists-per-folder counters for the folders overview: "(N)" (TZ 3.1).
+data class FolderListCount(val folderId: Long, val total: Int)
+
 @Dao
 interface ListsDao {
 
@@ -41,6 +47,12 @@ interface ListsDao {
     @Query("DELETE FROM lists WHERE folderId = :folderId")
     suspend fun deleteListsInFolder(folderId: Long)
 
+    @Query("SELECT listId, SUM(isDone) AS done, COUNT(*) AS total FROM items GROUP BY listId")
+    fun observeListItemCounts(): Flow<List<ListItemCounts>>
+
+    @Query("SELECT folderId, COUNT(*) AS total FROM lists WHERE folderId IS NOT NULL GROUP BY folderId")
+    fun observeFolderListCounts(): Flow<List<FolderListCount>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertList(list: ListEntity): Long
 
@@ -54,11 +66,26 @@ interface ListsDao {
     @Query("SELECT * FROM items WHERE listId = :listId ORDER BY isDone, position")
     fun observeItems(listId: Long): Flow<List<ItemEntity>>
 
+    @Query("SELECT * FROM items WHERE id = :id")
+    suspend fun getItem(id: Long): ItemEntity?
+
+    // Next free position at the end of the active group. MAX+1 instead of COUNT — checking an
+    // item out of the middle leaves position gaps, and COUNT could collide with a live position.
+    @Query("SELECT COALESCE(MAX(position) + 1, 0) FROM items WHERE listId = :listId AND isDone = 0")
+    suspend fun nextActivePosition(listId: Long): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertItem(item: ItemEntity): Long
 
     @Update
     suspend fun updateItem(item: ItemEntity)
+
+    @Query("UPDATE items SET position = :position WHERE id = :id")
+    suspend fun setItemPosition(id: Long, position: Int)
+
+    // Make room at the top of the done group — a newly checked item goes right under the divider (TZ 3.3).
+    @Query("UPDATE items SET position = position + 1 WHERE listId = :listId AND isDone = 1")
+    suspend fun shiftDoneItemsDown(listId: Long)
 
     @Delete
     suspend fun deleteItem(item: ItemEntity)
@@ -66,8 +93,9 @@ interface ListsDao {
     @Query("DELETE FROM items WHERE listId = :listId AND isDone = 1")
     suspend fun deleteDoneItems(listId: Long)
 
-    @Query("UPDATE items SET isDone = 0, doneAt = NULL WHERE listId = :listId")
-    suspend fun clearAllDone(listId: Long)
+    // Uncheck all: done items keep their relative order and append after the active group (TZ 3.2 / 3.3).
+    @Query("UPDATE items SET position = position + :offset, isDone = 0, doneAt = NULL WHERE listId = :listId AND isDone = 1")
+    suspend fun uncheckAllDone(listId: Long, offset: Int)
 
     @Query("SELECT * FROM item_photos WHERE itemId = :itemId ORDER BY position")
     fun observeItemPhotos(itemId: Long): Flow<List<ItemPhotoEntity>>

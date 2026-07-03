@@ -3,6 +3,9 @@ package com.reminderlists.ui.navigation
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,8 +19,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.reminderlists.ui.components.FabLevel
 import com.reminderlists.ui.screens.filters.FiltersScreen
 import com.reminderlists.ui.screens.filters.TagFilterScreen
+import com.reminderlists.ui.screens.lists.ItemEditorScreen
 import com.reminderlists.ui.screens.lists.ListDetailScreen
 import com.reminderlists.ui.screens.lists.ListsScreen
 import com.reminderlists.ui.screens.notes.NotesScreen
@@ -35,6 +40,7 @@ fun AppRoot() {
     val onTabRoute = Tab.entries.any { tab ->
         currentRoute?.hierarchy?.any { it.route == tab.route } == true
     }
+    val density = LocalDensity.current
 
     Scaffold(
         // Status-bar inset is handled by AppTopBar itself; without this the content padding
@@ -42,7 +48,13 @@ fun AppRoot() {
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (onTabRoute) {
-                NavigationBar {
+                NavigationBar(
+                    // Measure the bar once at startup: every FAB on every screen is drawn at
+                    // this level from the window bottom, so it never jumps (TZ 8).
+                    modifier = Modifier.onSizeChanged { size ->
+                        FabLevel.barHeight = with(density) { size.height.toDp() }
+                    },
+                ) {
                     Tab.entries.forEach { tab ->
                         val selected = currentRoute?.hierarchy?.any { it.route == tab.route } == true
                         NavigationBarItem(
@@ -77,6 +89,23 @@ fun AppRoot() {
                 arguments = listOf(navArgument("listId") { type = NavType.LongType }),
             ) { entry ->
                 ListDetailScreen(navController, entry.arguments?.getLong("listId") ?: 0L)
+            }
+
+            composable(
+                Routes.ITEM_EDITOR,
+                arguments = listOf(
+                    navArgument("listId") { type = NavType.LongType },
+                    navArgument("itemId") {
+                        type = NavType.LongType
+                        defaultValue = 0L
+                    },
+                ),
+            ) { entry ->
+                ItemEditorScreen(
+                    navController,
+                    listId = entry.arguments?.getLong("listId") ?: 0L,
+                    itemId = entry.arguments?.getLong("itemId") ?: 0L,
+                )
             }
 
             composable(Routes.SETTINGS) { SettingsScreen(navController) }
