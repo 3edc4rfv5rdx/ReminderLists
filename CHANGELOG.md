@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Photo viewer: pinch-to-zoom and double-tap zoom; "Add photo" label in the editor photo strip.
 - Shared photo module (TZ 8): camera/gallery without permissions, EXIF-corrected import, thumbnails in the item editor, photo icon on item rows, fullscreen pager viewer, cascade file cleanup and startup orphan sweep.
 - Photo delete dialog with a "save to gallery" checkbox (MediaStore export).
 - Dictionary entries can include a unit suffix ("Молоко /kg"): to-dictionary saves it, autocomplete fills Name and Unit, amounts display as "5/kg".

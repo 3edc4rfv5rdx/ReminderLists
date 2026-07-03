@@ -6,6 +6,11 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -36,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -43,10 +49,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -125,6 +137,11 @@ fun PhotoStrip(
     modifier: Modifier = Modifier,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.action_add_photo),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         AddPhotoButton(enabled = canAdd, onPicked = onPicked)
         LazyRow(Modifier.weight(1f)) {
             itemsIndexed(files, key = { _, file -> file.name }) { index, file ->
@@ -174,11 +191,9 @@ fun PhotoViewerDialog(
     ) {
         Box(Modifier.fillMaxSize().background(Color.Black)) {
             HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
-                AsyncImage(
-                    model = files[page],
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize(),
+                ZoomablePhoto(
+                    file = files[page],
+                    isActive = pagerState.settledPage == page,
                 )
             }
             Row(
@@ -229,6 +244,84 @@ fun PhotoViewerDialog(
                 }
             },
             onDismiss = { confirmDelete = false },
+        )
+    }
+}
+
+private const val MAX_ZOOM = 5f
+private const val DOUBLE_TAP_ZOOM = 2.5f
+
+// One pager page: pinch-to-zoom + pan while zoomed, double-tap zooms in/out (TZ 8).
+// Gestures are consumed only when zooming/zoomed, so page swipes keep working at 1x.
+@Composable
+private fun ZoomablePhoto(file: File, isActive: Boolean) {
+    var scale by remember(file) { mutableFloatStateOf(1f) }
+    var offset by remember(file) { mutableStateOf(Offset.Zero) }
+    var containerSize by remember { mutableStateOf(IntSize.Zero) }
+
+    fun clampOffset(candidate: Offset, atScale: Float): Offset {
+        val maxX = containerSize.width * (atScale - 1f) / 2f
+        val maxY = containerSize.height * (atScale - 1f) / 2f
+        return Offset(candidate.x.coerceIn(-maxX, maxX), candidate.y.coerceIn(-maxY, maxY))
+    }
+
+    // Reset zoom when the page is swiped away.
+    LaunchedEffect(isActive) {
+        if (!isActive) {
+            scale = 1f
+            offset = Offset.Zero
+        }
+    }
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .onSizeChanged { containerSize = it }
+            .pointerInput(file) {
+                detectTapGestures(
+                    onDoubleTap = { tap ->
+                        if (scale > 1f) {
+                            scale = 1f
+                            offset = Offset.Zero
+                        } else {
+                            val center = Offset(size.width / 2f, size.height / 2f)
+                            scale = DOUBLE_TAP_ZOOM
+                            offset = clampOffset((center - tap) * (DOUBLE_TAP_ZOOM - 1f), DOUBLE_TAP_ZOOM)
+                        }
+                    },
+                )
+            }
+            .pointerInput(file) {
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false)
+                    do {
+                        val event = awaitPointerEvent()
+                        val zoomChange = event.calculateZoom()
+                        val panChange = event.calculatePan()
+                        if (zoomChange != 1f || scale > 1f) {
+                            val newScale = (scale * zoomChange).coerceIn(1f, MAX_ZOOM)
+                            offset = clampOffset(offset * (newScale / scale) + panChange, newScale)
+                            scale = newScale
+                            event.changes.forEach { change ->
+                                if (change.positionChanged()) change.consume()
+                            }
+                        }
+                    } while (event.changes.any { it.pressed })
+                }
+            },
+    ) {
+        AsyncImage(
+            model = file,
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    translationX = offset.x
+                    translationY = offset.y
+                },
         )
     }
 }
