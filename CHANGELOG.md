@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Dictionary (TZ 3.4): management screen, name autocomplete in the item editor, "to dictionary" button on item rows; shared swipe-actions row component.
 - List items (TZ 3.3): checkbox with done divider, drag-handle reorder, item editor (Name/Quantity/Unit), swipe right/left for edit/delete, long-press menu, delete-checked and uncheck-all menu actions.
 - Lists tab counters: "(done/total)" after list names, "(N)" after folders; non-empty bold, fully done struck through.
 - FAB pinned at one level on all screens (bottom bar height measured at startup).

@@ -20,6 +20,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.reminderlists.ui.components.FabLevel
+import com.reminderlists.ui.screens.dictionary.DictionaryScreen
 import com.reminderlists.ui.screens.filters.FiltersScreen
 import com.reminderlists.ui.screens.filters.TagFilterScreen
 import com.reminderlists.ui.screens.lists.ItemEditorScreen
@@ -107,6 +108,8 @@ fun AppRoot() {
                     itemId = entry.arguments?.getLong("itemId") ?: 0L,
                 )
             }
+
+            composable(Routes.DICTIONARY) { DictionaryScreen(navController) }
 
             composable(Routes.SETTINGS) { SettingsScreen(navController) }
             composable(Routes.FILTERS) { FiltersScreen(navController) }

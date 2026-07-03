@@ -1,7 +1,9 @@
 package com.reminderlists.ui.screens.lists
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -11,6 +13,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -51,11 +55,22 @@ fun ItemEditorScreen(navController: NavController, listId: Long, itemId: Long) {
         ) {
             FloatingLabelTextField(
                 value = vm.name,
-                onValueChange = { vm.name = it },
+                onValueChange = vm::onNameChange,
                 label = stringResource(R.string.field_name),
                 maxLength = Limits.ITEM_TEXT,
                 autoFocus = true,
             )
+            // Dictionary autocomplete drop-down (TZ 3.4): tap substitutes the text.
+            vm.suggestions.forEach { suggestion ->
+                Text(
+                    text = suggestion,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { vm.pickSuggestion(suggestion) }
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                )
+            }
             FloatingLabelTextField(
                 value = vm.quantity,
                 onValueChange = { vm.quantity = it },

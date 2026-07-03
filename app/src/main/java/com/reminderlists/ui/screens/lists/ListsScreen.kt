@@ -109,13 +109,20 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                             },
                         )
                         DropdownMenuItem(
+                            text = { Text(stringResource(R.string.menu_dictionary)) },
+                            onClick = {
+                                topMenuOpen = false
+                                navController.navigate(Routes.DICTIONARY) { launchSingleTop = true }
+                            },
+                        )
+                        DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_about)) },
                             onClick = {
                                 topMenuOpen = false
                                 dialog = ListsDialog.About
                             },
                         )
-                        // TODO menu items Dictionary (TZ 3.4) and Backup/Restore (TZ 3.8) once those screens exist.
+                        // TODO menu item Backup/Restore (TZ 3.8) once that feature exists.
                     }
                 },
             )

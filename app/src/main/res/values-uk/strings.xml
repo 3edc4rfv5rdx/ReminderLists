@@ -47,6 +47,11 @@
     <string name="field_quantity">Кількість</string>
     <string name="field_unit">Одиниця виміру</string>
     <string name="delete_item_title">Видалити елемент</string>
+
+    <string name="dictionary_new_entry">Новий запис</string>
+    <string name="delete_entry_title">Видалити запис</string>
+    <string name="empty_dictionary">Словник порожній</string>
+    <string name="action_add_to_dictionary">До словника</string>
     <string name="menu_delete_checked">Видалити позначені</string>
     <string name="menu_uncheck_all">Зняти позначки</string>
 

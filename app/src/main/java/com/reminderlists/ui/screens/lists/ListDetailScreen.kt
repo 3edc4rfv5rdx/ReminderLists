@@ -16,9 +16,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.DragHandle
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
@@ -27,12 +26,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,8 +53,10 @@ import com.reminderlists.ui.components.ConfirmDialog
 import com.reminderlists.ui.components.DragReorderState
 import com.reminderlists.ui.components.FabLevel
 import com.reminderlists.ui.components.EmptyState
+import com.reminderlists.ui.components.SwipeActionsRow
 import com.reminderlists.ui.components.rememberDragReorderState
 import com.reminderlists.ui.navigation.Routes
+import com.reminderlists.util.TextFormat
 
 private const val ACTIVE_KEY_PREFIX = "a-"
 private const val DONE_KEY_PREFIX = "d-"
@@ -71,6 +68,7 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
     val list by vm.list.collectAsState()
     val activeItems by vm.activeItems.collectAsState()
     val doneItems by vm.doneItems.collectAsState()
+    val dictionaryTexts by vm.dictionaryTexts.collectAsState()
 
     var topMenuOpen by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<ItemEntity?>(null) }
@@ -141,9 +139,11 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                             item = item,
                             dragState = dragState,
                             rowKey = ACTIVE_KEY_PREFIX + item.id,
+                            inDictionary = TextFormat.toDictionaryForm(item.text) in dictionaryTexts,
                             onToggle = { vm.toggleDone(item) },
                             onEdit = { openEditor(item.id) },
                             onDelete = { pendingDelete = item },
+                            onAddToDictionary = { vm.addToDictionary(item) },
                         )
                     }
                     if (doneItems.isNotEmpty()) {
@@ -161,9 +161,11 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                             item = item,
                             dragState = null,
                             rowKey = DONE_KEY_PREFIX + item.id,
+                            inDictionary = TextFormat.toDictionaryForm(item.text) in dictionaryTexts,
                             onToggle = { vm.toggleDone(item) },
                             onEdit = { openEditor(item.id) },
                             onDelete = { pendingDelete = item },
+                            onAddToDictionary = { vm.addToDictionary(item) },
                         )
                     }
                 }
@@ -196,73 +198,31 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
     }
 }
 
-// Item row (TZ 3.3): checkbox · text (strikethrough when done) · drag handle (active only).
-// Long-press or swipe right = edit, swipe left = delete (user rule).
-// Photo icon and "to dictionary" button arrive with their features (TZ 3.3 p.3/4).
-@OptIn(ExperimentalFoundationApi::class)
+// Item row (TZ 3.3): checkbox · text (strikethrough when done) · "to dictionary" button
+// (only while the text is not in the dictionary) · drag handle (active only).
+// Long-press = edit/delete menu, swipe right = edit, swipe left = delete (TZ 8).
+// Photo icon arrives with the shared photo module (TZ 3.3 p.3).
 @Composable
 private fun ItemRow(
     item: ItemEntity,
     dragState: DragReorderState?,
     rowKey: String,
+    inDictionary: Boolean,
     onToggle: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    onAddToDictionary: () -> Unit,
 ) {
     val isDragging = dragState?.draggingKey == rowKey
-    val dismissState = rememberSwipeToDismissBoxState()
-    // confirmValueChange is deprecated: react to the settled value and snap the row back.
-    LaunchedEffect(dismissState.currentValue) {
-        when (dismissState.currentValue) {
-            SwipeToDismissBoxValue.StartToEnd -> {
-                onEdit()
-                dismissState.reset()
-            }
-            SwipeToDismissBoxValue.EndToStart -> {
-                onDelete()
-                dismissState.reset()
-            }
-            SwipeToDismissBoxValue.Settled -> {}
-        }
-    }
-    SwipeToDismissBox(
-        state = dismissState,
-        backgroundContent = { SwipeRowBackground(dismissState.dismissDirection) },
+    SwipeActionsRow(
+        onEdit = onEdit,
+        onDelete = onDelete,
         modifier = Modifier
             .zIndex(if (isDragging) 1f else 0f)
             // isDragging == true implies dragState != null (K2 smart cast through the local val).
             .graphicsLayer { translationY = if (isDragging) dragState.draggingOffset else 0f },
     ) {
-        ItemRowContent(item, dragState, rowKey, onToggle, onEdit, onDelete)
-    }
-}
-
-@Composable
-private fun SwipeRowBackground(direction: SwipeToDismissBoxValue) {
-    when (direction) {
-        SwipeToDismissBoxValue.StartToEnd -> Box(
-            contentAlignment = Alignment.CenterStart,
-            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primaryContainer),
-        ) {
-            Icon(
-                Icons.Filled.Edit,
-                contentDescription = stringResource(R.string.action_edit),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.padding(start = 24.dp),
-            )
-        }
-        SwipeToDismissBoxValue.EndToStart -> Box(
-            contentAlignment = Alignment.CenterEnd,
-            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.errorContainer),
-        ) {
-            Icon(
-                Icons.Filled.Delete,
-                contentDescription = stringResource(R.string.action_delete),
-                tint = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.padding(end = 24.dp),
-            )
-        }
-        SwipeToDismissBoxValue.Settled -> {}
+        ItemRowContent(item, dragState, rowKey, inDictionary, onToggle, onEdit, onDelete, onAddToDictionary)
     }
 }
 
@@ -272,9 +232,11 @@ private fun ItemRowContent(
     item: ItemEntity,
     dragState: DragReorderState?,
     rowKey: String,
+    inDictionary: Boolean,
     onToggle: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    onAddToDictionary: () -> Unit,
 ) {
     // Long-press = edit/delete menu (user rule); short tap is reserved (multi-select, TZ 3.3).
     var menuOpen by remember { mutableStateOf(false) }
@@ -323,6 +285,16 @@ private fun ItemRowContent(
                 maxLines = 1,
                 modifier = Modifier.padding(start = 8.dp),
             )
+        }
+        if (!inDictionary) {
+            // "To dictionary": saves the formatted text as a dictionary entry (TZ 3.3 p.4).
+            IconButton(onClick = onAddToDictionary) {
+                Icon(
+                    imageVector = Icons.Filled.BookmarkAdd,
+                    contentDescription = stringResource(R.string.action_add_to_dictionary),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
         if (dragState != null) {
             Icon(
