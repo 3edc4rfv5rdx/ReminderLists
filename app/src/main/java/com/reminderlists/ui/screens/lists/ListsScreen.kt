@@ -55,6 +55,8 @@ import com.reminderlists.ui.components.EditTextDialog
 import com.reminderlists.ui.components.EmptyState
 import com.reminderlists.ui.components.FolderPickerDialog
 import com.reminderlists.ui.components.NameCommentDialog
+import com.reminderlists.ui.components.PinDialog
+import com.reminderlists.ui.components.PinSetupDialog
 import com.reminderlists.ui.navigation.Routes
 import com.reminderlists.ui.screens.about.AboutDialog
 import com.reminderlists.util.Limits
@@ -69,6 +71,7 @@ private sealed interface ListsDialog {
     data class DeleteFolder(val folder: FolderEntity) : ListsDialog
     data class EditList(val list: ListEntity) : ListsDialog
     data class MoveList(val list: ListEntity) : ListsDialog
+    data class ProtectList(val list: ListEntity) : ListsDialog
     data class DeleteList(val list: ListEntity) : ListsDialog
 }
 
@@ -81,9 +84,18 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
     val currentFolder by vm.currentFolder.collectAsState()
     val itemCounts by vm.itemCounts.collectAsState()
     val folderCounts by vm.folderCounts.collectAsState()
+    // Collected here so the flow is live whenever the PIN gate checks it (TZ 3.6).
+    val defaultPin by vm.defaultPin.collectAsState()
 
     var dialog by remember { mutableStateOf<ListsDialog?>(null) }
     var topMenuOpen by remember { mutableStateOf(false) }
+
+    // PIN gate (TZ 3.6): every operation on a protected list first asks for the PIN;
+    // the pending action runs only after a correct entry.
+    var pinGate by remember { mutableStateOf<Pair<ListEntity, () -> Unit>?>(null) }
+    val gated: (ListEntity, () -> Unit) -> Unit = { list, action ->
+        if (list.pinEnabled) pinGate = list to action else action()
+    }
 
     val inFolder = currentFolder != null
     BackHandler(enabled = inFolder) { vm.openFolder(null) }
@@ -165,11 +177,21 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                             fontWeight = if (total > 0 && !allDone) FontWeight.Bold else null,
                             textDecoration = if (allDone) TextDecoration.LineThrough else null,
                             onOpen = {
-                                navController.navigate(Routes.listDetail(list.id)) { launchSingleTop = true }
+                                gated(list) {
+                                    navController.navigate(Routes.listDetail(list.id)) { launchSingleTop = true }
+                                }
                             },
-                            onEdit = { dialog = ListsDialog.EditList(list) },
-                            onMove = { dialog = ListsDialog.MoveList(list) },
-                            onDelete = { dialog = ListsDialog.DeleteList(list) },
+                            onEdit = { gated(list) { dialog = ListsDialog.EditList(list) } },
+                            onMove = { gated(list) { dialog = ListsDialog.MoveList(list) } },
+                            // Protect opens the PIN setup; Unprotect (gated) just turns it off.
+                            onProtect = {
+                                if (list.pinEnabled) {
+                                    gated(list) { vm.setProtection(list, enabled = false, customPin = null) }
+                                } else {
+                                    dialog = ListsDialog.ProtectList(list)
+                                }
+                            },
+                            onDelete = { gated(list) { dialog = ListsDialog.DeleteList(list) } },
                         )
                     }
                     // Folder comment goes at the bottom, after the lists and a divider (user rule).
@@ -289,6 +311,22 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
             onDismiss = { dialog = null },
         )
 
+        is ListsDialog.ProtectList -> {
+            val hasDefaultPin = !defaultPin.isNullOrEmpty()
+            PinSetupDialog(
+                title = stringResource(R.string.action_protect),
+                emptyPinAllowed = hasDefaultPin,
+                emptyPinHint = stringResource(
+                    if (hasDefaultPin) R.string.pin_empty_default else R.string.pin_no_default,
+                ),
+                onSave = { pin ->
+                    vm.setProtection(d.list, enabled = true, customPin = pin.takeIf { it.isNotEmpty() })
+                    dialog = null
+                },
+                onDismiss = { dialog = null },
+            )
+        }
+
         is ListsDialog.DeleteList -> ConfirmDialog(
             title = stringResource(R.string.delete_list_title),
             text = d.list.name,
@@ -298,6 +336,19 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                 dialog = null
             },
             onDismiss = { dialog = null },
+        )
+    }
+
+    // PIN entry for the gated action (TZ 3.6); shown on top, runs the action on success.
+    pinGate?.let { (list, action) ->
+        PinDialog(
+            title = list.name,
+            verify = { vm.pinMatches(list, it) },
+            onSuccess = {
+                pinGate = null
+                action()
+            },
+            onDismiss = { pinGate = null },
         )
     }
 }
@@ -365,18 +416,20 @@ private fun ListRow(
     onOpen: () -> Unit,
     onEdit: () -> Unit,
     onMove: () -> Unit,
+    onProtect: () -> Unit,
     onDelete: () -> Unit,
 ) {
     var buttonMenuOpen by remember { mutableStateOf(false) }
     LongPressMenuBox(
         onTap = onOpen,
-        menuContent = { dismiss -> ListMenuItems(dismiss, onEdit, onMove, onDelete) },
+        menuContent = { dismiss -> ListMenuItems(dismiss, list.pinEnabled, onEdit, onMove, onProtect, onDelete) },
     ) {
         ListItem(
             headlineContent = {
                 RowTitle(name = list.name, countsText = countsText, fontWeight = fontWeight, textDecoration = textDecoration)
             },
-            supportingContent = list.comment?.let {
+            // A protected list must not leak its comment before the PIN gate (TZ 3.6).
+            supportingContent = list.comment?.takeIf { !list.pinEnabled }?.let {
                 { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             },
             leadingContent = {
@@ -397,7 +450,7 @@ private fun ListRow(
                             Icon(Icons.Filled.MoreHoriz, contentDescription = stringResource(R.string.action_menu))
                         }
                         AppDropdownMenu(expanded = buttonMenuOpen, onDismissRequest = { buttonMenuOpen = false }) {
-                            ListMenuItems({ buttonMenuOpen = false }, onEdit, onMove, onDelete)
+                            ListMenuItems({ buttonMenuOpen = false }, list.pinEnabled, onEdit, onMove, onProtect, onDelete)
                         }
                     }
                 }
@@ -409,13 +462,16 @@ private fun ListRow(
 @Composable
 private fun ListMenuItems(
     dismiss: () -> Unit,
+    isProtected: Boolean,
     onEdit: () -> Unit,
     onMove: () -> Unit,
+    onProtect: () -> Unit,
     onDelete: () -> Unit,
 ) {
     MenuItem(R.string.action_edit) { dismiss(); onEdit() }
     MenuItem(R.string.action_move_to_folder) { dismiss(); onMove() }
-    // TODO "Protect" menu item (PIN on/off) — TZ 3.6, next feature.
+    // Protect / Unprotect depending on the current state (TZ 3.6).
+    MenuItem(if (isProtected) R.string.action_unprotect else R.string.action_protect) { dismiss(); onProtect() }
     MenuItem(R.string.action_delete) { dismiss(); onDelete() }
 }
 

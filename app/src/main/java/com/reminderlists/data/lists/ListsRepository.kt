@@ -97,6 +97,17 @@ class ListsRepository(private val db: AppDatabase, context: Context) {
         )
     }
 
+    // PIN protection (TZ 3.6): customPin == null means "use the default PIN from Settings".
+    suspend fun setListProtection(list: ListEntity, enabled: Boolean, customPin: String?) {
+        dao.updateList(
+            list.copy(
+                pinEnabled = enabled,
+                pinCode = customPin.takeIf { enabled },
+                updatedAt = System.currentTimeMillis(),
+            ),
+        )
+    }
+
     suspend fun moveList(list: ListEntity, folderId: Long?) {
         dao.updateList(list.copy(folderId = folderId, updatedAt = System.currentTimeMillis()))
     }

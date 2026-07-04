@@ -9,6 +9,7 @@ object Limits {
     const val TAG = 30
     const val QUANTITY = 20
     const val UNIT = 20
+    const val PIN = 8 // digits, list/note protection and the default PIN (TZ 3.6)
 
     const val MAX_PHOTOS = 10 // per item / reminder / note (TZ 3.3 / 4.2 / 4A.2)
 

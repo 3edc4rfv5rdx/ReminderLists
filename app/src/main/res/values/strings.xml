@@ -42,6 +42,14 @@
     <string name="action_edit">Edit</string>
     <string name="action_edit_comment">Edit comment</string>
     <string name="action_move_to_folder">To folder</string>
+    <string name="action_protect">Protect</string>
+    <string name="pin_label">PIN</string>
+    <string name="pin_repeat">Repeat PIN</string>
+    <string name="pin_mismatch">PINs do not match</string>
+    <string name="action_unprotect">Unprotect</string>
+    <string name="pin_wrong">Wrong PIN</string>
+    <string name="pin_empty_default">Leave empty to use the Default PIN</string>
+    <string name="pin_no_default">Set the Default PIN in Settings first</string>
     <string name="field_name">Name</string>
     <string name="field_comment">Comment</string>
     <string name="folder_root">Root</string>

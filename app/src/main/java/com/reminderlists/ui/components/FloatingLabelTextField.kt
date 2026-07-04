@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 
 // Single reusable text field with floating label + char counter (TZ 8).
 // All app text inputs go through this component — no ad-hoc fields per screen.
@@ -24,6 +26,7 @@ fun FloatingLabelTextField(
     maxLength: Int? = null,
     singleLine: Boolean = true,
     keyboardType: KeyboardType = KeyboardType.Text,
+    password: Boolean = false,
     isError: Boolean = false,
     supportingText: String? = null,
     autoFocus: Boolean = false,
@@ -40,6 +43,7 @@ fun FloatingLabelTextField(
         label = { Text(label) },
         singleLine = singleLine,
         isError = isError,
+        visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         supportingText = {
             val counter = maxLength?.let { "${value.length}/$it" }

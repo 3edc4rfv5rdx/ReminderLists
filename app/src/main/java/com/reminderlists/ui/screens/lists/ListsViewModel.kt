@@ -3,10 +3,12 @@ package com.reminderlists.ui.screens.lists
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reminderlists.data.db.dao.ListItemCounts
+import com.reminderlists.data.db.dao.SettingsDao
 import com.reminderlists.data.db.entity.FolderEntity
 import com.reminderlists.data.db.entity.ListEntity
 import com.reminderlists.data.lists.ListsRepository
 import com.reminderlists.ui.appViewModelFactory
+import com.reminderlists.util.SettingsKeys
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,9 +22,17 @@ import kotlinx.coroutines.launch
 // Lists tab state (TZ 3.1 / 3.2): root shows folders + root lists; opening a folder is
 // in-tab state (bottom bar stays, tab state is preserved on tab switch).
 @OptIn(ExperimentalCoroutinesApi::class)
-class ListsViewModel(private val repo: ListsRepository) : ViewModel() {
+class ListsViewModel(
+    private val repo: ListsRepository,
+    settingsDao: SettingsDao,
+) : ViewModel() {
 
     private val currentFolderId = MutableStateFlow<Long?>(null)
+
+    // Default PIN from Settings (TZ 3.6 / 5); null or empty = not set.
+    val defaultPin: StateFlow<String?> =
+        settingsDao.observe(SettingsKeys.DEFAULT_PIN)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val folders: StateFlow<List<FolderEntity>> =
         repo.observeFolders().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -84,7 +94,20 @@ class ListsViewModel(private val repo: ListsRepository) : ViewModel() {
         viewModelScope.launch { repo.deleteList(list) }
     }
 
+    // PIN gate check (TZ 3.6): the list's own PIN, or the default PIN when none is set.
+    // A protected list with neither PIN available never matches (UI blocks that setup).
+    fun pinMatches(list: ListEntity, entered: String): Boolean {
+        val expected = list.pinCode ?: defaultPin.value
+        return !expected.isNullOrEmpty() && entered == expected
+    }
+
+    fun setProtection(list: ListEntity, enabled: Boolean, customPin: String?) {
+        viewModelScope.launch { repo.setListProtection(list, enabled, customPin) }
+    }
+
     companion object {
-        val Factory = appViewModelFactory { db, app -> ListsViewModel(ListsRepository(db, app)) }
+        val Factory = appViewModelFactory { db, app ->
+            ListsViewModel(ListsRepository(db, app), db.settingsDao())
+        }
     }
 }
