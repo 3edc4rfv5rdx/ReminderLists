@@ -90,6 +90,15 @@ object PhotoManager {
         }
     }
 
+    // Duplicate a stored photo under a new name (item copy, TZ 3.3). Returns the copy name.
+    fun copyPhoto(context: Context, fileName: String): String? = try {
+        val copyName = "photo_${System.currentTimeMillis()}_${(1000..9999).random()}.jpg"
+        fileFor(context, fileName).copyTo(fileFor(context, copyName))
+        copyName
+    } catch (_: Exception) {
+        null
+    }
+
     private fun applyOrientation(bitmap: Bitmap, orientation: Int): Bitmap {
         val matrix = Matrix()
         when (orientation) {

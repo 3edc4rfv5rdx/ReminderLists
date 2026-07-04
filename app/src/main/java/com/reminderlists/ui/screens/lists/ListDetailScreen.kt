@@ -8,18 +8,23 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.MoreVert
@@ -31,6 +36,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -53,6 +60,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.reminderlists.R
+import com.reminderlists.data.db.dao.ListPickerEntry
 import com.reminderlists.data.db.entity.ItemEntity
 import com.reminderlists.data.photo.PhotoManager
 import com.reminderlists.ui.components.AppDropdownMenu
@@ -61,6 +69,7 @@ import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.CommentFooter
 import com.reminderlists.ui.components.ConfirmDialog
 import com.reminderlists.ui.components.DialogDismissButton
+import com.reminderlists.ui.components.DialogConfirmButton
 import com.reminderlists.ui.components.LongPressEditDeleteBox
 import com.reminderlists.ui.components.DragReorderState
 import com.reminderlists.ui.components.FabLevel
@@ -77,6 +86,9 @@ import com.reminderlists.util.TextFormat
 private const val ACTIVE_KEY_PREFIX = "a-"
 private const val DONE_KEY_PREFIX = "d-"
 
+// Move dialog item list: 7 rows of 48dp (checkbox touch target) before it scrolls (user rule).
+private val MOVE_DIALOG_LIST_MAX_HEIGHT = 336.dp
+
 // Opened list screen (TZ 3.2 / 3.3): active items, 3px divider, done items below.
 @Composable
 fun ListDetailScreen(navController: NavController, listId: Long) {
@@ -92,6 +104,9 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
     var shareDialogOpen by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<ItemEntity?>(null) }
     var photoViewerItem by remember { mutableStateOf<ItemEntity?>(null) }
+
+    // Move/copy dialog (TZ 3.3): opened via the in-list menu "Move" (no long-press — user decision).
+    var moveDialogOpen by remember { mutableStateOf(false) }
 
     // Large font / presentation mode (TZ 3.5): long-press on the FAB toggles, Back exits too.
     var largeFont by rememberSaveable { mutableStateOf(false) }
@@ -122,9 +137,21 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                         Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.action_menu))
                     }
                     AppDropdownMenu(expanded = topMenuOpen, onDismissRequest = { topMenuOpen = false }) {
-                        // TODO in-list menu (TZ 3.2): Move (multi-select), Comment.
+                        // TODO in-list menu (TZ 3.2): Comment.
+                        // Items needing something to act on are disabled while the list is empty;
+                        // "Delete checked" / "Uncheck all" also need at least one done item.
+                        val hasItems = activeItems.isNotEmpty() || doneItems.isNotEmpty()
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.menu_move)) },
+                            enabled = hasItems,
+                            onClick = {
+                                topMenuOpen = false
+                                moveDialogOpen = true
+                            },
+                        )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_share)) },
+                            enabled = hasItems,
                             onClick = {
                                 topMenuOpen = false
                                 shareDialogOpen = true
@@ -132,6 +159,7 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_delete_checked)) },
+                            enabled = doneItems.isNotEmpty(),
                             onClick = {
                                 topMenuOpen = false
                                 vm.deleteChecked()
@@ -139,6 +167,7 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_uncheck_all)) },
+                            enabled = doneItems.isNotEmpty(),
                             onClick = {
                                 topMenuOpen = false
                                 vm.uncheckAll()
@@ -243,6 +272,21 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
         )
     }
 
+    // Move/copy items to another list (TZ 3.3): one dialog with item selection,
+    // a Copy checkbox and a target list dropdown.
+    if (moveDialogOpen) {
+        val moveTargets by vm.moveTargets.collectAsState()
+        MoveItemsDialog(
+            items = activeItems + doneItems,
+            targets = moveTargets,
+            onConfirm = { itemIds, targetListId, copy ->
+                vm.moveItemsTo(itemIds, targetListId, copy)
+                moveDialogOpen = false
+            },
+            onDismiss = { moveDialogOpen = false },
+        )
+    }
+
     // Share the list (TZ 3.7): choose all items or only unfinished, then hand off to Share Intent.
     if (shareDialogOpen) {
         ShareChoiceDialog(
@@ -311,6 +355,142 @@ private fun ShareChoiceRow(text: String, onClick: () -> Unit) {
             .padding(vertical = 12.dp),
     )
 }
+
+// Item text + "5/kg" amount, strikethrough when done — shared by the normal and the
+// move-selection rows (text, quantity and unit: one size, one color — user rule).
+@Composable
+private fun RowScope.ItemTexts(item: ItemEntity) {
+    val textColor = if (item.isDone) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+    val decoration = if (item.isDone) TextDecoration.LineThrough else null
+    Text(
+        text = item.text,
+        style = MaterialTheme.typography.bodyLarge,
+        textDecoration = decoration,
+        color = textColor,
+        modifier = Modifier.weight(1f).padding(vertical = 12.dp),
+    )
+    val amount = TextFormat.formatAmount(item.quantity, item.unit)
+    if (amount.isNotEmpty()) {
+        Text(
+            text = amount,
+            style = MaterialTheme.typography.bodyLarge,
+            textDecoration = decoration,
+            color = textColor,
+            maxLines = 1,
+            modifier = Modifier.padding(start = 8.dp),
+        )
+    }
+}
+
+// Move/copy dialog (TZ 3.3): item selection with checkboxes, a Copy checkbox below,
+// then a dropdown with the destination lists; OK confirms, Cancel dismisses.
+@Composable
+private fun MoveItemsDialog(
+    items: List<ItemEntity>,
+    targets: List<ListPickerEntry>,
+    onConfirm: (itemIds: Set<Long>, targetListId: Long, copy: Boolean) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var selectedIds by remember { mutableStateOf(emptySet<Long>()) }
+    var copy by remember { mutableStateOf(false) }
+    var target by remember { mutableStateOf<ListPickerEntry?>(null) }
+    var targetMenuOpen by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.move_dialog_title)) },
+        text = {
+            Column {
+                // Items to move — capped at ~7 rows (user rule), scrollable beyond that.
+                Column(
+                    Modifier
+                        .weight(1f, fill = false)
+                        .heightIn(max = MOVE_DIALOG_LIST_MAX_HEIGHT)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    items.forEach { item ->
+                        val checked = item.id in selectedIds
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedIds = if (checked) selectedIds - item.id else selectedIds + item.id
+                                },
+                        ) {
+                            Checkbox(
+                                checked = checked,
+                                onCheckedChange = {
+                                    selectedIds = if (checked) selectedIds - item.id else selectedIds + item.id
+                                },
+                            )
+                            ItemTexts(item)
+                        }
+                    }
+                }
+                // Copy switch — a toggle, not a checkbox, so it does not blend into the item list.
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { copy = !copy }
+                        .padding(vertical = 8.dp),
+                ) {
+                    Switch(checked = copy, onCheckedChange = { copy = it })
+                    Text(stringResource(R.string.move_copy), Modifier.padding(start = 12.dp))
+                }
+                // Destination list dropdown, "Folder / Name" labels, root lists first.
+                if (targets.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.move_no_targets),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 12.dp),
+                    )
+                } else {
+                    Box {
+                        OutlinedButton(
+                            onClick = { targetMenuOpen = true },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = target?.let(::pickerLabel) ?: stringResource(R.string.move_select_list),
+                                maxLines = 1,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
+                        }
+                        AppDropdownMenu(
+                            expanded = targetMenuOpen,
+                            onDismissRequest = { targetMenuOpen = false },
+                        ) {
+                            targets.forEach { entry ->
+                                DropdownMenuItem(
+                                    text = { Text(pickerLabel(entry)) },
+                                    onClick = {
+                                        target = entry
+                                        targetMenuOpen = false
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            val chosen = target
+            DialogConfirmButton(
+                text = stringResource(R.string.action_ok),
+                enabled = selectedIds.isNotEmpty() && chosen != null,
+                onClick = { chosen?.let { onConfirm(selectedIds, it.id, copy) } },
+            )
+        },
+        dismissButton = { DialogDismissButton(stringResource(R.string.action_cancel), onDismiss) },
+    )
+}
+
+private fun pickerLabel(entry: ListPickerEntry): String =
+    entry.folderName?.let { "$it / ${entry.name}" } ?: entry.name
 
 // Large font mode row (TZ 3.5): thick bullet dot + huge text, tap toggles done, nothing else.
 @Composable
@@ -396,29 +576,8 @@ private fun ItemRowContent(
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(start = 8.dp, end = 16.dp),
         ) {
-            // Text, quantity and unit: one size, one color (user rule).
-            val textColor = if (item.isDone) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
-            val decoration = if (item.isDone) TextDecoration.LineThrough else null
             Checkbox(checked = item.isDone, onCheckedChange = { onToggle() })
-            Text(
-                text = item.text,
-                style = MaterialTheme.typography.bodyLarge,
-                textDecoration = decoration,
-                color = textColor,
-                modifier = Modifier.weight(1f).padding(vertical = 12.dp),
-            )
-            // "5/kg" (TZ 3.3, user rule).
-            val amount = TextFormat.formatAmount(item.quantity, item.unit)
-            if (amount.isNotEmpty()) {
-                Text(
-                    text = amount,
-                    style = MaterialTheme.typography.bodyLarge,
-                    textDecoration = decoration,
-                    color = textColor,
-                    maxLines = 1,
-                    modifier = Modifier.padding(start = 8.dp),
-                )
-            }
+            ItemTexts(item)
             if (photoCount > 0) {
                 // Photo icon only when the item already has photos (TZ 3.3 p.3).
                 IconButton(onClick = onOpenPhotos) {

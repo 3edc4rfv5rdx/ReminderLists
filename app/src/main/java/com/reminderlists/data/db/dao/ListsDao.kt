@@ -21,6 +21,9 @@ data class FolderListCount(val folderId: Long, val total: Int)
 // Photos-per-item counters for the item rows photo icon (TZ 3.3).
 data class ItemPhotoCount(val itemId: Long, val count: Int)
 
+// Destination list for the "move items" picker: list + its folder name, if any (TZ 3.3).
+data class ListPickerEntry(val id: Long, val name: String, val folderName: String?)
+
 @Dao
 interface ListsDao {
 
@@ -56,6 +59,15 @@ interface ListsDao {
     @Query("SELECT folderId, COUNT(*) AS total FROM lists WHERE folderId IS NOT NULL GROUP BY folderId")
     fun observeFolderListCounts(): Flow<List<FolderListCount>>
 
+    // All lists for the "move items" picker, root first (NULL folder sorts first in ASC),
+    // then by folder (TZ 3.3).
+    @Query(
+        "SELECT l.id, l.name, f.name AS folderName FROM lists l " +
+            "LEFT JOIN folders f ON l.folderId = f.id " +
+            "ORDER BY f.name COLLATE NOCASE, l.name COLLATE NOCASE",
+    )
+    fun observeListPickerEntries(): Flow<List<ListPickerEntry>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertList(list: ListEntity): Long
 
@@ -76,6 +88,9 @@ interface ListsDao {
     // item out of the middle leaves position gaps, and COUNT could collide with a live position.
     @Query("SELECT COALESCE(MAX(position) + 1, 0) FROM items WHERE listId = :listId AND isDone = 0")
     suspend fun nextActivePosition(listId: Long): Int
+
+    @Query("SELECT COALESCE(MAX(position) + 1, 0) FROM items WHERE listId = :listId AND isDone = 1")
+    suspend fun nextDonePosition(listId: Long): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertItem(item: ItemEntity): Long

@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.reminderlists.data.db.dao.ListPickerEntry
 import com.reminderlists.data.db.dao.SettingsDao
 import com.reminderlists.data.db.entity.ItemEntity
 import com.reminderlists.data.db.entity.ItemPhotoEntity
@@ -119,6 +120,16 @@ class ListDetailViewModel(
 
     fun uncheckAll() {
         viewModelScope.launch { repo.uncheckAll(listId) }
+    }
+
+    // Destination lists for "move items" (TZ 3.3): every list except the open one.
+    val moveTargets: StateFlow<List<ListPickerEntry>> =
+        repo.observeListPickerEntries()
+            .map { entries -> entries.filter { it.id != listId } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun moveItemsTo(itemIds: Collection<Long>, targetListId: Long, copy: Boolean) {
+        viewModelScope.launch { repo.moveItemsToList(itemIds, targetListId, copy) }
     }
 
     // Build shareable text (TZ 3.7): list name + one line per item, status marker + amount.

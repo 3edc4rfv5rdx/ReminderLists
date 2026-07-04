@@ -6,6 +6,7 @@ import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.db.dao.FolderListCount
 import com.reminderlists.data.db.dao.ItemPhotoCount
 import com.reminderlists.data.db.dao.ListItemCounts
+import com.reminderlists.data.db.dao.ListPickerEntry
 import com.reminderlists.data.db.entity.FolderEntity
 import com.reminderlists.data.db.entity.ItemEntity
 import com.reminderlists.data.db.entity.ItemPhotoEntity
@@ -61,6 +62,8 @@ class ListsRepository(private val db: AppDatabase, context: Context) {
     fun observeListItemCounts(): Flow<List<ListItemCounts>> = dao.observeListItemCounts()
 
     fun observeFolderListCounts(): Flow<List<FolderListCount>> = dao.observeFolderListCounts()
+
+    fun observeListPickerEntries(): Flow<List<ListPickerEntry>> = dao.observeListPickerEntries()
 
     suspend fun createList(folderId: Long?, name: String, comment: String?) {
         val now = System.currentTimeMillis()
@@ -144,6 +147,34 @@ class ListsRepository(private val db: AppDatabase, context: Context) {
     suspend fun reorderActiveItems(orderedIds: List<Long>) {
         db.withTransaction {
             orderedIds.forEachIndexed { index, id -> dao.setItemPosition(id, index) }
+        }
+    }
+
+    // Move or copy items to another list (TZ 3.3): each lands at the end of its status
+    // group in the target list, keeping done state and the current display order.
+    // Copy duplicates the items and their photo files; move re-points the originals
+    // (photos follow via the itemId FK).
+    suspend fun moveItemsToList(itemIds: Collection<Long>, targetListId: Long, copy: Boolean) {
+        db.withTransaction {
+            var activePos = dao.nextActivePosition(targetListId)
+            var donePos = dao.nextDonePosition(targetListId)
+            val items = itemIds.mapNotNull { dao.getItem(it) }
+                .filter { it.listId != targetListId }
+                .sortedWith(compareBy({ it.isDone }, { it.position }))
+            for (item in items) {
+                val position = if (item.isDone) donePos++ else activePos++
+                if (copy) {
+                    val newId = dao.upsertItem(
+                        item.copy(id = 0, listId = targetListId, position = position, createdAt = System.currentTimeMillis()),
+                    )
+                    for (photo in dao.getItemPhotos(item.id)) {
+                        val copyName = PhotoManager.copyPhoto(appContext, photo.filePath) ?: continue
+                        dao.insertItemPhoto(photo.copy(id = 0, itemId = newId, filePath = copyName))
+                    }
+                } else {
+                    dao.updateItem(item.copy(listId = targetListId, position = position))
+                }
+            }
         }
     }
 
