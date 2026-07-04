@@ -21,6 +21,7 @@ import androidx.navigation.NavController
 import com.reminderlists.R
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.PinSetupDialog
+import com.reminderlists.ui.navigation.Routes
 
 // Settings (TZ 5): theme, language, dictionary, enable reminders, welcome, keep-screen-on,
 // logs, time presets, default sound, default PIN, backup/restore. Default PIN is wired;
@@ -42,7 +43,18 @@ fun SettingsScreen(navController: NavController) {
             listOf(
                 R.string.settings_theme,
                 R.string.settings_language,
-                R.string.menu_dictionary,
+            ).forEach { res ->
+                Text(stringResource(res), Modifier.padding(vertical = 12.dp))
+            }
+            // Dictionary management screen entry (TZ 3.4).
+            Text(
+                text = stringResource(R.string.menu_dictionary),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { navController.navigate(Routes.DICTIONARY) { launchSingleTop = true } }
+                    .padding(vertical = 12.dp),
+            )
+            listOf(
                 R.string.settings_enable_reminders,
                 R.string.settings_welcome_screen,
                 R.string.settings_keep_screen_on,

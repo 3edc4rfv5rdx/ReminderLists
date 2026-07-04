@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Dictionary entry in Settings opens the dictionary screen (TZ 3.4).
 - PIN protection for lists (TZ 3.6): Protect/Unprotect menu item, masked PIN with repeat (empty uses the Default PIN), PIN gate on all list operations, Default PIN editor in Settings, protected list comment hidden in the overview.
 - Edit list comment (TZ 3.2): in-list menu "Edit comment", same dialog as folder comments, footer updates live.
 - Move/copy items to another list (TZ 3.3): in-list "Move" menu opens one dialog — item checkboxes, Copy toggle, target list dropdown; copies duplicate photos.
