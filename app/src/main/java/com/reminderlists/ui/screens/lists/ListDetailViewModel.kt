@@ -121,6 +121,20 @@ class ListDetailViewModel(
         viewModelScope.launch { repo.uncheckAll(listId) }
     }
 
+    // Build shareable text (TZ 3.7): list name + one line per item, status marker + amount.
+    // onlyUnfinished drops done items entirely; otherwise done items are marked as done.
+    fun buildShareText(onlyUnfinished: Boolean): String {
+        val items = if (onlyUnfinished) activeItems.value else activeItems.value + doneItems.value
+        val sb = StringBuilder(">>> ").append(list.value?.name.orEmpty())
+        for (item in items) {
+            val amount = TextFormat.formatAmount(item.quantity, item.unit)
+            val line = if (amount.isEmpty()) item.text else "${item.text} $amount"
+            val marker = if (item.isDone) "v " else "- "
+            sb.append('\n').append(marker).append(line)
+        }
+        return sb.toString()
+    }
+
     companion object {
         fun factory(listId: Long): ViewModelProvider.Factory =
             appViewModelFactory { db, app ->

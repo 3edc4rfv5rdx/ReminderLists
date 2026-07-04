@@ -72,6 +72,10 @@
     <string name="save_to_gallery">Save to gallery</string>
     <string name="menu_delete_checked">Delete checked</string>
     <string name="menu_uncheck_all">Uncheck all</string>
+    <string name="menu_share">Share</string>
+    <string name="share_dialog_title">Share list</string>
+    <string name="share_all">All items</string>
+    <string name="share_unfinished">Unfinished only</string>
 
     <!-- Empty states (TZ 8) -->
     <string name="empty_lists">No lists yet</string>

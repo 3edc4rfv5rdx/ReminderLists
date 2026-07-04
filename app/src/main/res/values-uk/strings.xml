@@ -62,6 +62,10 @@
     <string name="save_to_gallery">Зберегти в галерею</string>
     <string name="menu_delete_checked">Видалити позначені</string>
     <string name="menu_uncheck_all">Зняти позначки</string>
+    <string name="menu_share">Поділитися</string>
+    <string name="share_dialog_title">Поділитися списком</string>
+    <string name="share_all">Усі елементи</string>
+    <string name="share_unfinished">Лише невиконані</string>
 
     <string name="empty_lists">Ще немає списків</string>
     <string name="empty_reminders">Тут немає нагадувань</string>

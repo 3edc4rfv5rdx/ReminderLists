@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -59,6 +60,7 @@ import com.reminderlists.ui.components.AppFab
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.CommentFooter
 import com.reminderlists.ui.components.ConfirmDialog
+import com.reminderlists.ui.components.DialogDismissButton
 import com.reminderlists.ui.components.LongPressEditDeleteBox
 import com.reminderlists.ui.components.DragReorderState
 import com.reminderlists.ui.components.FabLevel
@@ -69,6 +71,7 @@ import com.reminderlists.ui.components.rememberDragReorderState
 import com.reminderlists.ui.navigation.Routes
 import com.reminderlists.ui.theme.LargeItemTextStyle
 import com.reminderlists.util.Limits
+import com.reminderlists.util.ShareUtils
 import com.reminderlists.util.TextFormat
 
 private const val ACTIVE_KEY_PREFIX = "a-"
@@ -86,6 +89,7 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
     val context = LocalContext.current
 
     var topMenuOpen by remember { mutableStateOf(false) }
+    var shareDialogOpen by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<ItemEntity?>(null) }
     var photoViewerItem by remember { mutableStateOf<ItemEntity?>(null) }
 
@@ -118,7 +122,14 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                         Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.action_menu))
                     }
                     AppDropdownMenu(expanded = topMenuOpen, onDismissRequest = { topMenuOpen = false }) {
-                        // TODO in-list menu (TZ 3.2): Move (multi-select), Share, Comment.
+                        // TODO in-list menu (TZ 3.2): Move (multi-select), Comment.
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.menu_share)) },
+                            onClick = {
+                                topMenuOpen = false
+                                shareDialogOpen = true
+                            },
+                        )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_delete_checked)) },
                             onClick = {
@@ -232,6 +243,17 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
         )
     }
 
+    // Share the list (TZ 3.7): choose all items or only unfinished, then hand off to Share Intent.
+    if (shareDialogOpen) {
+        ShareChoiceDialog(
+            onPick = { onlyUnfinished ->
+                shareDialogOpen = false
+                ShareUtils.shareText(context, vm.buildShareText(onlyUnfinished))
+            },
+            onDismiss = { shareDialogOpen = false },
+        )
+    }
+
     pendingDelete?.let { item ->
         ConfirmDialog(
             title = stringResource(R.string.delete_item_title),
@@ -259,6 +281,35 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
             )
         }
     }
+}
+
+// Share choice (TZ 3.7): all items or only unfinished (done items excluded).
+@Composable
+private fun ShareChoiceDialog(onPick: (onlyUnfinished: Boolean) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.share_dialog_title)) },
+        text = {
+            Column {
+                ShareChoiceRow(stringResource(R.string.share_all)) { onPick(false) }
+                ShareChoiceRow(stringResource(R.string.share_unfinished)) { onPick(true) }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { DialogDismissButton(stringResource(R.string.action_cancel), onDismiss) },
+    )
+}
+
+@Composable
+private fun ShareChoiceRow(text: String, onClick: () -> Unit) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+    )
 }
 
 // Large font mode row (TZ 3.5): thick bullet dot + huge text, tap toggles done, nothing else.

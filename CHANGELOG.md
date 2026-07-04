@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Share a list (TZ 3.7): in-list menu "Share" offers all items or unfinished only, formats name + marked lines, hands off to the Android Share Intent.
 - Large font mode (TZ 3.5): long-press on the list FAB, 30sp rows with bullet markers, tap toggles done, keep-screen-on honored.
 - Dictionary suggestions match by substring from the first letter (Cyrillic case-insensitive), prefix matches first.
 - Photo viewer: pinch-to-zoom and double-tap zoom; "Add photo" label in the editor photo strip.
