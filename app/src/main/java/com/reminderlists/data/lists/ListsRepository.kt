@@ -88,6 +88,15 @@ class ListsRepository(private val db: AppDatabase, context: Context) {
         )
     }
 
+    suspend fun updateListComment(list: ListEntity, comment: String?) {
+        dao.updateList(
+            list.copy(
+                comment = comment?.takeIf { it.isNotBlank() },
+                updatedAt = System.currentTimeMillis(),
+            ),
+        )
+    }
+
     suspend fun moveList(list: ListEntity, folderId: Long?) {
         dao.updateList(list.copy(folderId = folderId, updatedAt = System.currentTimeMillis()))
     }

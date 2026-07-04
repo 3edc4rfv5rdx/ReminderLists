@@ -70,6 +70,7 @@ import com.reminderlists.ui.components.CommentFooter
 import com.reminderlists.ui.components.ConfirmDialog
 import com.reminderlists.ui.components.DialogDismissButton
 import com.reminderlists.ui.components.DialogConfirmButton
+import com.reminderlists.ui.components.EditTextDialog
 import com.reminderlists.ui.components.LongPressEditDeleteBox
 import com.reminderlists.ui.components.DragReorderState
 import com.reminderlists.ui.components.FabLevel
@@ -107,6 +108,8 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
 
     // Move/copy dialog (TZ 3.3): opened via the in-list menu "Move" (no long-press — user decision).
     var moveDialogOpen by remember { mutableStateOf(false) }
+    // List comment editor (TZ 3.2), opened via the in-list menu "Edit comment".
+    var commentDialogOpen by remember { mutableStateOf(false) }
 
     // Large font / presentation mode (TZ 3.5): long-press on the FAB toggles, Back exits too.
     var largeFont by rememberSaveable { mutableStateOf(false) }
@@ -137,7 +140,6 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                         Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.action_menu))
                     }
                     AppDropdownMenu(expanded = topMenuOpen, onDismissRequest = { topMenuOpen = false }) {
-                        // TODO in-list menu (TZ 3.2): Comment.
                         // Items needing something to act on are disabled while the list is empty;
                         // "Delete checked" / "Uncheck all" also need at least one done item.
                         val hasItems = activeItems.isNotEmpty() || doneItems.isNotEmpty()
@@ -155,6 +157,13 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                             onClick = {
                                 topMenuOpen = false
                                 shareDialogOpen = true
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_edit_comment)) },
+                            onClick = {
+                                topMenuOpen = false
+                                commentDialogOpen = true
                             },
                         )
                         DropdownMenuItem(
@@ -269,6 +278,22 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp)
                 .padding(bottom = FabLevel.barHeight + 16.dp),
+        )
+    }
+
+    // Edit the list comment (TZ 3.2) — same dialog as the folder comment on the Lists tab.
+    if (commentDialogOpen) {
+        EditTextDialog(
+            title = stringResource(R.string.action_edit_comment),
+            label = stringResource(R.string.field_comment),
+            initial = list?.comment.orEmpty(),
+            maxLength = Limits.COMMENT,
+            required = false,
+            onSave = { comment ->
+                vm.updateComment(comment)
+                commentDialogOpen = false
+            },
+            onDismiss = { commentDialogOpen = false },
         )
     }
 

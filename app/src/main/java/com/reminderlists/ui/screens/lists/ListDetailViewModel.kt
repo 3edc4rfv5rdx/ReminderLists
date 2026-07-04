@@ -122,6 +122,12 @@ class ListDetailViewModel(
         viewModelScope.launch { repo.uncheckAll(listId) }
     }
 
+    // Edit the list comment from the in-list menu (TZ 3.2).
+    fun updateComment(comment: String) {
+        val current = list.value ?: return
+        viewModelScope.launch { repo.updateListComment(current, comment) }
+    }
+
     // Destination lists for "move items" (TZ 3.3): every list except the open one.
     val moveTargets: StateFlow<List<ListPickerEntry>> =
         repo.observeListPickerEntries()
