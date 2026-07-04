@@ -2,21 +2,55 @@ package com.reminderlists.data.db.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
+import androidx.room.Embedded
 import androidx.room.Insert
+import androidx.room.Junction
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Relation
+import androidx.room.Transaction
 import androidx.room.Update
 import com.reminderlists.data.db.entity.ReminderEntity
 import com.reminderlists.data.db.entity.ReminderEventEntity
 import com.reminderlists.data.db.entity.ReminderPhotoEntity
+import com.reminderlists.data.db.entity.ReminderTagCrossRef
 import com.reminderlists.data.db.entity.ReminderTimeEntity
+import com.reminderlists.data.db.entity.TagEntity
 import kotlinx.coroutines.flow.Flow
+
+// Reminder with everything the folder cards (TZ 4.6) and the editor (TZ 4.2) need.
+data class ReminderWithDetails(
+    @Embedded val reminder: ReminderEntity,
+    @Relation(parentColumn = "id", entityColumn = "reminderId")
+    val times: List<ReminderTimeEntity>,
+    @Relation(parentColumn = "id", entityColumn = "reminderId")
+    val photos: List<ReminderPhotoEntity>,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "id",
+        associateBy = Junction(
+            ReminderTagCrossRef::class,
+            parentColumn = "reminderId",
+            entityColumn = "tagId",
+        ),
+    )
+    val tags: List<TagEntity>,
+)
 
 @Dao
 interface RemindersDao {
 
     @Query("SELECT * FROM reminders ORDER BY nextFireAt IS NULL, nextFireAt")
     fun observeAll(): Flow<List<ReminderEntity>>
+
+    // One live query for the whole tab: folder counts, in-folder cards, sorting (TZ 4.6).
+    @Transaction
+    @Query("SELECT * FROM reminders")
+    fun observeAllWithDetails(): Flow<List<ReminderWithDetails>>
+
+    @Transaction
+    @Query("SELECT * FROM reminders WHERE id = :id")
+    suspend fun getWithDetails(id: Long): ReminderWithDetails?
 
     @Query("SELECT * FROM reminders WHERE id = :id")
     suspend fun get(id: Long): ReminderEntity?
@@ -48,6 +82,16 @@ interface RemindersDao {
 
     @Query("SELECT * FROM reminder_photos WHERE reminderId = :reminderId ORDER BY position")
     fun observePhotos(reminderId: Long): Flow<List<ReminderPhotoEntity>>
+
+    @Query("SELECT * FROM reminder_photos WHERE reminderId = :reminderId ORDER BY position")
+    suspend fun getPhotos(reminderId: Long): List<ReminderPhotoEntity>
+
+    // Deleting a reminder must also delete photo files — CASCADE only clears rows (TZ 8).
+    @Query("SELECT filePath FROM reminder_photos WHERE reminderId = :reminderId")
+    suspend fun photoNamesForReminder(reminderId: Long): List<String>
+
+    @Query("SELECT COALESCE(MAX(position) + 1, 0) FROM reminder_photos WHERE reminderId = :reminderId")
+    suspend fun nextPhotoPosition(reminderId: Long): Int
 
     // For the photo orphan sweep (TZ 8).
     @Query("SELECT filePath FROM reminder_photos")

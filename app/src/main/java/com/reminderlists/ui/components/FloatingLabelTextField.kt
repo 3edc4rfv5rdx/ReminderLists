@@ -6,10 +6,14 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -32,8 +36,16 @@ fun FloatingLabelTextField(
     autoFocus: Boolean = false,
 ) {
     val focusRequester = remember { FocusRequester() }
+    var focused by remember { mutableStateOf(false) }
     if (autoFocus) {
         LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    }
+    // The counter shows only while the field is focused — an unfocused field takes no
+    // supporting line, keeping stacked forms compact (user rule, TZ 8). An explicit
+    // supportingText (hint/error) is always shown.
+    val supporting = run {
+        val counter = maxLength?.takeIf { focused }?.let { "${value.length}/$it" }
+        listOfNotNull(supportingText, counter).joinToString("  ")
     }
     OutlinedTextField(
         value = value,
@@ -45,11 +57,14 @@ fun FloatingLabelTextField(
         isError = isError,
         visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        supportingText = {
-            val counter = maxLength?.let { "${value.length}/$it" }
-            val text = listOfNotNull(supportingText, counter).joinToString("  ")
-            if (text.isNotEmpty()) Text(text)
+        supportingText = if (supporting.isEmpty()) {
+            null
+        } else {
+            { Text(supporting) }
         },
-        modifier = modifier.fillMaxWidth().focusRequester(focusRequester),
+        modifier = modifier
+            .fillMaxWidth()
+            .focusRequester(focusRequester)
+            .onFocusChanged { focused = it.isFocused },
     )
 }

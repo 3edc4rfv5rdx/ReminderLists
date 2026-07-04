@@ -3,6 +3,7 @@ package com.reminderlists.ui.screens.dictionary
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -35,7 +36,7 @@ import com.reminderlists.ui.components.EditTextDialog
 import com.reminderlists.ui.components.EmptyState
 import com.reminderlists.ui.components.FabLevel
 import com.reminderlists.ui.components.FloatingLabelTextField
-import com.reminderlists.ui.components.LongPressEditDeleteBox
+import com.reminderlists.ui.components.EditDeleteMenuButton
 import com.reminderlists.ui.components.SwipeActionsRow
 import com.reminderlists.util.Limits
 
@@ -144,21 +145,27 @@ fun DictionaryScreen(navController: NavController) {
     }
 }
 
-// Entry row: long-press = edit/delete menu at the touch point, swipes via SwipeActionsRow (TZ 8).
+// Entry row: «⋯» = edit/delete menu (TZ 8, no long-press), swipes via SwipeActionsRow.
 @Composable
 private fun DictionaryRow(
     entry: DictionaryEntity,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    LongPressEditDeleteBox(onEdit = onEdit, onDelete = onDelete) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(start = 16.dp, end = 8.dp),
+    ) {
         Text(
             text = entry.text,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .weight(1f)
+                .padding(vertical = 14.dp),
         )
+        EditDeleteMenuButton(onEdit = onEdit, onDelete = onDelete)
     }
 }

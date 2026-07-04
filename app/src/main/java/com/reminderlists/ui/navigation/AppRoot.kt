@@ -19,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.ui.components.FabLevel
 import com.reminderlists.ui.screens.dictionary.DictionaryScreen
 import com.reminderlists.ui.screens.filters.FiltersScreen
@@ -27,6 +28,7 @@ import com.reminderlists.ui.screens.lists.ItemEditorScreen
 import com.reminderlists.ui.screens.lists.ListDetailScreen
 import com.reminderlists.ui.screens.lists.ListsScreen
 import com.reminderlists.ui.screens.notes.NotesScreen
+import com.reminderlists.ui.screens.reminders.ReminderEditorScreen
 import com.reminderlists.ui.screens.reminders.RemindersScreen
 import com.reminderlists.ui.screens.settings.SettingsScreen
 
@@ -106,6 +108,28 @@ fun AppRoot() {
                     navController,
                     listId = entry.arguments?.getLong("listId") ?: 0L,
                     itemId = entry.arguments?.getLong("itemId") ?: 0L,
+                )
+            }
+
+            composable(
+                Routes.REMINDER_EDITOR,
+                arguments = listOf(
+                    navArgument("reminderId") {
+                        type = NavType.LongType
+                        defaultValue = 0L
+                    },
+                    navArgument("folder") {
+                        type = NavType.StringType
+                        defaultValue = ReminderFolder.ONCE.name
+                    },
+                ),
+            ) { entry ->
+                ReminderEditorScreen(
+                    navController,
+                    reminderId = entry.arguments?.getLong("reminderId") ?: 0L,
+                    folder = ReminderFolder.valueOf(
+                        entry.arguments?.getString("folder") ?: ReminderFolder.ONCE.name,
+                    ),
                 )
             }
 

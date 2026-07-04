@@ -71,7 +71,7 @@ import com.reminderlists.ui.components.ConfirmDialog
 import com.reminderlists.ui.components.DialogDismissButton
 import com.reminderlists.ui.components.DialogConfirmButton
 import com.reminderlists.ui.components.EditTextDialog
-import com.reminderlists.ui.components.LongPressEditDeleteBox
+import com.reminderlists.ui.components.EditDeleteMenuButton
 import com.reminderlists.ui.components.DragReorderState
 import com.reminderlists.ui.components.FabLevel
 import com.reminderlists.ui.components.EmptyState
@@ -592,55 +592,54 @@ private fun ItemRowContent(
     onAddToDictionary: () -> Unit,
     onOpenPhotos: () -> Unit,
 ) {
-    // Long-press = edit/delete menu at the touch point (TZ 8); short tap is reserved (TZ 3.3).
-    LongPressEditDeleteBox(onEdit = onEdit, onDelete = onDelete) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(start = 8.dp, end = 16.dp),
-        ) {
-            Checkbox(checked = item.isDone, onCheckedChange = { onToggle() })
-            ItemTexts(item)
-            if (photoCount > 0) {
-                // Photo icon only when the item already has photos (TZ 3.3 p.3).
-                IconButton(onClick = onOpenPhotos) {
-                    Icon(
-                        imageVector = Icons.Filled.Photo,
-                        contentDescription = stringResource(R.string.action_photos),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
-            if (!inDictionary) {
-                // "To dictionary": saves the formatted text as a dictionary entry (TZ 3.3 p.4).
-                IconButton(onClick = onAddToDictionary) {
-                    Icon(
-                        imageVector = Icons.Filled.BookmarkAdd,
-                        contentDescription = stringResource(R.string.action_add_to_dictionary),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
-            if (dragState != null) {
+    // «⋯» = edit/delete menu (TZ 8, no long-press on records); short tap is reserved (TZ 3.3).
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(start = 8.dp, end = 16.dp),
+    ) {
+        Checkbox(checked = item.isDone, onCheckedChange = { onToggle() })
+        ItemTexts(item)
+        if (photoCount > 0) {
+            // Photo icon only when the item already has photos (TZ 3.3 p.3).
+            IconButton(onClick = onOpenPhotos) {
                 Icon(
-                    imageVector = Icons.Filled.DragHandle,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.outline,
-                    modifier = Modifier.padding(start = 12.dp).pointerInput(rowKey) {
-                        detectDragGestures(
-                            onDragStart = { dragState.start(rowKey) },
-                            onDrag = { change, amount ->
-                                change.consume()
-                                dragState.drag(amount.y)
-                            },
-                            onDragEnd = { dragState.drop() },
-                            onDragCancel = { dragState.drop() },
-                        )
-                    },
+                    imageVector = Icons.Filled.Photo,
+                    contentDescription = stringResource(R.string.action_photos),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
+        }
+        if (!inDictionary) {
+            // "To dictionary": saves the formatted text as a dictionary entry (TZ 3.3 p.4).
+            IconButton(onClick = onAddToDictionary) {
+                Icon(
+                    imageVector = Icons.Filled.BookmarkAdd,
+                    contentDescription = stringResource(R.string.action_add_to_dictionary),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+        EditDeleteMenuButton(onEdit = onEdit, onDelete = onDelete)
+        if (dragState != null) {
+            Icon(
+                imageVector = Icons.Filled.DragHandle,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.padding(start = 12.dp).pointerInput(rowKey) {
+                    detectDragGestures(
+                        onDragStart = { dragState.start(rowKey) },
+                        onDrag = { change, amount ->
+                            change.consume()
+                            dragState.drag(amount.y)
+                        },
+                        onDragEnd = { dragState.drop() },
+                        onDragCancel = { dragState.drop() },
+                    )
+                },
+            )
         }
     }
 }

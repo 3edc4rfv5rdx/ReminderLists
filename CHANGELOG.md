@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- Reminders module skeleton (TZ 4): Daily/Periods/Monthly/Yearly folders with Once cards in the tab root, cards per 4.6 with Active checkbox and swipes, full editor form 4.2 with validation, tags, photos, weekday toggles and sound attach/preview; next_fire_at and alarm arming still TODO.
+- Record context menus moved from long-press to a per-row «⋯» button app-wide (TZ 8); long-press stays on the FAB only.
+- Compact vertical forms (TZ 8): uniform 4dp field gaps, 36dp checkbox/radio rows, length counter shown only while a field is focused.
 - Dictionary entry in Settings opens the dictionary screen (TZ 3.4).
 - PIN protection for lists (TZ 3.6): Protect/Unprotect menu item, masked PIN with repeat (empty uses the Default PIN), PIN gate on all list operations, Default PIN editor in Settings, protected list comment hidden in the overview.
 - Edit list comment (TZ 3.2): in-list menu "Edit comment", same dialog as folder comments, footer updates live.

@@ -7,11 +7,14 @@ object Limits {
     const val CONTENT = 2000
     const val COMMENT = 500
     const val TAG = 30
+    const val TAGS_FIELD = 200 // whole comma-separated tags input (TZ 4.2)
     const val QUANTITY = 20
     const val UNIT = 20
     const val PIN = 8 // digits, list/note protection and the default PIN (TZ 3.6)
 
     const val MAX_PHOTOS = 10 // per item / reminder / note (TZ 3.3 / 4.2 / 4A.2)
+
+    const val PRIORITY_MAX = 3 // «(–) ★ ★ ★ (+)» levels, 0 = none (TZ 4.2 п. 6)
 
     const val MISSED_GRACE_MINUTES = 10 // reminder catch-up grace window (TZ 4.10)
 }

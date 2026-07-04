@@ -6,6 +6,7 @@ import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.reminderlists.R
+import com.reminderlists.data.reminders.ReminderFolder
 
 // Bottom navigation tabs (TZ 3.9): Lists · Reminders · Notes. Lists is the default.
 enum class Tab(val route: String, val labelRes: Int, val icon: ImageVector) {
@@ -29,4 +30,10 @@ object Routes {
     // Item add/edit window (TZ 3.3); itemId <= 0 means a new item.
     const val ITEM_EDITOR = "item_editor/{listId}?itemId={itemId}"
     fun itemEditor(listId: Long, itemId: Long = 0) = "item_editor/$listId?itemId=$itemId"
+
+    // Reminder add/edit form (TZ 4.2); reminderId <= 0 means a new reminder, folder
+    // prefills the repeat type from the opened type-folder (TZ 3.9).
+    const val REMINDER_EDITOR = "reminder_editor?reminderId={reminderId}&folder={folder}"
+    fun reminderEditor(reminderId: Long = 0, folder: ReminderFolder = ReminderFolder.ONCE) =
+        "reminder_editor?reminderId=$reminderId&folder=${folder.name}"
 }

@@ -1,6 +1,7 @@
 package com.reminderlists.ui.screens.lists
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,7 +17,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -46,7 +46,7 @@ import com.reminderlists.ui.components.AppDropdownMenu
 import com.reminderlists.ui.components.AppFab
 import com.reminderlists.ui.components.AppSmallFab
 import com.reminderlists.ui.components.FabLevel
-import com.reminderlists.ui.components.LongPressMenuBox
+import com.reminderlists.ui.components.RowMenuButton
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.CommentFooter
 import com.reminderlists.ui.components.ConfirmDialog
@@ -57,6 +57,7 @@ import com.reminderlists.ui.components.FolderPickerDialog
 import com.reminderlists.ui.components.NameCommentDialog
 import com.reminderlists.ui.components.PinDialog
 import com.reminderlists.ui.components.PinSetupDialog
+import com.reminderlists.ui.components.RowTitle
 import com.reminderlists.ui.navigation.Routes
 import com.reminderlists.ui.screens.about.AboutDialog
 import com.reminderlists.util.Limits
@@ -353,7 +354,7 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
     }
 }
 
-// Folder row (TZ 3.1): tap opens; long-press = menu at the touch point, «⋯» = menu at the button.
+// Folder row (TZ 3.1): tap opens; «⋯» = context menu (TZ 8, no long-press on records).
 @Composable
 private fun FolderRow(
     folder: FolderEntity,
@@ -364,33 +365,21 @@ private fun FolderRow(
     onEditComment: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    var buttonMenuOpen by remember { mutableStateOf(false) }
-    LongPressMenuBox(
-        onTap = onOpen,
-        menuContent = { dismiss -> FolderMenuItems(dismiss, onRename, onEditComment, onDelete) },
-    ) {
-        ListItem(
-            headlineContent = {
-                RowTitle(name = folder.name, countsText = countsText, fontWeight = fontWeight, textDecoration = null)
-            },
-            supportingContent = folder.comment?.let {
-                { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-            },
-            leadingContent = {
-                Icon(Icons.Filled.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            },
-            trailingContent = {
-                Box {
-                    IconButton(onClick = { buttonMenuOpen = true }) {
-                        Icon(Icons.Filled.MoreHoriz, contentDescription = stringResource(R.string.action_menu))
-                    }
-                    AppDropdownMenu(expanded = buttonMenuOpen, onDismissRequest = { buttonMenuOpen = false }) {
-                        FolderMenuItems({ buttonMenuOpen = false }, onRename, onEditComment, onDelete)
-                    }
-                }
-            },
-        )
-    }
+    ListItem(
+        headlineContent = {
+            RowTitle(name = folder.name, countsText = countsText, fontWeight = fontWeight, textDecoration = null)
+        },
+        supportingContent = folder.comment?.let {
+            { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        },
+        leadingContent = {
+            Icon(Icons.Filled.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        },
+        trailingContent = {
+            RowMenuButton { dismiss -> FolderMenuItems(dismiss, onRename, onEditComment, onDelete) }
+        },
+        modifier = Modifier.clickable { onOpen() },
+    )
 }
 
 @Composable
@@ -406,7 +395,7 @@ private fun FolderMenuItems(
 }
 
 // List row (TZ 3.2): lock icon marks a PIN-protected list (TZ 3.6).
-// Tap opens; long-press = menu at the touch point, «⋯» = menu at the button.
+// Tap opens; «⋯» = context menu (TZ 8, no long-press on records).
 @Composable
 private fun ListRow(
     list: ListEntity,
@@ -419,44 +408,34 @@ private fun ListRow(
     onProtect: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    var buttonMenuOpen by remember { mutableStateOf(false) }
-    LongPressMenuBox(
-        onTap = onOpen,
-        menuContent = { dismiss -> ListMenuItems(dismiss, list.pinEnabled, onEdit, onMove, onProtect, onDelete) },
-    ) {
-        ListItem(
-            headlineContent = {
-                RowTitle(name = list.name, countsText = countsText, fontWeight = fontWeight, textDecoration = textDecoration)
-            },
-            // A protected list must not leak its comment before the PIN gate (TZ 3.6).
-            supportingContent = list.comment?.takeIf { !list.pinEnabled }?.let {
-                { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-            },
-            leadingContent = {
-                Icon(Icons.AutoMirrored.Filled.ListAlt, contentDescription = null)
-            },
-            trailingContent = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (list.pinEnabled) {
-                        Icon(
-                            Icons.Filled.Lock,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.outline,
-                        )
-                    }
-                    Box {
-                        IconButton(onClick = { buttonMenuOpen = true }) {
-                            Icon(Icons.Filled.MoreHoriz, contentDescription = stringResource(R.string.action_menu))
-                        }
-                        AppDropdownMenu(expanded = buttonMenuOpen, onDismissRequest = { buttonMenuOpen = false }) {
-                            ListMenuItems({ buttonMenuOpen = false }, list.pinEnabled, onEdit, onMove, onProtect, onDelete)
-                        }
-                    }
+    ListItem(
+        headlineContent = {
+            RowTitle(name = list.name, countsText = countsText, fontWeight = fontWeight, textDecoration = textDecoration)
+        },
+        // A protected list must not leak its comment before the PIN gate (TZ 3.6).
+        supportingContent = list.comment?.takeIf { !list.pinEnabled }?.let {
+            { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        },
+        leadingContent = {
+            Icon(Icons.AutoMirrored.Filled.ListAlt, contentDescription = null)
+        },
+        trailingContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (list.pinEnabled) {
+                    Icon(
+                        Icons.Filled.Lock,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.outline,
+                    )
                 }
-            },
-        )
-    }
+                RowMenuButton { dismiss ->
+                    ListMenuItems(dismiss, list.pinEnabled, onEdit, onMove, onProtect, onDelete)
+                }
+            }
+        },
+        modifier = Modifier.clickable { onOpen() },
+    )
 }
 
 @Composable
@@ -473,34 +452,6 @@ private fun ListMenuItems(
     // Protect / Unprotect depending on the current state (TZ 3.6).
     MenuItem(if (isProtected) R.string.action_unprotect else R.string.action_protect) { dismiss(); onProtect() }
     MenuItem(R.string.action_delete) { dismiss(); onDelete() }
-}
-
-// Row title: name + optional "(counts)" — one size, one color, shared weight/strikethrough (TZ 8).
-@Composable
-private fun RowTitle(
-    name: String,
-    countsText: String?,
-    fontWeight: FontWeight?,
-    textDecoration: TextDecoration?,
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = name,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            fontWeight = fontWeight,
-            textDecoration = textDecoration,
-            modifier = Modifier.weight(1f, fill = false),
-        )
-        if (countsText != null) {
-            Text(
-                text = " $countsText",
-                maxLines = 1,
-                fontWeight = fontWeight,
-                textDecoration = textDecoration,
-            )
-        }
-    }
 }
 
 @Composable
