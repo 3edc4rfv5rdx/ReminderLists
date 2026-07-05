@@ -90,7 +90,7 @@ object ReminderScheduler {
     }
 
     // enable_reminders (TZ 5): stored as '1'/'0', absent means enabled.
-    private suspend fun remindersEnabled(db: AppDatabase): Boolean =
+    suspend fun remindersEnabled(db: AppDatabase): Boolean =
         db.settingsDao().get(SettingsKeys.ENABLE_REMINDERS) != "0"
 
     private fun pendingIntent(context: Context, reminderId: Long): PendingIntent {

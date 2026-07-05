@@ -19,6 +19,22 @@ object ReminderNotifier {
     private const val MISSED_SUMMARY_THRESHOLD = 5
     private const val MISSED_SUMMARY_ID = -1
 
+    // On-time fire (TZ 4.5): a heads-up notification on the HIGH channel. The full-screen
+    // variant for fullScreenAlert reminders and the looping sound are later stages.
+    fun notifyFired(context: Context, reminder: ReminderEntity) {
+        val nm = NotificationManagerCompat.from(context)
+        if (!nm.areNotificationsEnabled()) return
+        val builder = NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
+            .setSmallIcon(R.drawable.ic_launcher_foreground) // TODO dedicated status-bar icon
+            .setContentTitle(reminder.title)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setAutoCancel(true)
+            .setContentIntent(openApp(context))
+        reminder.content?.let { builder.setContentText(it) }
+        nm.notify(notifId(reminder.id), builder.build())
+    }
+
     fun notifyMissed(context: Context, missed: List<ReminderEntity>) {
         if (missed.isEmpty()) return
         val nm = NotificationManagerCompat.from(context)
@@ -29,7 +45,7 @@ object ReminderNotifier {
             nm.notify(MISSED_SUMMARY_ID, build(context, context.getString(R.string.notif_missed_summary_title), text))
         } else {
             missed.forEach { r ->
-                nm.notify(missedId(r.id), build(context, r.title, context.getString(R.string.notif_missed_single)))
+                nm.notify(notifId(r.id), build(context, r.title, context.getString(R.string.notif_missed_single)))
             }
         }
     }
@@ -49,6 +65,7 @@ object ReminderNotifier {
         return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
     }
 
-    // Keep missed ids clear of the summary slot and of any future on-time notification scheme.
-    private fun missedId(reminderId: Long): Int = reminderId.toInt()
+    // One live notification per reminder (fired or missed collapse onto the same slot);
+    // the summary uses its own reserved id.
+    private fun notifId(reminderId: Long): Int = reminderId.toInt()
 }
