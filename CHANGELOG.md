@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Reminder sound (TZ 4.10): a foreground SoundService loops the reminder sound (own MediaPlayer, USAGE_ALARM) bounded by the Duration setting, at the Sound level volume, with a Stop action; sound is suppressed in silent mode/DND while vibration always fires; falls back to the system alarm ringtone when no custom sound is set.
 - Reminder firing (TZ 4.5): a heads-up notification on the Reminders channel when an alarm fires, with the fire logged to reminder_events; sound and full-screen alert are next stages.
 - Firing lights up the screen for ~10s so the fired device is identifiable regardless of system settings; a one-shot Once drops its Active flag after firing (Monthly/Yearly roll over, Daily/Period keep firing).
 - Alarm engine (TZ 4.10): next_fire_at computed for all repeat types (end-of-month, Feb 29, DST via wall-clock), exact alarms armed on save/active/delete, re-armed on boot/update/app start/time change and after each fire; same-minute reminders staggered by id (10×6s slots); unit tests for the calculator.

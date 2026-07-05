@@ -168,4 +168,8 @@
     <string name="notif_missed_single">Missed reminder</string>
     <string name="notif_missed_summary_title">Missed reminders</string>
     <string name="notif_missed_summary">%1$d reminders were missed</string>
+
+    <!-- Reminder sound service (TZ 4.10) -->
+    <string name="notif_sound_playing">Reminder sound playing</string>
+    <string name="notif_sound_stop">Stop</string>
 </resources>

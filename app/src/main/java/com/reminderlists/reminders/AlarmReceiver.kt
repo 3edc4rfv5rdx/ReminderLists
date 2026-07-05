@@ -14,10 +14,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 // Fires on an armed alarm (TZ 4.5 / 4.10). Under goAsync(): light up the screen, present the
-// notification, record the fire in reminder_events, drop a one-shot Once's Active flag, then
-// recompute next_fire_at and arm the next occurrence so the repeat chain never breaks.
-// TODO SoundService loop (feature 2), full-screen alert (feature 3),
-//  Monthly/Yearly date roll-over + auto-remove (feature 4).
+// notification, start the looping sound/vibration, record the fire in reminder_events, drop a
+// one-shot Once's Active flag, then recompute next_fire_at and arm the next occurrence so the
+// repeat chain never breaks.
+// TODO full-screen alert (feature 3), Monthly/Yearly date roll-over + auto-remove (feature 4).
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_REMINDER_ID, -1L)
@@ -37,6 +37,7 @@ class AlarmReceiver : BroadcastReceiver() {
                         ReminderEventEntity(reminderId = reminderId, firedAt = now, createdAt = now),
                     )
                     ReminderNotifier.notifyFired(context, reminder)
+                    SoundService.start(context, reminder.soundUri, reminder.loopSound)
                     // A plain Once has nothing left to fire — drop Active so the card shows
                     // it as done (Monthly/Yearly roll over, Daily/Period keep firing).
                     if (isOneShotOnce(reminder)) {
