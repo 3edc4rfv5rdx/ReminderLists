@@ -280,7 +280,7 @@ class ReminderEditorViewModel(
             weekdaysMask = weekdaysMask.takeIf { !oneTime },
             loopSound = loopSound,
             soundUri = soundUri,
-            // TODO NextFireCalculator + alarm arming (TZ 4.10) — engine stage.
+            // Recomputed and armed by the repository right after save (TZ 4.10).
             nextFireAt = null,
             createdAt = base?.createdAt ?: now,
             updatedAt = now,

@@ -1,7 +1,9 @@
 # Changelog
 
 ## Unreleased
-- Reminders module skeleton (TZ 4): Daily/Periods/Monthly/Yearly folders with Once cards in the tab root, cards per 4.6 with Active checkbox and swipes, full editor form 4.2 with validation, tags, photos, weekday toggles and sound attach/preview; next_fire_at and alarm arming still TODO.
+- Alarm engine (TZ 4.10): next_fire_at computed for all repeat types (end-of-month, Feb 29, DST via wall-clock), exact alarms armed on save/active/delete, re-armed on boot/update/app start/time change and after each fire; same-minute reminders staggered by id (10×6s slots); unit tests for the calculator.
+- Missed reminders (TZ 4.10): fires stale past the 10-min grace window at re-arm are surfaced as notifications — one per reminder, collapsing to a single summary above 5.
+- Reminders module skeleton (TZ 4): Daily/Periods/Monthly/Yearly folders with Once cards in the tab root, cards per 4.6 with Active checkbox and swipes, full editor form 4.2 with validation, tags, photos, weekday toggles and sound attach/preview.
 - Record context menus moved from long-press to a per-row «⋯» button app-wide (TZ 8); long-press stays on the FAB only.
 - Compact vertical forms (TZ 8): uniform 4dp field gaps, 36dp checkbox/radio rows, length counter shown only while a field is focused.
 - Dictionary entry in Settings opens the dictionary screen (TZ 3.4).

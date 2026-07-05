@@ -3,10 +3,15 @@ package com.reminderlists.reminders
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.util.Logger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 // Re-arms alarms after boot / app update, and recomputes next_fire_at on time/zone change
-// (TZ 4.10). Also resolves missed fires (grace window, catch-up, missed summary).
+// (TZ 4.10). Alarms do not survive a reboot, so the re-arm is mandatory.
+// TODO missed fires (TZ 4.10): grace window, catch-up, missed summary — presentation stage.
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Logger.i("BootReceiver: ${intent.action}")
@@ -16,9 +21,14 @@ class BootReceiver : BroadcastReceiver() {
             Intent.ACTION_TIME_CHANGED,
             Intent.ACTION_TIMEZONE_CHANGED,
             -> {
-                // TODO goAsync(): recompute next_fire_at for all active reminders, handle missed
-                //  fires (TZ 4.10), then ReminderScheduler.rearmAll(context).
-                ReminderScheduler.rearmAll(context)
+                val result = goAsync()
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        ReminderScheduler.rearmAll(context, AppDatabase.get(context))
+                    } finally {
+                        result.finish()
+                    }
+                }
             }
         }
     }

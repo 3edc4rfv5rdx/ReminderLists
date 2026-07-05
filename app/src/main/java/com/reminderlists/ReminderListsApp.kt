@@ -4,6 +4,7 @@ import android.app.Application
 import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.photo.PhotoManager
 import com.reminderlists.reminders.NotificationChannels
+import com.reminderlists.reminders.ReminderScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,6 +30,10 @@ class ReminderListsApp : Application() {
                 addAll(db.remindersDao().allPhotoNames())
             }
             PhotoManager.sweepOrphans(this@ReminderListsApp, referenced)
+
+            // A force-stop clears armed alarms and blocks receivers until the app is opened,
+            // so re-arm on every start (also surfaces missed fires) — TZ 4.10.
+            ReminderScheduler.rearmAll(this@ReminderListsApp, db)
         }
     }
 }

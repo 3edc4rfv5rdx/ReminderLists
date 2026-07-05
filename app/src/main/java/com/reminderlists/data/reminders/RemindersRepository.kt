@@ -10,12 +10,13 @@ import com.reminderlists.data.db.entity.ReminderTagCrossRef
 import com.reminderlists.data.db.entity.ReminderTimeEntity
 import com.reminderlists.data.db.entity.TagEntity
 import com.reminderlists.data.photo.PhotoManager
+import com.reminderlists.reminders.ReminderScheduler
 import kotlinx.coroutines.flow.Flow
 
 // Reminders module data operations (TZ 4.2 / 4.6). Holds a context because deleting a
 // reminder must also delete its photo files — Room CASCADE only clears rows (TZ 8).
-// next_fire_at stays null and no alarm is armed yet: NextFireCalculator and the scheduler
-// wiring are the engine stage (TZ 4.10).
+// Every mutation that affects firing goes through ReminderScheduler.reschedule, which
+// recomputes next_fire_at and arms/cancels the alarm (TZ 4.10).
 class RemindersRepository(private val db: AppDatabase, context: Context) {
 
     private val appContext = context.applicationContext
@@ -27,10 +28,9 @@ class RemindersRepository(private val db: AppDatabase, context: Context) {
     suspend fun getWithDetails(id: Long): ReminderWithDetails? = dao.getWithDetails(id)
 
     // Save the whole form in one transaction: entity + Daily times + normalized tags
-    // (TZ 4.2). Returns the reminder id. TODO recompute next_fire_at and arm the alarm
-    // (TZ 4.10) once the engine exists.
-    suspend fun save(reminder: ReminderEntity, dailyTimes: List<String>, tags: List<String>): Long =
-        db.withTransaction {
+    // (TZ 4.2), then recompute next_fire_at and arm the alarm (TZ 4.10). Returns the id.
+    suspend fun save(reminder: ReminderEntity, dailyTimes: List<String>, tags: List<String>): Long {
+        val id = db.withTransaction {
             val id = dao.upsert(reminder)
             dao.deleteTimes(id)
             dailyTimes.forEach { dao.insertTime(ReminderTimeEntity(reminderId = id, time = it)) }
@@ -45,14 +45,18 @@ class RemindersRepository(private val db: AppDatabase, context: Context) {
             tagsDao.pruneOrphanTags()
             id
         }
+        ReminderScheduler.reschedule(appContext, db, id)
+        return id
+    }
 
     suspend fun setActive(reminder: ReminderEntity, active: Boolean) {
-        // TODO cancel / re-arm the alarm (TZ 4.10) once the engine exists.
         dao.update(reminder.copy(active = active, updatedAt = System.currentTimeMillis()))
+        // Inactive computes to null next_fire_at, so this also cancels the alarm (TZ 4.10).
+        ReminderScheduler.reschedule(appContext, db, reminder.id)
     }
 
     suspend fun delete(reminder: ReminderEntity) {
-        // TODO cancel the armed alarm (TZ 4.10) once the engine exists.
+        ReminderScheduler.cancel(appContext, reminder.id)
         val photoNames = dao.photoNamesForReminder(reminder.id)
         dao.delete(reminder)
         tagsDao.pruneOrphanTags()

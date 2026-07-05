@@ -163,4 +163,9 @@
     <string name="error_daily_fields">Add at least one time and one weekday</string>
     <string name="error_period_fields">Set From, To, time and at least one weekday</string>
     <string name="error_period_order">From must not be later than To</string>
+
+    <!-- Missed reminder notifications (TZ 4.10) -->
+    <string name="notif_missed_single">Missed reminder</string>
+    <string name="notif_missed_summary_title">Missed reminders</string>
+    <string name="notif_missed_summary">%1$d reminders were missed</string>
 </resources>
