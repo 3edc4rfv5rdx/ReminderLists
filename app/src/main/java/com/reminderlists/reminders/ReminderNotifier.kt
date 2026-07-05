@@ -19,8 +19,8 @@ object ReminderNotifier {
     private const val MISSED_SUMMARY_THRESHOLD = 5
     private const val MISSED_SUMMARY_ID = -1
 
-    // On-time fire (TZ 4.5): a heads-up notification on the HIGH channel. The full-screen
-    // variant for fullScreenAlert reminders and the looping sound are later stages.
+    // On-time fire (TZ 4.5): a plain heads-up notification on the HIGH channel. The screen is
+    // woken separately by AlarmReceiver. The looping sound is a later stage.
     fun notifyFired(context: Context, reminder: ReminderEntity) {
         val nm = NotificationManagerCompat.from(context)
         if (!nm.areNotificationsEnabled()) return

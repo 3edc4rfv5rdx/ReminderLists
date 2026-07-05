@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Reminder firing (TZ 4.5): a heads-up notification on the Reminders channel when an alarm fires, with the fire logged to reminder_events; sound and full-screen alert are next stages.
+- Firing lights up the screen for ~10s so the fired device is identifiable regardless of system settings; a one-shot Once drops its Active flag after firing (Monthly/Yearly roll over, Daily/Period keep firing).
 - Alarm engine (TZ 4.10): next_fire_at computed for all repeat types (end-of-month, Feb 29, DST via wall-clock), exact alarms armed on save/active/delete, re-armed on boot/update/app start/time change and after each fire; same-minute reminders staggered by id (10×6s slots); unit tests for the calculator.
 - Missed reminders (TZ 4.10): fires stale past the 10-min grace window at re-arm are surfaced as notifications — one per reminder, collapsing to a single summary above 5.
 - Reminders module skeleton (TZ 4): Daily/Periods/Monthly/Yearly folders with Once cards in the tab root, cards per 4.6 with Active checkbox and swipes, full editor form 4.2 with validation, tags, photos, weekday toggles and sound attach/preview.
