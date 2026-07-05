@@ -105,6 +105,8 @@
     <string name="settings_write_logs">Write logs to file</string>
     <string name="settings_time_presets">Time presets</string>
     <string name="settings_default_sound">Default sound</string>
+    <string name="settings_sound_duration">Sound duration</string>
+    <string name="settings_sound_level">Sound level</string>
     <string name="settings_default_pin">Default PIN</string>
 
     <!-- About (TZ 4.9) -->

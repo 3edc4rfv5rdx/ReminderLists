@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.reminders.RepeatType
+import com.reminderlists.util.Limits
 import com.reminderlists.util.Logger
 import com.reminderlists.util.SettingsKeys
 
@@ -22,7 +23,7 @@ object ReminderScheduler {
     // A cached next_fire_at older than this at re-arm time is a genuine miss (device off,
     // force-stopped, reminders re-enabled). Within the window it is normal slack — Doze,
     // boot delay — and would just fire on time (TZ 4.10).
-    private const val MISSED_GRACE_MS = 10 * 60 * 1000L
+    private const val MISSED_GRACE_MS = Limits.MISSED_GRACE_MINUTES * 60 * 1000L
 
     // Recompute next_fire_at and arm or cancel the alarm for one reminder. The single
     // entry point for Save, Active toggle, delete-side cancel, post-fire re-arm and

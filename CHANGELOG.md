@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Settings wired for the reminder engine (TZ 5): Enable reminders toggle (cancels/re-arms all alarms), and Default sound Duration (0–180s) and Sound level (0–100) sliders that SoundService reads on the next fire.
 - Reminder sound (TZ 4.10): a foreground SoundService loops the reminder sound (own MediaPlayer, USAGE_ALARM) bounded by the Duration setting, at the Sound level volume, with a Stop action; sound is suppressed in silent mode/DND while vibration always fires; falls back to the system alarm ringtone when no custom sound is set.
 - Reminder firing (TZ 4.5): a heads-up notification on the Reminders channel when an alarm fires, with the fire logged to reminder_events; sound and full-screen alert are next stages.
 - Firing lights up the screen for ~10s so the fired device is identifiable regardless of system settings; a one-shot Once drops its Active flag after firing (Monthly/Yearly roll over, Daily/Period keep firing).

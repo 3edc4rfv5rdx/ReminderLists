@@ -17,4 +17,7 @@ object Limits {
     const val PRIORITY_MAX = 3 // «(–) ★ ★ ★ (+)» levels, 0 = none (TZ 4.2 п. 6)
 
     const val MISSED_GRACE_MINUTES = 10 // reminder catch-up grace window (TZ 4.10)
+
+    const val MAX_SOUND_DURATION = 90 // Default sound loop cap, seconds (TZ 5)
+    const val MAX_SOUND_LEVEL = 100 // Default sound volume 0..100 (TZ 5)
 }
