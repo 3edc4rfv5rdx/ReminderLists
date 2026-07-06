@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
@@ -59,6 +60,7 @@ import com.reminderlists.ui.components.TimeField
 import com.reminderlists.ui.components.TimePickerDialog
 import com.reminderlists.ui.components.TimePresetRow
 import com.reminderlists.ui.components.WeekdayPicker
+import com.reminderlists.util.Dates
 import com.reminderlists.util.Limits
 
 // Reminder add/edit form (TZ 4.2): common top fields, then type-dependent firing fields.
@@ -79,6 +81,7 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
     }
     var viewerIndex by remember { mutableStateOf<Int?>(null) }
     var dailyPickerOpen by remember { mutableStateOf(false) }
+    var editingTime by remember { mutableStateOf<String?>(null) }
 
     val presetPairs = listOf(
         stringResource(R.string.preset_morning) to presets.morning,
@@ -207,7 +210,7 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(stringResource(R.string.field_times), Modifier.weight(1f))
-                            IconButton(onClick = { dailyPickerOpen = true }) {
+                            FilledIconButton(onClick = { dailyPickerOpen = true }) {
                                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.action_add_time))
                             }
                         }
@@ -218,7 +221,8 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
                             vm.dailyTimes.forEach { entry ->
                                 InputChip(
                                     selected = false,
-                                    onClick = {},
+                                    // Tap the chip to re-pick this time (TZ 4.2 d′).
+                                    onClick = { editingTime = entry },
                                     label = { Text(entry) },
                                     trailingIcon = {
                                         Icon(
@@ -290,6 +294,14 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
             initial = null,
             onPick = vm::addDailyTime,
             onDismiss = { dailyPickerOpen = false },
+        )
+    }
+
+    editingTime?.let { entry ->
+        TimePickerDialog(
+            initial = Dates.parseTime(entry),
+            onPick = { vm.editDailyTime(entry, it) },
+            onDismiss = { editingTime = null },
         )
     }
 

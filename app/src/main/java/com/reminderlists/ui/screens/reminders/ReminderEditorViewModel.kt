@@ -195,6 +195,13 @@ class ReminderEditorViewModel(
         dailyTimes.remove(value)
     }
 
+    // Re-pick an existing Daily time (TZ 4.2 d′): drop the old value, add the new one
+    // (addDailyTime keeps the list sorted and de-duplicated).
+    fun editDailyTime(old: String, picked: LocalTime) {
+        dailyTimes.remove(old)
+        addDailyTime(picked)
+    }
+
     fun addPhoto(source: Uri) {
         if (photos.size >= Limits.MAX_PHOTOS) return
         viewModelScope.launch {
