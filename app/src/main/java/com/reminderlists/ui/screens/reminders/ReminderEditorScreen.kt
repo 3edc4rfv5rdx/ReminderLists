@@ -147,17 +147,11 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
                     PriorityEditor(priority = vm.priority, onPriorityChange = { vm.priority = it })
                 }
 
-                // 7a–7b: Active + Full screen alert (forced on for Period, TZ 4.2 b).
+                // 7a: Active (Full screen alert moved down next to Loop sound, TZ 4.2).
                 CheckboxRow(
                     label = stringResource(R.string.field_active),
                     checked = vm.active,
                     onCheckedChange = { vm.active = it },
-                )
-                CheckboxRow(
-                    label = stringResource(R.string.field_full_screen_alert),
-                    checked = vm.fullScreenAlert,
-                    onCheckedChange = vm::setFullScreen,
-                    enabled = vm.repeatType != RepeatType.PERIOD,
                 )
 
                 // 7c: repeat type radio group — one option per line so translated labels
@@ -267,8 +261,14 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
                     }
                 }
 
-                // i–j: Loop sound + Sound row (TZ 4.2): a field that opens the shared sound
-                // picker (Default, device ringtones, attached files) with in-place preview.
+                // Common firing options for every type (TZ 4.2): Full screen alert (7b, forced
+                // on for Period), Loop sound (i), then the Sound field.
+                CheckboxRow(
+                    label = stringResource(R.string.field_full_screen_alert),
+                    checked = vm.fullScreenAlert,
+                    onCheckedChange = vm::setFullScreen,
+                    enabled = vm.repeatType != RepeatType.PERIOD,
+                )
                 CheckboxRow(
                     label = stringResource(R.string.field_loop_sound),
                     checked = vm.loopSound,

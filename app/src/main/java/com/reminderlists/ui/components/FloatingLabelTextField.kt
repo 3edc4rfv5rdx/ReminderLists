@@ -34,6 +34,7 @@ fun FloatingLabelTextField(
     isError: Boolean = false,
     supportingText: String? = null,
     autoFocus: Boolean = false,
+    trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     val focusRequester = remember { FocusRequester() }
     var focused by remember { mutableStateOf(false) }
@@ -54,6 +55,7 @@ fun FloatingLabelTextField(
         },
         label = { Text(label) },
         singleLine = singleLine,
+        trailingIcon = trailingIcon,
         isError = isError,
         visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),

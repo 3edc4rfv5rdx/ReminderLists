@@ -2,6 +2,7 @@ package com.reminderlists.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
@@ -14,7 +15,6 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
@@ -51,22 +51,24 @@ fun DateField(
     supportingText: String? = null,
 ) {
     var pickerOpen by remember { mutableStateOf(false) }
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
-        FloatingLabelTextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = label,
-            isError = isError,
-            supportingText = supportingText,
-            modifier = Modifier.weight(1f),
-        )
-        IconButton(onClick = { pickerOpen = true }) {
-            Icon(Icons.Filled.CalendarMonth, contentDescription = stringResource(R.string.action_pick_date))
-        }
-        IconButton(onClick = { onValueChange("") }) {
-            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_clear))
-        }
-    }
+    FloatingLabelTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = label,
+        isError = isError,
+        supportingText = supportingText,
+        modifier = modifier,
+        trailingIcon = {
+            Row {
+                IconButton(onClick = { pickerOpen = true }) {
+                    Icon(Icons.Filled.CalendarMonth, contentDescription = stringResource(R.string.action_pick_date))
+                }
+                IconButton(onClick = { onValueChange("") }) {
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_clear))
+                }
+            }
+        },
+    )
     if (pickerOpen) {
         // The state lives inside this if-block, so every open re-seeds from the field text;
         // an empty field opens with today preselected.
@@ -109,22 +111,24 @@ fun TimeField(
     supportingText: String? = null,
 ) {
     var pickerOpen by remember { mutableStateOf(false) }
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
-        FloatingLabelTextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = label,
-            isError = isError,
-            supportingText = supportingText,
-            modifier = Modifier.weight(1f),
-        )
-        IconButton(onClick = { pickerOpen = true }) {
-            Icon(Icons.Filled.Schedule, contentDescription = stringResource(R.string.action_pick_time))
-        }
-        IconButton(onClick = { onValueChange("") }) {
-            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_clear))
-        }
-    }
+    FloatingLabelTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = label,
+        isError = isError,
+        supportingText = supportingText,
+        modifier = modifier,
+        trailingIcon = {
+            Row {
+                IconButton(onClick = { pickerOpen = true }) {
+                    Icon(Icons.Filled.Schedule, contentDescription = stringResource(R.string.action_pick_time))
+                }
+                IconButton(onClick = { onValueChange("") }) {
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_clear))
+                }
+            }
+        },
+    )
     if (pickerOpen) {
         TimePickerDialog(
             initial = Dates.parseTime(value),
@@ -176,10 +180,14 @@ fun TimePresetRow(
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = modifier.fillMaxWidth()) {
         presets.forEach { (label, time) ->
-            OutlinedButton(onClick = { onPick(time) }, modifier = Modifier.weight(1f)) {
+            OutlinedButton(
+                onClick = { onPick(time) },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                modifier = Modifier.weight(1f),
+            ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(label)
-                    Text(time, style = MaterialTheme.typography.labelSmall)
+                    Text(time)
                 }
             }
         }

@@ -37,21 +37,23 @@ fun TagsField(
     modifier: Modifier = Modifier,
 ) {
     var pickerOpen by remember { mutableStateOf(false) }
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
-        FloatingLabelTextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = stringResource(R.string.field_tags),
-            maxLength = Limits.TAGS_FIELD,
-            modifier = Modifier.weight(1f),
-        )
-        IconButton(onClick = { pickerOpen = true }) {
-            Icon(Icons.Filled.Tag, contentDescription = stringResource(R.string.action_pick_tags))
-        }
-        IconButton(onClick = { onValueChange("") }) {
-            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_clear))
-        }
-    }
+    FloatingLabelTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = stringResource(R.string.field_tags),
+        maxLength = Limits.TAGS_FIELD,
+        modifier = modifier,
+        trailingIcon = {
+            Row {
+                IconButton(onClick = { pickerOpen = true }) {
+                    Icon(Icons.Filled.Tag, contentDescription = stringResource(R.string.action_pick_tags))
+                }
+                IconButton(onClick = { onValueChange("") }) {
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_clear))
+                }
+            }
+        },
+    )
     if (pickerOpen) {
         // Seeded from the field on open; tags typed manually but absent from the dictionary
         // survive OK untouched (they are in the list, just not shown as rows).

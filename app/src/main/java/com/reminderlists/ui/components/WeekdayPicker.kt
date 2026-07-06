@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -40,13 +41,15 @@ fun WeekdayPicker(mask: Int, onMaskChange: (Int) -> Unit, modifier: Modifier = M
             // Presets toggle their own range on/off (TZ 4.2 e′).
             OutlinedButton(
                 onClick = { onMaskChange(Weekdays.toggleRange(mask, Weekdays.ALL)) },
-                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 8.dp),
+                modifier = Modifier.weight(1f).height(34.dp),
             ) {
                 Text(stringResource(R.string.weekdays_every_day))
             }
             OutlinedButton(
                 onClick = { onMaskChange(Weekdays.toggleRange(mask, Weekdays.WEEKDAYS)) },
-                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 8.dp),
+                modifier = Modifier.weight(1f).height(34.dp),
             ) {
                 Text(stringResource(R.string.weekdays_weekdays))
             }

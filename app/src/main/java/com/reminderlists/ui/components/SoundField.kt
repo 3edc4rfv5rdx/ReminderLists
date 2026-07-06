@@ -3,12 +3,13 @@ package com.reminderlists.ui.components
 import android.media.MediaPlayer
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -118,13 +119,7 @@ fun SoundField(
             ?: value
     }
 
-    Column(modifier.fillMaxWidth()) {
-        Text(
-            label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = 2.dp),
-        )
+    Box(modifier.fillMaxWidth()) {
         Row(
             Modifier
                 .fillMaxWidth()
@@ -167,6 +162,17 @@ fun SoundField(
                 Icon(Icons.Filled.AttachFile, contentDescription = stringResource(R.string.action_attach_sound))
             }
         }
+        // Floating label sitting on the top border, cut into it like an OutlinedTextField.
+        Text(
+            label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 12.dp, y = (-7).dp)
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(horizontal = 4.dp),
+        )
     }
 }
 
