@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Russian and Ukrainian translations caught up to the base strings (149 keys each): reminder editor fields, PIN, move, sound settings, weekdays, validation errors and notifications.
 - Daily times editable in the editor (TZ 4.2 d′): tapping a time chip re-opens the picker on it and replaces it (kept sorted, de-duplicated); the add-time «+» is now a filled accent button. Finished TZ sections marked with a "# Done" heading prefix.
 - Today dialog (TZ 4.11): the alarm-clock button lists every reminder scheduled for today (computed from the schedule, not next_fire_at), sorted by time with a divider between past and upcoming, each row showing time · title · priority · tags · type icon; tapping opens the editor. Inactive reminders (fired one-time / switched-off Daily/Period) still appear struck through (whole row), an active row strikes only its already-passed time; a note shows when reminders are globally off.
 - Reminder editor field polish (TZ 4.2 / 8): Date/Time/Tags fields stretch full-width with their picker and clear buttons moved inside the frame (shared trailingIcon on FloatingLabelTextField); the Sound field gets a floating label cut into its border; Morning/Day/Evening and Every day/Weekdays buttons are shorter with the preset time now full-size; Full screen alert sits in the common firing-options group (first, before Loop sound), not up top.

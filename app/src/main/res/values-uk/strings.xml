@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">ReminderLists</string>
     <string name="tab_lists">Списки</string>
     <string name="tab_reminders">Нагадування</string>
     <string name="tab_notes">Нотатки</string>
@@ -35,6 +36,14 @@
     <string name="action_edit">Змінити</string>
     <string name="action_edit_comment">Змінити коментар</string>
     <string name="action_move_to_folder">До папки</string>
+    <string name="action_protect">Захистити</string>
+    <string name="action_unprotect">Зняти захист</string>
+    <string name="pin_label">PIN</string>
+    <string name="pin_repeat">Повторіть PIN</string>
+    <string name="pin_mismatch">PIN-коди не збігаються</string>
+    <string name="pin_wrong">Невірний PIN</string>
+    <string name="pin_empty_default">Залиште порожнім для PIN за замовчуванням</string>
+    <string name="pin_no_default">Спершу задайте PIN за замовчуванням у налаштуваннях</string>
     <string name="field_name">Назва</string>
     <string name="field_comment">Коментар</string>
     <string name="folder_root">Корінь</string>
@@ -62,6 +71,11 @@
     <string name="save_to_gallery">Зберегти в галерею</string>
     <string name="menu_delete_checked">Видалити позначені</string>
     <string name="menu_uncheck_all">Зняти позначки</string>
+    <string name="menu_move">Перемістити</string>
+    <string name="move_dialog_title">Перемістити до списку</string>
+    <string name="move_copy">Копіювати</string>
+    <string name="move_no_targets">Немає інших списків</string>
+    <string name="move_select_list">Виберіть список</string>
     <string name="menu_share">Поділитися</string>
     <string name="share_dialog_title">Поділитися списком</string>
     <string name="share_all">Усі елементи</string>
@@ -71,6 +85,7 @@
     <string name="empty_reminders">Тут немає нагадувань</string>
     <string name="empty_notes">Ще немає нотаток</string>
     <string name="empty_today">Немає нагадувань на сьогодні</string>
+    <string name="today_reminders_off">Нагадування зараз вимкнені</string>
 
     <string name="settings_theme">Тема</string>
     <string name="settings_language">Мова</string>
@@ -80,9 +95,74 @@
     <string name="settings_write_logs">Писати логи у файл</string>
     <string name="settings_time_presets">Пресети часу</string>
     <string name="settings_default_sound">Звук за замовчуванням</string>
+    <string name="settings_sound_duration">Тривалість звуку</string>
+    <string name="settings_sound_level">Гучність звуку</string>
+    <string name="settings_sound_system_default">Системний за замовчуванням</string>
     <string name="settings_default_pin">PIN за замовчуванням</string>
 
     <string name="about_description">Списки, нагадування та нотатки. Локально, без хмари</string>
     <string name="about_version">Версія</string>
     <string name="about_build">Збірка</string>
+
+    <!-- Reminders (TZ 4.2 / 4.6) -->
+    <string name="editor_new_memo">Новий запис</string>
+    <string name="field_title">Заголовок</string>
+    <string name="field_content">Вміст</string>
+    <string name="field_tags">Теги</string>
+    <string name="field_date">Дата</string>
+    <string name="field_time">Час</string>
+    <string name="field_priority">Пріоритет</string>
+    <string name="field_active">Активно</string>
+    <string name="field_full_screen_alert">Повноекранне сповіщення</string>
+    <string name="repeat_one_time">Одноразово</string>
+    <string name="repeat_daily">Щодня</string>
+    <string name="repeat_period">Період</string>
+    <string name="field_monthly_repeat">Щомісяця</string>
+    <string name="field_yearly_repeat">Щороку</string>
+    <string name="field_auto_remove">Видаляти після спрацювання</string>
+    <string name="field_times">Часи</string>
+    <string name="action_add_time">Додати час</string>
+    <string name="field_period_from">З</string>
+    <string name="field_period_to">До</string>
+    <string name="field_loop_sound">Зациклити звук</string>
+    <string name="field_sound">Звук</string>
+    <string name="sound_default">За замовчуванням</string>
+    <string name="action_attach_sound">Прикріпити аудіофайл</string>
+    <string name="action_play_sound">Відтворити звук</string>
+    <string name="preset_morning">Ранок</string>
+    <string name="preset_day">День</string>
+    <string name="preset_evening">Вечір</string>
+    <string name="weekdays_every_day">Кожен день</string>
+    <string name="weekdays_weekdays">Будні</string>
+    <string name="day_mo">Пн</string>
+    <string name="day_tu">Вт</string>
+    <string name="day_we">Ср</string>
+    <string name="day_th">Чт</string>
+    <string name="day_fr">Пт</string>
+    <string name="day_sa">Сб</string>
+    <string name="day_su">Нд</string>
+    <string name="delete_reminder_title">Видалити нагадування</string>
+    <string name="action_pick_date">Вибрати дату</string>
+    <string name="action_pick_time">Вибрати час</string>
+    <string name="action_pick_tags">Вибрати теги</string>
+    <string name="action_clear">Очистити</string>
+    <string name="tags_dialog_title">Теги</string>
+    <string name="tags_empty">Поки немає тегів</string>
+    <string name="priority_decrease">Знизити пріоритет</string>
+    <string name="priority_increase">Підвищити пріоритет</string>
+    <string name="error_title_required">Вкажіть заголовок</string>
+    <string name="error_once_date_time">Вкажіть дату і час</string>
+    <string name="error_daily_fields">Додайте хоча б один час і день тижня</string>
+    <string name="error_period_fields">Вкажіть «З», «До», час і хоча б один день тижня</string>
+    <string name="error_period_order">«З» не може бути пізніше «До»</string>
+    <string name="error_once_past">Дата або час у минулому</string>
+
+    <!-- Missed reminder notifications (TZ 4.10) -->
+    <string name="notif_missed_single">Пропущене нагадування</string>
+    <string name="notif_missed_summary_title">Пропущені нагадування</string>
+    <string name="notif_missed_summary">%1$d пропущених нагадувань</string>
+
+    <!-- Reminder sound service (TZ 4.10) -->
+    <string name="notif_sound_playing">Звучить нагадування</string>
+    <string name="notif_sound_stop">Стоп</string>
 </resources>
