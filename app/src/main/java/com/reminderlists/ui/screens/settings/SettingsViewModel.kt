@@ -44,6 +44,12 @@ class SettingsViewModel(
         settingsDao.observe(SettingsKeys.DEFAULT_SOUND_URI)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    // Current default PIN (TZ 3.6 / 5): changing/clearing it must be gated behind entering it,
+    // else anyone could re-key the PIN that guards protected lists/notes. null = none set yet.
+    val defaultPin: StateFlow<String?> =
+        settingsDao.observe(SettingsKeys.DEFAULT_PIN)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     // The sound list, preview and file-picker all live inside the shared SoundField (TZ 8).
     fun setDefaultSound(uri: String?) {
         viewModelScope.launch {

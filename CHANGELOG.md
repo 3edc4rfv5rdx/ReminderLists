@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Changing or clearing the default PIN now requires entering the current one first (TZ 3.6 / 5) — it guards protected lists/notes, so it can't be silently re-keyed.
 - Tag Filter (TZ 4.4): a usage-sorted tag cloud (5 font tiers, "name (N)") with a centered OR/AND toggle (accent-colored, plain-language hint) applied to Reminders — filters cards and folder counts (Today stays unfiltered), shows the All/T/F/TF indicator in the top bar, and Clear all filters resets it; OK on a filter that matches nothing warns with a blue snackbar and stays put. Notes carries its own filter state for when that tab is built.
 - Empty Reminders type-folders are hidden while a filter is active (shown always otherwise, TZ 3.9).
 - About moved to an (i) button on the Settings tab's top bar (TZ 4.9) and dropped from the Lists/Reminders menus; the Reminders bottom-bar bell is now outlined.

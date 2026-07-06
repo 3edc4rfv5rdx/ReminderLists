@@ -32,6 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.reminderlists.R
 import com.reminderlists.ui.components.AppTopBar
+import com.reminderlists.ui.components.PinDialog
 import com.reminderlists.ui.components.PinSetupDialog
 import com.reminderlists.ui.components.SoundField
 import com.reminderlists.ui.navigation.Routes
@@ -44,6 +45,8 @@ import com.reminderlists.util.Limits
 @Composable
 fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) {
     val vm: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
+    // Two-step for the default PIN: verify the current one (if any) before the setup editor.
+    var pinGateOpen by remember { mutableStateOf(false) }
     var pinDialogOpen by remember { mutableStateOf(false) }
     var aboutOpen by remember { mutableStateOf(false) }
 
@@ -51,6 +54,7 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
     val soundDuration by vm.soundDuration.collectAsState()
     val soundLevel by vm.soundLevel.collectAsState()
     val defaultSoundUri by vm.defaultSoundUri.collectAsState()
+    val defaultPin by vm.defaultPin.collectAsState()
 
     // Settings is now a bottom-bar tab (TZ 3.9): no back arrow, content inset from the bar.
     Column(Modifier.fillMaxSize().padding(contentPadding)) {
@@ -112,10 +116,24 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
             SettingRow(
                 stringResource(R.string.settings_default_pin),
                 arrow = true,
-                onClick = { pinDialogOpen = true },
+                // Gate the change behind the current PIN; skip straight to setup if none set.
+                onClick = { if (defaultPin.isNullOrEmpty()) pinDialogOpen = true else pinGateOpen = true },
             )
             SettingRow(stringResource(R.string.menu_backup_restore), arrow = true)
         }
+    }
+
+    // Verify the current default PIN before allowing a change/clear (TZ 3.6 / 5).
+    if (pinGateOpen) {
+        PinDialog(
+            title = stringResource(R.string.settings_default_pin),
+            verify = { it == defaultPin },
+            onSuccess = {
+                pinGateOpen = false
+                pinDialogOpen = true
+            },
+            onDismiss = { pinGateOpen = false },
+        )
     }
 
     // Default PIN editor (TZ 5): masked, typed twice, never shown back; saving an
