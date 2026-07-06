@@ -16,8 +16,8 @@ import kotlinx.coroutines.launch
 // Fires on an armed alarm (TZ 4.5 / 4.10). Under goAsync(): light up the screen, present the
 // full-screen alert or a plain notification, start the looping sound/vibration, record the fire
 // in reminder_events, drop a one-shot Once's Active flag, then recompute next_fire_at and arm
-// the next occurrence so the repeat chain never breaks.
-// TODO Monthly/Yearly date roll-over + auto-remove (feature 4).
+// the next occurrence so the repeat chain never breaks. Monthly/Yearly roll their next_fire_at
+// forward via the recompute; a fired auto-remove Once is swept the next day (TZ 4.2 h, at app start).
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_REMINDER_ID, -1L)

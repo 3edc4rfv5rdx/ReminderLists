@@ -59,6 +59,23 @@ interface RemindersDao {
     @Query("SELECT * FROM reminders WHERE active = 1")
     suspend fun getActive(): List<ReminderEntity>
 
+    // Auto-remove after firing (TZ 4.2 h): a fired, finished non-repeating reminder with the flag
+    // on. active=0 + nextFireAt IS NULL means it fired and has nothing left — a Postpone
+    // re-activates with a future nextFireAt, and Monthly/Yearly keep a future nextFireAt, so both
+    // are excluded. The last fire must predate dayStart (start of today) so removal waits for the
+    // date to roll over, never pre-empting a same-day re-fire.
+    @Query(
+        """
+        SELECT * FROM reminders r
+        WHERE r.autoRemove = 1 AND r.active = 0 AND r.nextFireAt IS NULL
+          AND (
+            SELECT MAX(e.firedAt) FROM reminder_events e
+            WHERE e.reminderId = r.id AND e.firedAt IS NOT NULL
+          ) < :dayStart
+        """,
+    )
+    suspend fun autoRemovableBefore(dayStart: Long): List<ReminderEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(reminder: ReminderEntity): Long
 

@@ -11,6 +11,8 @@ import com.reminderlists.data.db.entity.ReminderTimeEntity
 import com.reminderlists.data.db.entity.TagEntity
 import com.reminderlists.data.photo.PhotoManager
 import com.reminderlists.reminders.ReminderScheduler
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlinx.coroutines.flow.Flow
 
 // Reminders module data operations (TZ 4.2 / 4.6). Holds a context because deleting a
@@ -61,6 +63,15 @@ class RemindersRepository(private val db: AppDatabase, context: Context) {
         dao.delete(reminder)
         tagsDao.pruneOrphanTags()
         PhotoManager.deleteAll(appContext, photoNames)
+    }
+
+    // Auto-remove after firing (TZ 4.2 h): drop auto-remove reminders that fired and are done
+    // (not postponed, not Monthly/Yearly), once the fire day has rolled over. Runs whenever the
+    // app is foregrounded (no background job — TZ 9), so removal happens the first time the app is
+    // opened on or after the next day.
+    suspend fun sweepAutoRemoved() {
+        val dayStart = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        dao.autoRemovableBefore(dayStart).forEach { delete(it) }
     }
 
     // Photos (shared photo module, TZ 8).

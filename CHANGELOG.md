@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Auto-remove after firing (TZ 4.2 h): a reminder with the flag on that has fired and is done (not postponed, not Monthly/Yearly) is deleted once its fire day rolls over — deferred to the next day (swept whenever the app is opened) so a same-day re-fire is never pre-empted; a Postpone or a repeating next fire keeps it. Its photos go with it.
 - Russian and Ukrainian translations caught up to the base strings (175 keys each): full screen alert and Postpone buttons, the mixed-period error, and the earlier Filters/Tag Filter strings (indicators, OR/AND modes and hints, date-range validation).
 - Period From/To are now stored exactly as entered (TZ 4.2 e″/f″): bare day numbers (e.g. 5–11) mean a monthly window repeating every month (days 5–11), while full dates mean a single one-shot range. Numbers no longer get force-converted to dates or bumped to next month, so "5–11" on the 6th is this month's ongoing 5–11. From > To spans the month boundary for numbers (28→3); dates still require To ≥ From, and mixing a number with a date is rejected.
 - Reminders now fire as close to the set time as possible (TZ 4.10): a lone reminder fires exactly at :00 instead of a fixed per-id offset. Same-minute reminders are ranked lowest-id first and staggered by 3 s (20 slots/minute), and a minute's group is re-armed as a whole when a reminder joins/leaves it so the slots stay packed from :00.
