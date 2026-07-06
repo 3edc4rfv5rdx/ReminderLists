@@ -14,10 +14,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 // Fires on an armed alarm (TZ 4.5 / 4.10). Under goAsync(): light up the screen, present the
-// notification, start the looping sound/vibration, record the fire in reminder_events, drop a
-// one-shot Once's Active flag, then recompute next_fire_at and arm the next occurrence so the
-// repeat chain never breaks.
-// TODO full-screen alert (feature 3), Monthly/Yearly date roll-over + auto-remove (feature 4).
+// full-screen alert or a plain notification, start the looping sound/vibration, record the fire
+// in reminder_events, drop a one-shot Once's Active flag, then recompute next_fire_at and arm
+// the next occurrence so the repeat chain never breaks.
+// TODO Monthly/Yearly date roll-over + auto-remove (feature 4).
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_REMINDER_ID, -1L)
@@ -36,7 +36,18 @@ class AlarmReceiver : BroadcastReceiver() {
                     db.remindersDao().insertEvent(
                         ReminderEventEntity(reminderId = reminderId, firedAt = now, createdAt = now),
                     )
-                    ReminderNotifier.notifyFired(context, reminder)
+                    // Full-screen alert (TZ 4.5) when opted in, or always for Period (its
+                    // Done/Continue buttons live only on that screen); otherwise a plain
+                    // heads-up notification.
+                    if (reminder.fullScreenAlert || RepeatType.of(reminder.repeatType) == RepeatType.PERIOD) {
+                        // Grab the screen immediately (works unlocked too, in the alarm's
+                        // background-start window) and post the full-screen-intent notification
+                        // as the lockscreen fallback / shade presence.
+                        ReminderNotifier.notifyFullScreen(context, reminder)
+                        FullScreenAlertActivity.start(context, reminderId)
+                    } else {
+                        ReminderNotifier.notifyFired(context, reminder)
+                    }
                     SoundService.start(context, reminder.soundUri, reminder.loopSound)
                     // A plain Once has nothing left to fire — drop Active so the card shows
                     // it as done (Monthly/Yearly roll over, Daily/Period keep firing).

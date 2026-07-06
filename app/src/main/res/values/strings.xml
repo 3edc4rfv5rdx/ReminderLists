@@ -182,6 +182,7 @@
     <string name="error_daily_fields">Add at least one time and one weekday</string>
     <string name="error_period_fields">Set From, To, time and at least one weekday</string>
     <string name="error_period_order">From must not be later than To</string>
+    <string name="error_period_mixed">Use day numbers or dates for both From and To</string>
     <string name="error_once_past">Date or time is in the past</string>
 
     <!-- Missed reminder notifications (TZ 4.10) -->
@@ -192,4 +193,16 @@
     <!-- Reminder sound service (TZ 4.10) -->
     <string name="notif_sound_playing">Reminder sound playing</string>
     <string name="notif_sound_stop">Stop</string>
+
+    <!-- Full screen alert (TZ 4.5) -->
+    <string name="alert_reminder_label">Reminder</string>
+    <string name="alert_postpone_title">Postpone for</string>
+    <string name="alert_done">Done</string>
+    <string name="alert_continue">Continue</string>
+    <string name="postpone_10_min">10 MIN</string>
+    <string name="postpone_20_min">20 MIN</string>
+    <string name="postpone_30_min">30 MIN</string>
+    <string name="postpone_1_hour">1 HOUR</string>
+    <string name="postpone_3_hours">3 HOURS</string>
+    <string name="postpone_1_day">1 DAY</string>
 </resources>

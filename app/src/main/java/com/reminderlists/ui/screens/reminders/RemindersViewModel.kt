@@ -147,8 +147,10 @@ class RemindersViewModel(
         ReminderFolder.DAILY ->
             list.sortedBy { detail -> detail.times.minOfOrNull { it.time }.orEmpty() }
 
+        // From may be a bare day (recurring window) or a date, so sort by the computed next
+        // fire (like Monthly/Yearly), inactive/ended ones (null) last.
         ReminderFolder.PERIODS ->
-            list.sortedWith(compareBy({ it.reminder.periodFrom.orEmpty() }, { it.reminder.time.orEmpty() }))
+            list.sortedWith(compareBy(nullsLast()) { it.reminder.nextFireAt })
     }
 
     companion object {

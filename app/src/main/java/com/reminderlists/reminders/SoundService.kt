@@ -163,5 +163,11 @@ class SoundService : Service() {
                 .putExtra(EXTRA_LOOP, loop)
             context.startForegroundService(intent)
         }
+
+        // Stop the looping sound early — the user reacted on the full-screen alert or the
+        // notification's Stop action (TZ 4.5 / 4.10).
+        fun stop(context: Context) {
+            context.startService(Intent(context, SoundService::class.java).setAction(ACTION_STOP))
+        }
     }
 }

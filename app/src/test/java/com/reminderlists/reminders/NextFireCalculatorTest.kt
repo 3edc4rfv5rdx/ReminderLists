@@ -163,6 +163,44 @@ class NextFireCalculatorTest {
         assertNull(compute(r, now = at("2026-07-20", "11:00")))
     }
 
+    // Period as a recurring monthly day-window (TZ 4.2 e″/f″): bare day numbers, repeats monthly.
+
+    @Test
+    fun periodWindowFiresTodayInsideWindow() {
+        // Days 5–11 every month; 2026-07-06 sits inside, 10:00 still ahead of 09:00.
+        val r = period("5", "11", "10:00", Weekdays.ALL)
+        assertEquals(at("2026-07-06", "10:00"), compute(r, now = at("2026-07-06", "09:00")))
+    }
+
+    @Test
+    fun periodWindowRollsToNextMonthWhenPast() {
+        // After the 11th this month's window is done — next is the 5th of next month.
+        val r = period("5", "11", "10:00", Weekdays.ALL)
+        assertEquals(at("2026-08-05", "10:00"), compute(r, now = at("2026-07-15", "12:00")))
+    }
+
+    @Test
+    fun periodWindowSpansMonthBoundaryTail() {
+        // 28–3 spans the boundary: from the 15th the next hit is this month's 28th.
+        val r = period("28", "3", "10:00", Weekdays.ALL)
+        assertEquals(at("2026-07-28", "10:00"), compute(r, now = at("2026-07-15", "12:00")))
+    }
+
+    @Test
+    fun periodWindowSpansMonthBoundaryHead() {
+        // Still inside the 28→3 window on the 2nd of the next month.
+        val r = period("28", "3", "10:00", Weekdays.ALL)
+        assertEquals(at("2026-08-02", "10:00"), compute(r, now = at("2026-08-02", "09:00")))
+    }
+
+    @Test
+    fun periodWindowSkipsToNextMonthOnWeekdayMask() {
+        // Days 5–11 on weekdays only; 2026-07-11 is a Saturday and the window's weekdays have
+        // passed, so the next hit is 2026-08-05 (a Wednesday).
+        val r = period("5", "11", "10:00", Weekdays.WEEKDAYS)
+        assertEquals(at("2026-08-05", "10:00"), compute(r, now = at("2026-07-11", "08:00")))
+    }
+
     // DST (TZ 4.10): java.time defaults — nonexistent spring-forward time shifts forward.
 
     @Test

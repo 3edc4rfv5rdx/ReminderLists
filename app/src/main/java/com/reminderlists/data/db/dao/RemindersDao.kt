@@ -71,6 +71,11 @@ interface RemindersDao {
     @Query("UPDATE reminders SET nextFireAt = :nextFireAt WHERE id = :id")
     suspend fun updateNextFire(id: Long, nextFireAt: Long?)
 
+    // Active reminders sharing one fire minute, lowest id first — used to hand out same-minute
+    // stagger slots so the first fires exactly on time and the rest are spaced (TZ 4.10).
+    @Query("SELECT id FROM reminders WHERE nextFireAt = :fireAt AND active = 1 ORDER BY id")
+    suspend fun idsFiringAt(fireAt: Long): List<Long>
+
     @Query("SELECT * FROM reminder_times WHERE reminderId = :reminderId")
     suspend fun getTimes(reminderId: Long): List<ReminderTimeEntity>
 

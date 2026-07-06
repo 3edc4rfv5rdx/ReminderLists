@@ -54,13 +54,23 @@ object NextFireCalculator {
             }
 
             RepeatType.PERIOD -> {
-                val from = Dates.parseDate(reminder.periodFrom.orEmpty()) ?: return null
-                val to = Dates.parseDate(reminder.periodTo.orEmpty()) ?: return null
                 val time = Dates.parseTime(reminder.time.orEmpty()) ?: return null
                 val mask = reminder.weekdaysMask ?: Weekdays.NONE
                 if (mask == Weekdays.NONE) return null
-                val start = maxOf(from, localDate(now, zone))
-                nextWeekdaySlot(start, to, listOf(time), mask, now, zone)
+                val fromRaw = reminder.periodFrom.orEmpty()
+                val toRaw = reminder.periodTo.orEmpty()
+                val fromDate = Dates.parseDate(fromRaw)
+                val toDate = Dates.parseDate(toRaw)
+                if (fromDate != null && toDate != null) {
+                    // Concrete one-shot range (dates).
+                    val start = maxOf(fromDate, localDate(now, zone))
+                    nextWeekdaySlot(start, toDate, listOf(time), mask, now, zone)
+                } else {
+                    // Recurring monthly day-window (bare day numbers).
+                    val fromDay = Dates.parseDay(fromRaw) ?: return null
+                    val toDay = Dates.parseDay(toRaw) ?: return null
+                    nextMonthlyWindowSlot(fromDay, toDay, time, mask, now, zone)
+                }
             }
         }
     }
@@ -95,11 +105,21 @@ object NextFireCalculator {
             }
 
             RepeatType.PERIOD -> {
-                val from = Dates.parseDate(reminder.periodFrom.orEmpty()) ?: return emptyList()
-                val to = Dates.parseDate(reminder.periodTo.orEmpty()) ?: return emptyList()
                 val time = Dates.parseTime(reminder.time.orEmpty()) ?: return emptyList()
                 val mask = reminder.weekdaysMask ?: Weekdays.NONE
-                if (!today.isBefore(from) && !today.isAfter(to) && weekdayOn(mask)) listOf(time) else emptyList()
+                if (!weekdayOn(mask)) return emptyList()
+                val fromRaw = reminder.periodFrom.orEmpty()
+                val toRaw = reminder.periodTo.orEmpty()
+                val fromDate = Dates.parseDate(fromRaw)
+                val toDate = Dates.parseDate(toRaw)
+                val inRange = if (fromDate != null && toDate != null) {
+                    !today.isBefore(fromDate) && !today.isAfter(toDate)
+                } else {
+                    val fromDay = Dates.parseDay(fromRaw)
+                    val toDay = Dates.parseDay(toRaw)
+                    fromDay != null && toDay != null && inMonthlyWindow(today, fromDay, toDay)
+                }
+                if (inRange) listOf(time) else emptyList()
             }
         }
     }
@@ -131,6 +151,40 @@ object NextFireCalculator {
             day = day.plusDays(1)
         }
         return null
+    }
+
+    // Recurring monthly day-window (TZ 4.2 e″/f″): nearest future slot on an active weekday
+    // inside a [fromDay..toDay] window that repeats every month. A year-long scan always finds
+    // one when any weekday is active.
+    private fun nextMonthlyWindowSlot(
+        fromDay: Int,
+        toDay: Int,
+        time: LocalTime,
+        mask: Int,
+        now: Long,
+        zone: ZoneId,
+    ): Long? {
+        var day = localDate(now, zone)
+        val limit = day.plusDays(366)
+        while (!day.isAfter(limit)) {
+            if (inMonthlyWindow(day, fromDay, toDay) && Weekdays.has(mask, day.dayOfWeek.value - 1)) {
+                val at = toMillis(day, time, zone)
+                if (at > now) return at
+            }
+            day = day.plusDays(1)
+        }
+        return null
+    }
+
+    // Whether a date falls in the monthly window [fromDay..toDay], each day clamped to the
+    // month's length (31 -> last day). fromDay > toDay is a window spanning the month boundary
+    // (28→3), matched as this month's tail (>= fromDay) or next month's head (<= toDay).
+    private fun inMonthlyWindow(date: LocalDate, fromDay: Int, toDay: Int): Boolean {
+        val len = date.lengthOfMonth()
+        val from = minOf(fromDay, len)
+        val to = minOf(toDay, len)
+        val d = date.dayOfMonth
+        return if (fromDay <= toDay) d in from..to else d >= from || d <= to
     }
 
     // Monthly: nearest future occurrence of the anchor day-of-month, clamped to short

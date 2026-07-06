@@ -19,8 +19,8 @@ object ReminderNotifier {
     private const val MISSED_SUMMARY_THRESHOLD = 5
     private const val MISSED_SUMMARY_ID = -1
 
-    // On-time fire (TZ 4.5): a plain heads-up notification on the HIGH channel. The screen is
-    // woken separately by AlarmReceiver. The looping sound is a later stage.
+    // On-time fire without full-screen (TZ 4.5): a plain heads-up notification on the HIGH
+    // channel. The screen is woken separately by AlarmReceiver; SoundService drives the sound.
     fun notifyFired(context: Context, reminder: ReminderEntity) {
         val nm = NotificationManagerCompat.from(context)
         if (!nm.areNotificationsEnabled()) return
@@ -33,6 +33,43 @@ object ReminderNotifier {
             .setContentIntent(openApp(context))
         reminder.content?.let { builder.setContentText(it) }
         nm.notify(notifId(reminder.id), builder.build())
+    }
+
+    // On-time fire with Full screen alert on / Period (TZ 4.5): a HIGH-channel notification
+    // carrying a full-screen intent to FullScreenAlertActivity. The OS launches the activity
+    // over the lockscreen; unlocked it lands as heads-up and the activity opens on tap. Ongoing
+    // so it can't be swiped away — the alert screen is dismissed by acting on it.
+    fun notifyFullScreen(context: Context, reminder: ReminderEntity) {
+        val nm = NotificationManagerCompat.from(context)
+        if (!nm.areNotificationsEnabled()) return
+        val alert = alertIntent(context, reminder.id)
+        val builder = NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
+            .setSmallIcon(R.drawable.ic_launcher_foreground) // TODO dedicated status-bar icon
+            .setContentTitle(reminder.title)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setOngoing(true)
+            .setContentIntent(alert)
+            .setFullScreenIntent(alert, true)
+        reminder.content?.let { builder.setContentText(it) }
+        nm.notify(notifId(reminder.id), builder.build())
+    }
+
+    // Dismiss the fired reminder's notification once the user acted on the alert (TZ 4.5).
+    fun cancel(context: Context, reminderId: Long) {
+        NotificationManagerCompat.from(context).cancel(notifId(reminderId))
+    }
+
+    private fun alertIntent(context: Context, reminderId: Long): PendingIntent {
+        val intent = Intent(context, FullScreenAlertActivity::class.java)
+            .putExtra(ReminderScheduler.EXTRA_REMINDER_ID, reminderId)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return PendingIntent.getActivity(
+            context,
+            reminderId.toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
     }
 
     fun notifyMissed(context: Context, missed: List<ReminderEntity>) {

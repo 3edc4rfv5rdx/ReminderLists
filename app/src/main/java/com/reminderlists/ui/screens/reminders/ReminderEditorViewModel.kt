@@ -26,7 +26,6 @@ import com.reminderlists.util.Limits
 import com.reminderlists.util.SettingsKeys
 import com.reminderlists.util.TextFormat
 import com.reminderlists.util.Weekdays
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import kotlinx.coroutines.flow.SharingStarted
@@ -223,12 +222,7 @@ class ReminderEditorViewModel(
     }
 
     fun save(onSaved: () -> Unit) {
-        // Period day-only inputs resolve against today (From) and From (To) — TZ 4.2 e″/f″.
-        val today = LocalDate.now()
-        val resolvedFrom = Dates.resolveDayOnly(periodFrom, today)
-        val resolvedTo = resolvedFrom?.let { Dates.resolveDayOnly(periodTo, it) }
-
-        val error = validate(resolvedFrom, resolvedTo)
+        val error = validate()
         if (error != null) {
             // A past date/time isn't an input error — it's a warning (orange), like the card's
             // Active toggle; real form errors stay red.
@@ -258,8 +252,10 @@ class ReminderEditorViewModel(
             monthlyRepeat = oneTime && monthlyRepeat,
             yearlyRepeat = oneTime && yearlyRepeat,
             autoRemove = oneTime && autoRemove,
-            periodFrom = resolvedFrom?.let { Dates.format(it) }.takeIf { period },
-            periodTo = resolvedTo?.let { Dates.format(it) }.takeIf { period },
+            // Stored exactly as entered — a bare day (recurring monthly window) or a full date
+            // (one-shot range), TZ 4.2 e″/f″.
+            periodFrom = periodFrom.trim().takeIf { period },
+            periodTo = periodTo.trim().takeIf { period },
             weekdaysMask = weekdaysMask.takeIf { !oneTime },
             loopSound = loopSound,
             soundUri = soundUri,
@@ -281,7 +277,7 @@ class ReminderEditorViewModel(
     }
 
     // Save validation (TZ 4.2): returns the error string res, or null when the form is valid.
-    private fun validate(resolvedFrom: LocalDate?, resolvedTo: LocalDate?): Int? = when {
+    private fun validate(): Int? = when {
         title.isBlank() -> R.string.error_title_required
 
         repeatType == RepeatType.ONE_TIME &&
@@ -298,15 +294,26 @@ class ReminderEditorViewModel(
             (dailyTimes.isEmpty() || weekdaysMask == Weekdays.NONE) ->
             R.string.error_daily_fields
 
-        repeatType == RepeatType.PERIOD &&
-            (resolvedFrom == null || resolvedTo == null ||
-                Dates.parseTime(time) == null || weekdaysMask == Weekdays.NONE) ->
-            R.string.error_period_fields
-
-        repeatType == RepeatType.PERIOD && resolvedTo!!.isBefore(resolvedFrom!!) ->
-            R.string.error_period_order
+        repeatType == RepeatType.PERIOD -> validatePeriod()
 
         else -> null
+    }
+
+    // Period From/To each hold a bare day (recurring monthly window) or a full date (one-shot
+    // range); both must be the same kind. From > To is allowed for day numbers — the window
+    // spans the month boundary (28→3) — but a date range must not run backwards (TZ 4.2 e″/f″).
+    private fun validatePeriod(): Int? {
+        if (Dates.parseTime(time) == null || weekdaysMask == Weekdays.NONE) return R.string.error_period_fields
+        val from = periodFrom.trim()
+        val to = periodTo.trim()
+        val fromDate = Dates.parseDate(from)
+        val toDate = Dates.parseDate(to)
+        val fromValid = fromDate != null || Dates.parseDay(from) != null
+        val toValid = toDate != null || Dates.parseDay(to) != null
+        if (!fromValid || !toValid) return R.string.error_period_fields
+        if ((fromDate != null) != (toDate != null)) return R.string.error_period_mixed
+        if (fromDate != null && toDate!!.isBefore(fromDate)) return R.string.error_period_order
+        return null
     }
 
     private fun oncePast(): Boolean {

@@ -28,23 +28,7 @@ object Dates {
 
     fun format(time: LocalTime): String = TIME.format(time)
 
-    // Period From/To day-only input (TZ 4.2 e″/f″): a full date parses as is; a bare day
-    // number resolves to the nearest month, starting at notBefore (today for From, the
-    // From date for To), where that day exists and is not earlier than notBefore.
-    fun resolveDayOnly(text: String, notBefore: LocalDate): LocalDate? {
-        val trimmed = text.trim()
-        parseDate(trimmed)?.let { return it }
-        val day = trimmed.toIntOrNull() ?: return null
-        if (day !in 1..31) return null
-        var month = notBefore.withDayOfMonth(1)
-        // Scan forward until the day fits the month (skips e.g. 31 in short months).
-        repeat(12) {
-            if (day <= month.lengthOfMonth()) {
-                val candidate = month.withDayOfMonth(day)
-                if (!candidate.isBefore(notBefore)) return candidate
-            }
-            month = month.plusMonths(1)
-        }
-        return null
-    }
+    // Bare day-of-month 1..31 (TZ 4.2 e″/f″): a Period From/To may be a recurring monthly day
+    // instead of a concrete date. null if the text isn't a plain day number.
+    fun parseDay(text: String): Int? = text.trim().toIntOrNull()?.takeIf { it in 1..31 }
 }

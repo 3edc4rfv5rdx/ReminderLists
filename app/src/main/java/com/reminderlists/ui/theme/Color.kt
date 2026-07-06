@@ -17,3 +17,9 @@ val SnackError = Color(0xFFC62828)
 val SnackWarning = Color(0xFFEF6C00)
 val SnackSuccess = Color(0xFF2E7D32)
 val SnackInfo = Color(0xFF1565C0)
+
+// Full-screen alert (TZ 4.5): a fixed high-visibility scheme, independent of the theme preset —
+// an orange field with black controls (lock circle + buttons) and white lock/arrow/labels on them.
+val AlertBackground = Color(0xFFEF6C00)
+val AlertControl = Color(0xFF000000)
+val AlertOnControl = Color(0xFFFFFFFF)
