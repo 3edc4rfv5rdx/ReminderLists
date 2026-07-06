@@ -127,7 +127,7 @@ class SoundService : Service() {
 
     private fun buildNotification() =
         NotificationCompat.Builder(this, NotificationChannels.SERVICE)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // TODO dedicated status-bar icon
+            .setSmallIcon(R.drawable.ic_stat_reminder)
             .setContentTitle(getString(R.string.notif_sound_playing))
             .setOngoing(true)
             .addAction(0, getString(R.string.notif_sound_stop), stopIntent())

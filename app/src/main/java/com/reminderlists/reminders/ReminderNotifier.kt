@@ -25,7 +25,7 @@ object ReminderNotifier {
         val nm = NotificationManagerCompat.from(context)
         if (!nm.areNotificationsEnabled()) return
         val builder = NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // TODO dedicated status-bar icon
+            .setSmallIcon(R.drawable.ic_stat_reminder)
             .setContentTitle(reminder.title)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
@@ -47,7 +47,7 @@ object ReminderNotifier {
         if (!nm.areNotificationsEnabled()) return
         val alert = alertIntent(context, reminder.id)
         val builder = NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // TODO dedicated status-bar icon
+            .setSmallIcon(R.drawable.ic_stat_reminder)
             .setContentTitle(reminder.title)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
@@ -92,14 +92,16 @@ object ReminderNotifier {
 
     private fun build(context: Context, title: String, text: String) =
         NotificationCompat.Builder(context, NotificationChannels.SERVICE)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // TODO dedicated status-bar icon
+            .setSmallIcon(R.drawable.ic_stat_reminder)
             .setContentTitle(title)
             .setContentText(text)
             .setAutoCancel(true)
             .setContentIntent(openApp(context))
             .build()
 
-    private fun openApp(context: Context): PendingIntent {
+    // Opens the app. Also used as the alarm-clock showIntent so tapping the status-bar alarm
+    // affordance lands in the app rather than re-firing the alarm broadcast (TZ 4.10).
+    fun openApp(context: Context): PendingIntent {
         val intent = Intent(context, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)

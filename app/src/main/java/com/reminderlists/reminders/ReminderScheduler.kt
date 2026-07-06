@@ -174,7 +174,8 @@ object ReminderScheduler {
     fun schedule(context: Context, reminderId: Long, triggerAtMillis: Long, rank: Int = 0) {
         val am = context.getSystemService(AlarmManager::class.java)
         val pi = pendingIntent(context, reminderId)
-        val showIntent = pendingIntent(context, reminderId) // TODO distinct show intent for the info action
+        // Tapping the status-bar alarm icon opens the app; the fire itself is the broadcast pi.
+        val showIntent = ReminderNotifier.openApp(context)
         val staggered = triggerAtMillis + (rank % STAGGER_SLOTS) * STAGGER_STEP_MS
         am.setAlarmClock(AlarmManager.AlarmClockInfo(staggered, showIntent), pi)
         Logger.i("Scheduled reminder $reminderId at $staggered (rank $rank)")
