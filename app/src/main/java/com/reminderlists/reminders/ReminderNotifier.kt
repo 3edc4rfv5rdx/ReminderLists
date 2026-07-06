@@ -31,6 +31,9 @@ object ReminderNotifier {
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setAutoCancel(true)
             .setContentIntent(openApp(context))
+            // +10 min postpones and clears the alert; Stop only silences the sound (TZ 4.5).
+            .addAction(0, context.getString(R.string.notif_postpone_10), ReminderActionReceiver.postponeIntent(context, reminder.id))
+            .addAction(0, context.getString(R.string.notif_sound_stop), ReminderActionReceiver.stopIntent(context, reminder.id))
         reminder.content?.let { builder.setContentText(it) }
         nm.notify(notifId(reminder.id), builder.build())
     }

@@ -46,6 +46,11 @@
             android:name=".reminders.AlarmReceiver"
             android:exported="false" />
 
+        <!-- Plain notification action buttons: +10 min / Stop (TZ 4.5). -->
+        <receiver
+            android:name=".reminders.ReminderActionReceiver"
+            android:exported="false" />
+
         <!-- Re-arm alarms after boot / update / time change (TZ 4.10). -->
         <receiver
             android:name=".reminders.BootReceiver"

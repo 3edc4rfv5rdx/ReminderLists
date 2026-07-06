@@ -193,6 +193,7 @@
     <!-- Reminder sound service (TZ 4.10) -->
     <string name="notif_sound_playing">Reminder sound playing</string>
     <string name="notif_sound_stop">Stop</string>
+    <string name="notif_postpone_10">+10 min</string>
 
     <!-- Full screen alert (TZ 4.5) -->
     <string name="alert_reminder_label">Reminder</string>
