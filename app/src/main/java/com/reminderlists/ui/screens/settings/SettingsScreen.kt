@@ -11,7 +11,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -33,6 +35,7 @@ import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.PinSetupDialog
 import com.reminderlists.ui.components.SoundField
 import com.reminderlists.ui.navigation.Routes
+import com.reminderlists.ui.screens.about.AboutDialog
 import com.reminderlists.util.Limits
 
 // Settings (TZ 5): theme, language, dictionary, enable reminders, welcome, keep-screen-on,
@@ -42,6 +45,7 @@ import com.reminderlists.util.Limits
 fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) {
     val vm: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
     var pinDialogOpen by remember { mutableStateOf(false) }
+    var aboutOpen by remember { mutableStateOf(false) }
 
     val enableReminders by vm.enableReminders.collectAsState()
     val soundDuration by vm.soundDuration.collectAsState()
@@ -50,7 +54,15 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
 
     // Settings is now a bottom-bar tab (TZ 3.9): no back arrow, content inset from the bar.
     Column(Modifier.fillMaxSize().padding(contentPadding)) {
-        AppTopBar(title = stringResource(R.string.menu_settings))
+        AppTopBar(
+            title = stringResource(R.string.menu_settings),
+            actions = {
+                // About moved here from the Lists/Reminders menus (TZ 4.9).
+                IconButton(onClick = { aboutOpen = true }) {
+                    Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.menu_about))
+                }
+            },
+        )
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
@@ -120,6 +132,9 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
         )
     }
 
+    if (aboutOpen) {
+        AboutDialog(onDismiss = { aboutOpen = false })
+    }
 }
 
 // A settings line; screen-exit rows (dictionary, PIN, backup) get a trailing chevron.

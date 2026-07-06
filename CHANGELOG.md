@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- Tag Filter (TZ 4.4): a usage-sorted tag cloud (5 font tiers, "name (N)") with a centered OR/AND toggle (accent-colored, plain-language hint) applied to Reminders — filters cards and folder counts (Today stays unfiltered), shows the All/T/F/TF indicator in the top bar, and Clear all filters resets it; OK on a filter that matches nothing warns with a blue snackbar and stays put. Notes carries its own filter state for when that tab is built.
+- Empty Reminders type-folders are hidden while a filter is active (shown always otherwise, TZ 3.9).
+- About moved to an (i) button on the Settings tab's top bar (TZ 4.9) and dropped from the Lists/Reminders menus; the Reminders bottom-bar bell is now outlined.
 - Settings is now a fourth bottom-bar tab (TZ 3.9) — a gear icon with no label — opening the settings screen as a tab (no back arrow); removed from the Lists/Reminders overflow menus.
 - Russian and Ukrainian translations caught up to the base strings (149 keys each): reminder editor fields, PIN, move, sound settings, weekdays, validation errors and notifications.
 - Daily times editable in the editor (TZ 4.2 d′): tapping a time chip re-opens the picker on it and replaces it (kept sorted, de-duplicated); the add-time «+» is now a filled accent button. Finished TZ sections marked with a "# Done" heading prefix.

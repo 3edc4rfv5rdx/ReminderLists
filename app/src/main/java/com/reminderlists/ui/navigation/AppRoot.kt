@@ -24,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.reminderlists.data.filter.FilterTab
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.ui.components.AppSnackbar
 import com.reminderlists.ui.components.FabLevel
@@ -158,7 +159,17 @@ fun AppRoot() {
 
             composable(Routes.SETTINGS) { SettingsScreen(navController, padding) }
             composable(Routes.FILTERS) { FiltersScreen(navController) }
-            composable(Routes.TAG_FILTER) { TagFilterScreen(navController) }
+            composable(
+                Routes.TAG_FILTER,
+                arguments = listOf(navArgument("tab") { type = NavType.StringType }),
+            ) { entry ->
+                TagFilterScreen(
+                    navController,
+                    tab = FilterTab.valueOf(
+                        entry.arguments?.getString("tab") ?: FilterTab.REMINDERS.name,
+                    ),
+                )
+            }
             // Welcome (TZ 4.8) is a dialog, not a route — see WelcomeDialog.
         }
         }

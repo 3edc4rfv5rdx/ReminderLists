@@ -24,6 +24,15 @@
     <string name="menu_filters">Filters</string>
     <string name="menu_tag_filter">Tag Filter</string>
     <string name="menu_clear_filters">Clear all filters</string>
+    <string name="filter_ind_all">All</string>
+    <string name="filter_ind_tag">T</string>
+    <string name="filter_ind_filters">F</string>
+    <string name="filter_ind_both">TF</string>
+    <string name="tag_filter_mode_or">OR</string>
+    <string name="tag_filter_mode_and">AND</string>
+    <string name="tag_filter_hint_or">Any tag from the set</string>
+    <string name="tag_filter_hint_and">All tags from the set</string>
+    <string name="filter_no_matches">Nothing matches this filter</string>
     <string name="menu_dictionary">Dictionary</string>
     <string name="menu_backup_restore">Backup and Restore</string>
 

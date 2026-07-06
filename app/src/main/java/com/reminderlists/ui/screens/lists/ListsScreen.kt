@@ -59,14 +59,12 @@ import com.reminderlists.ui.components.PinDialog
 import com.reminderlists.ui.components.PinSetupDialog
 import com.reminderlists.ui.components.RowTitle
 import com.reminderlists.ui.navigation.Routes
-import com.reminderlists.ui.screens.about.AboutDialog
 import com.reminderlists.util.Limits
 
 // Which dialog is open on the Lists tab (single slot — dialogs never stack).
 private sealed interface ListsDialog {
     data object NewFolder : ListsDialog
     data object NewList : ListsDialog
-    data object About : ListsDialog
     data class RenameFolder(val folder: FolderEntity) : ListsDialog
     data class FolderComment(val folder: FolderEntity) : ListsDialog
     data class DeleteFolder(val folder: FolderEntity) : ListsDialog
@@ -120,13 +118,6 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                             onClick = {
                                 topMenuOpen = false
                                 navController.navigate(Routes.DICTIONARY) { launchSingleTop = true }
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_about)) },
-                            onClick = {
-                                topMenuOpen = false
-                                dialog = ListsDialog.About
                             },
                         )
                         // TODO menu item Backup/Restore (TZ 3.8) once that feature exists.
@@ -223,8 +214,6 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
 
     when (val d = dialog) {
         null -> {}
-
-        ListsDialog.About -> AboutDialog(onDismiss = { dialog = null })
 
         ListsDialog.NewFolder -> NameCommentDialog(
             title = stringResource(R.string.fab_new_folder),

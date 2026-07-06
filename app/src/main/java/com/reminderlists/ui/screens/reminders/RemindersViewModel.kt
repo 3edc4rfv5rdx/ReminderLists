@@ -10,6 +10,9 @@ import com.reminderlists.R
 import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.db.dao.ReminderWithDetails
 import com.reminderlists.data.db.entity.ReminderEntity
+import com.reminderlists.data.filter.FilterStore
+import com.reminderlists.data.filter.FilterTab
+import com.reminderlists.data.filter.TabFilter
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.data.reminders.RemindersRepository
 import com.reminderlists.reminders.NextFireCalculator
@@ -49,15 +52,33 @@ class RemindersViewModel(
     // Validation feedback for the Active toggle (TZ 8 snackbar).
     var snack by mutableStateOf<SnackEvent?>(null)
 
-    // All reminders grouped by their derived type-folder (TZ 4.1).
+    // The tab's active filter (TZ 3.9 / 4.4), shared source of truth for the Tag Filter
+    // screen and the Top App Bar indicator.
+    val filter: StateFlow<TabFilter> = FilterStore.flow(FilterTab.REMINDERS)
+
+    // All reminders grouped by their derived type-folder (TZ 4.1). Unfiltered — Today reads
+    // this so the tab's filter never narrows the Today dialog (TZ 4.11).
     private val byFolder: StateFlow<Map<ReminderFolder, List<ReminderWithDetails>>> =
         repo.observeAll()
             .map { all -> all.groupBy { ReminderFolder.of(it.reminder) } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
+    // Same grouping after the active tag filter (TZ 4.4) — drives both counts and cards so a
+    // folder's counter matches what opening it shows.
+    private val filteredByFolder: StateFlow<Map<ReminderFolder, List<ReminderWithDetails>>> =
+        combine(byFolder, filter) { groups, f ->
+            if (!f.tagActive) {
+                groups
+            } else {
+                groups.mapValues { (_, list) ->
+                    list.filter { f.matchesTags(it.tags.mapTo(HashSet()) { tag -> tag.id }) }
+                }
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
     // folder -> reminders count shown next to folder names (styled like TZ 3.1 counters).
     val folderCounts: StateFlow<Map<ReminderFolder, Int>> =
-        byFolder
+        filteredByFolder
             .map { groups -> groups.mapValues { (_, list) -> list.size } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
@@ -65,7 +86,7 @@ class RemindersViewModel(
     // fixed folders (TZ 3.9). Sorting per TZ 4.6 reads the raw form fields; it switches
     // to next_fire_at once NextFireCalculator exists (TZ 4.10).
     val reminders: StateFlow<List<ReminderWithDetails>> =
-        combine(currentFolderFlow, byFolder) { folder, groups ->
+        combine(currentFolderFlow, filteredByFolder) { folder, groups ->
             val effective = folder ?: ReminderFolder.ONCE
             sorted(effective, groups[effective].orEmpty())
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -73,6 +94,9 @@ class RemindersViewModel(
     fun openFolder(folder: ReminderFolder?) {
         currentFolderFlow.value = folder
     }
+
+    // "Clear all filters" menu action (TZ 3.9).
+    fun clearFilters() = FilterStore.clearAll(FilterTab.REMINDERS)
 
     // enable_reminders (TZ 5): shown as a silent-mode note atop the Today dialog (TZ 4.11).
     val remindersEnabled: StateFlow<Boolean> =

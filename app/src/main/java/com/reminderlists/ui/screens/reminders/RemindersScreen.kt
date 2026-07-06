@@ -44,8 +44,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.reminderlists.R
 import com.reminderlists.data.db.dao.ReminderWithDetails
+import com.reminderlists.data.filter.FilterTab
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.ui.components.AppDropdownMenu
+import com.reminderlists.ui.components.FilterIndicatorBadge
 import com.reminderlists.ui.components.AppFab
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.LocalSnackController
@@ -57,7 +59,6 @@ import com.reminderlists.ui.components.PriorityStars
 import com.reminderlists.ui.components.RowTitle
 import com.reminderlists.ui.components.SwipeActionsRow
 import com.reminderlists.ui.navigation.Routes
-import com.reminderlists.ui.screens.about.AboutDialog
 import com.reminderlists.util.Dates
 import com.reminderlists.util.Weekdays
 import java.time.Instant
@@ -90,11 +91,11 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
     }
 
     var topMenuOpen by remember { mutableStateOf(false) }
-    var aboutOpen by remember { mutableStateOf(false) }
     var deleteTarget by remember { mutableStateOf<ReminderWithDetails?>(null) }
     // Today snapshot, captured at open so the row order/divider reflect that moment (TZ 4.11).
     var todayOpen by remember { mutableStateOf<LocalDateTime?>(null) }
     val remindersEnabled by vm.remindersEnabled.collectAsState()
+    val filter by vm.filter.collectAsState()
 
     val inFolder = currentFolder != null
     BackHandler(enabled = inFolder) { vm.openFolder(null) }
@@ -113,7 +114,8 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
                     IconButton(onClick = { todayOpen = LocalDateTime.now() }) {
                         Icon(Icons.Outlined.Alarm, contentDescription = stringResource(R.string.action_today))
                     }
-                    // TODO filter indicator All/T/F/TF (TZ 3.9) — arrives with Filters.
+                    // Filter indicator All/T/F/TF (TZ 3.9) — reflects this tab's filter state.
+                    FilterIndicatorBadge(filter.indicator)
                     IconButton(onClick = { topMenuOpen = true }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.action_menu))
                     }
@@ -129,21 +131,16 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
                             text = { Text(stringResource(R.string.menu_tag_filter)) },
                             onClick = {
                                 topMenuOpen = false
-                                navController.navigate(Routes.TAG_FILTER) { launchSingleTop = true }
+                                navController.navigate(Routes.tagFilter(FilterTab.REMINDERS)) {
+                                    launchSingleTop = true
+                                }
                             },
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_clear_filters)) },
                             onClick = {
                                 topMenuOpen = false
-                                // TODO clear both filters (TZ 3.9) once filtering exists.
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_about)) },
-                            onClick = {
-                                topMenuOpen = false
-                                aboutOpen = true
+                                vm.clearFilters()
                             },
                         )
                     }
@@ -160,8 +157,13 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
                 LazyColumn(Modifier.fillMaxSize()) {
                     if (folder == null) {
                         // Root: the four fixed type-folders, then the Once cards (TZ 3.9).
+                        // With a filter active, empty folders are hidden to cut clutter; without
+                        // a filter all four always show (TZ 3.9 — fixed type-folders).
+                        val visibleFolders = ReminderFolder.entries
+                            .filter { it != ReminderFolder.ONCE }
+                            .filter { !filter.isActive || (folderCounts[it] ?: 0) > 0 }
                         items(
-                            ReminderFolder.entries.filter { it != ReminderFolder.ONCE },
+                            visibleFolders,
                             key = { "folder-${it.name}" },
                         ) { entry ->
                             val count = folderCounts[entry] ?: 0
@@ -224,10 +226,6 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
                 .padding(bottom = FabLevel.barHeight + 16.dp),
         )
 
-    }
-
-    if (aboutOpen) {
-        AboutDialog(onDismiss = { aboutOpen = false })
     }
 
     deleteTarget?.let { target ->
