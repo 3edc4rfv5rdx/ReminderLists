@@ -195,6 +195,14 @@
     <string name="notif_sound_stop">Stop</string>
     <string name="notif_postpone_10">+10 min</string>
 
+    <!-- Notification permission onboarding (TZ 4.10) -->
+    <string name="notif_perm_title">Enable notifications</string>
+    <string name="notif_perm_rationale">Reminders alert you with notifications. Allow notifications so they can reach you</string>
+    <string name="notif_perm_blocked">Notifications are off, so reminders can\'t alert you. Turn them on in system settings</string>
+    <string name="notif_perm_allow">Allow</string>
+    <string name="notif_perm_open_settings">Open settings</string>
+    <string name="notif_perm_not_now">Not now</string>
+
     <!-- Full screen alert (TZ 4.5) -->
     <string name="alert_reminder_label">Reminder</string>
     <string name="alert_postpone_title">Postpone for</string>
