@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.reminderlists.R
 import com.reminderlists.util.Dates
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneOffset
 
@@ -67,10 +68,11 @@ fun DateField(
         }
     }
     if (pickerOpen) {
-        // The state lives inside this if-block, so every open re-seeds from the field text.
+        // The state lives inside this if-block, so every open re-seeds from the field text;
+        // an empty field opens with today preselected.
         val state = rememberDatePickerState(
-            initialSelectedDateMillis = Dates.parseDate(value)
-                ?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli(),
+            initialSelectedDateMillis = (Dates.parseDate(value) ?: LocalDate.now())
+                .atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
         )
         DatePickerDialog(
             onDismissRequest = { pickerOpen = false },
