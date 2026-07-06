@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Russian and Ukrainian translations caught up to the base strings (182 keys each): the notification permission onboarding dialog and the +10 min notification action.
 - Notification permission onboarding (TZ 4.10): a rationale dialog now explains why reminders need notifications before the system request fires, instead of asking cold on launch. A permanent denial switches the dialog to an Open settings action; Not now backs off and it returns on the next launch while still ungranted.
 - Long-missed fires are now completed, not left hanging (TZ 4.10): a one-time reminder missed beyond the grace window is marked fired (recorded at its due time) and retired to inactive instead of lingering active forever, so it also becomes eligible for auto-remove; Monthly/Yearly still roll their date forward. Extracted the shared one-shot-Once check to remove duplication.
 - Within-grace missed fires now still alert (TZ 4.10): a fire found just a bit late on re-arm (boot, app start, time change) — within the ~10-minute grace window — is re-armed a minute out and delivered through the normal alarm path (full-screen included), instead of being silently rescheduled. Fires older than the grace window stay a plain "missed" notification.

@@ -181,6 +181,15 @@
     <!-- Reminder sound service (TZ 4.10) -->
     <string name="notif_sound_playing">Звучить нагадування</string>
     <string name="notif_sound_stop">Стоп</string>
+    <string name="notif_postpone_10">+10 хв</string>
+
+    <!-- Notification permission onboarding (TZ 4.10) -->
+    <string name="notif_perm_title">Увімкнути сповіщення</string>
+    <string name="notif_perm_rationale">Нагадування попереджають вас сповіщеннями. Дозвольте сповіщення, щоб вони надходили</string>
+    <string name="notif_perm_blocked">Сповіщення вимкнені, тож нагадування не зможуть попередити. Увімкніть їх у системних налаштуваннях</string>
+    <string name="notif_perm_allow">Дозволити</string>
+    <string name="notif_perm_open_settings">Відкрити налаштування</string>
+    <string name="notif_perm_not_now">Не зараз</string>
 
     <!-- Full screen alert (TZ 4.5) -->
     <string name="alert_reminder_label">Нагадування</string>
