@@ -20,6 +20,21 @@
     <string name="menu_filters">Фільтри</string>
     <string name="menu_tag_filter">Фільтр за тегами</string>
     <string name="menu_clear_filters">Скинути фільтри</string>
+    <string name="filter_ind_all">Усі</string>
+    <string name="filter_ind_tag">Т</string>
+    <string name="filter_ind_filters">Ф</string>
+    <string name="filter_ind_both">ТФ</string>
+    <string name="tag_filter_mode_or">АБО</string>
+    <string name="tag_filter_mode_and">І</string>
+    <string name="tag_filter_hint_or">Будь-який тег із набору</string>
+    <string name="tag_filter_hint_and">Усі теги з набору</string>
+    <string name="filter_no_matches">Нічого не відповідає фільтру</string>
+    <string name="filter_date_from">Дата з</string>
+    <string name="filter_date_to">Дата до</string>
+    <string name="error_date_invalid">Використовуйте формат РРРР-ММ-ДД</string>
+    <string name="error_date_range">«Дата з» пізніше за «Дату до»</string>
+    <string name="filter_active_only">Лише активні</string>
+    <string name="filter_swap_dates_q">«Дата з» пізніше за «Дату до». Поміняти місцями?</string>
     <string name="menu_dictionary">Словник</string>
     <string name="menu_backup_restore">Резервна копія</string>
 
@@ -155,6 +170,7 @@
     <string name="error_daily_fields">Додайте хоча б один час і день тижня</string>
     <string name="error_period_fields">Вкажіть «З», «До», час і хоча б один день тижня</string>
     <string name="error_period_order">«З» не може бути пізніше «До»</string>
+    <string name="error_period_mixed">Для «З» і «До» використовуйте або числа днів, або дати</string>
     <string name="error_once_past">Дата або час у минулому</string>
 
     <!-- Missed reminder notifications (TZ 4.10) -->
@@ -165,4 +181,16 @@
     <!-- Reminder sound service (TZ 4.10) -->
     <string name="notif_sound_playing">Звучить нагадування</string>
     <string name="notif_sound_stop">Стоп</string>
+
+    <!-- Full screen alert (TZ 4.5) -->
+    <string name="alert_reminder_label">Нагадування</string>
+    <string name="alert_postpone_title">Відкласти на</string>
+    <string name="alert_done">Готово</string>
+    <string name="alert_continue">Продовжити</string>
+    <string name="postpone_10_min">10 ХВ</string>
+    <string name="postpone_20_min">20 ХВ</string>
+    <string name="postpone_30_min">30 ХВ</string>
+    <string name="postpone_1_hour">1 ГОД</string>
+    <string name="postpone_3_hours">3 ГОД</string>
+    <string name="postpone_1_day">1 ДЕНЬ</string>
 </resources>

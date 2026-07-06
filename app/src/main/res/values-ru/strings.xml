@@ -20,6 +20,21 @@
     <string name="menu_filters">Фильтры</string>
     <string name="menu_tag_filter">Фильтр по тегам</string>
     <string name="menu_clear_filters">Сбросить фильтры</string>
+    <string name="filter_ind_all">Все</string>
+    <string name="filter_ind_tag">Т</string>
+    <string name="filter_ind_filters">Ф</string>
+    <string name="filter_ind_both">ТФ</string>
+    <string name="tag_filter_mode_or">ИЛИ</string>
+    <string name="tag_filter_mode_and">И</string>
+    <string name="tag_filter_hint_or">Любой тег из набора</string>
+    <string name="tag_filter_hint_and">Все теги из набора</string>
+    <string name="filter_no_matches">Ничего не подходит под фильтр</string>
+    <string name="filter_date_from">Дата с</string>
+    <string name="filter_date_to">Дата по</string>
+    <string name="error_date_invalid">Используйте формат ГГГГ-ММ-ДД</string>
+    <string name="error_date_range">«Дата с» позже «Даты по»</string>
+    <string name="filter_active_only">Только активные</string>
+    <string name="filter_swap_dates_q">«Дата с» позже «Даты по». Поменять местами?</string>
     <string name="menu_dictionary">Словарь</string>
     <string name="menu_backup_restore">Резервная копия</string>
 
@@ -155,6 +170,7 @@
     <string name="error_daily_fields">Добавьте хотя бы одно время и день недели</string>
     <string name="error_period_fields">Укажите «С», «По», время и хотя бы один день недели</string>
     <string name="error_period_order">«С» не может быть позже «По»</string>
+    <string name="error_period_mixed">Для «С» и «По» используйте либо числа дней, либо даты</string>
     <string name="error_once_past">Дата или время в прошлом</string>
 
     <!-- Missed reminder notifications (TZ 4.10) -->
@@ -165,4 +181,16 @@
     <!-- Reminder sound service (TZ 4.10) -->
     <string name="notif_sound_playing">Звучит напоминание</string>
     <string name="notif_sound_stop">Стоп</string>
+
+    <!-- Full screen alert (TZ 4.5) -->
+    <string name="alert_reminder_label">Напоминание</string>
+    <string name="alert_postpone_title">Отложить на</string>
+    <string name="alert_done">Готово</string>
+    <string name="alert_continue">Продолжить</string>
+    <string name="postpone_10_min">10 МИН</string>
+    <string name="postpone_20_min">20 МИН</string>
+    <string name="postpone_30_min">30 МИН</string>
+    <string name="postpone_1_hour">1 ЧАС</string>
+    <string name="postpone_3_hours">3 ЧАСА</string>
+    <string name="postpone_1_day">1 ДЕНЬ</string>
 </resources>
