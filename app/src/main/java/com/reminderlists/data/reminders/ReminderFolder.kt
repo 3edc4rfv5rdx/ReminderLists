@@ -14,6 +14,11 @@ enum class RepeatType(val value: Int) {
     }
 }
 
+// A plain one-shot Once (not Monthly/Yearly, which roll forward): nothing left to fire once it
+// has gone off, so it's retired to inactive at fire / catch-up (TZ 4.1 / 4.10).
+fun ReminderEntity.isOneShotOnce(): Boolean =
+    RepeatType.of(repeatType) == RepeatType.ONE_TIME && !monthlyRepeat && !yearlyRepeat
+
 // The five fixed type-folders of the Reminders tab (TZ 4.1). Derived from the form fields,
 // never stored or picked manually. Monthly/Yearly are mutually exclusive checkboxes, so the
 // when-order carries no priority semantics.

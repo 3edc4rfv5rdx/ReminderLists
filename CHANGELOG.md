@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Long-missed fires are now completed, not left hanging (TZ 4.10): a one-time reminder missed beyond the grace window is marked fired (recorded at its due time) and retired to inactive instead of lingering active forever, so it also becomes eligible for auto-remove; Monthly/Yearly still roll their date forward. Extracted the shared one-shot-Once check to remove duplication.
 - Within-grace missed fires now still alert (TZ 4.10): a fire found just a bit late on re-arm (boot, app start, time change) — within the ~10-minute grace window — is re-armed a minute out and delivered through the normal alarm path (full-screen included), instead of being silently rescheduled. Fires older than the grace window stay a plain "missed" notification.
 - Added a project README and a GPLv3 LICENSE.
 - Plain reminder notification now carries +10 min / Stop action buttons (TZ 4.5): +10 min postpones the reminder ten minutes, silences the sound and dismisses the alert; Stop only stops the looping sound and leaves the notification in the shade. Handled by a background receiver, so neither opens the app.

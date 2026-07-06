@@ -7,6 +7,7 @@ import android.content.Intent
 import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.db.entity.ReminderEventEntity
 import com.reminderlists.data.reminders.RepeatType
+import com.reminderlists.data.reminders.isOneShotOnce
 import com.reminderlists.util.Limits
 import com.reminderlists.util.Logger
 import com.reminderlists.util.SettingsKeys
@@ -96,6 +97,15 @@ object ReminderScheduler {
             dao.updateNextFire(r.id, soon)
             schedule(context, r.id, soon, rank)
         }
+
+        // Beyond grace: mark the missed occurrence as fired (at its due time) for history and the
+        // deferred auto-remove, and retire a one-shot Once so it stops lingering active. The
+        // reschedule below then rolls Monthly/Yearly forward and clears the finished Once.
+        missed.forEach { r ->
+            dao.insertEvent(ReminderEventEntity(reminderId = r.id, firedAt = r.nextFireAt, createdAt = now))
+            if (r.isOneShotOnce()) dao.update(r.copy(active = false, updatedAt = now))
+        }
+
         // Everything else recomputes from its schedule and arms/cancels as usual.
         active.filterNot { it.id in catchUpIds }.forEach { reschedule(context, db, it.id) }
 

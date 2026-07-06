@@ -5,9 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.PowerManager
 import com.reminderlists.data.db.AppDatabase
-import com.reminderlists.data.db.entity.ReminderEntity
 import com.reminderlists.data.db.entity.ReminderEventEntity
 import com.reminderlists.data.reminders.RepeatType
+import com.reminderlists.data.reminders.isOneShotOnce
 import com.reminderlists.util.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +51,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     SoundService.start(context, reminder.soundUri, reminder.loopSound)
                     // A plain Once has nothing left to fire — drop Active so the card shows
                     // it as done (Monthly/Yearly roll over, Daily/Period keep firing).
-                    if (isOneShotOnce(reminder)) {
+                    if (reminder.isOneShotOnce()) {
                         reminder = reminder.copy(active = false, updatedAt = now)
                         db.remindersDao().update(reminder)
                     }
@@ -62,10 +62,6 @@ class AlarmReceiver : BroadcastReceiver() {
             }
         }
     }
-
-    private fun isOneShotOnce(reminder: ReminderEntity): Boolean =
-        RepeatType.of(reminder.repeatType) == RepeatType.ONE_TIME &&
-            !reminder.monthlyRepeat && !reminder.yearlyRepeat
 
     // Briefly turn the screen on so the user can spot which device fired, regardless of the
     // system's ambient-display settings (TZ 4.5). SCREEN_BRIGHT_WAKE_LOCK is deprecated but
