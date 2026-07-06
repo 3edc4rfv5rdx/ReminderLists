@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Within-grace missed fires now still alert (TZ 4.10): a fire found just a bit late on re-arm (boot, app start, time change) — within the ~10-minute grace window — is re-armed a minute out and delivered through the normal alarm path (full-screen included), instead of being silently rescheduled. Fires older than the grace window stay a plain "missed" notification.
 - Added a project README and a GPLv3 LICENSE.
 - Plain reminder notification now carries +10 min / Stop action buttons (TZ 4.5): +10 min postpones the reminder ten minutes, silences the sound and dismisses the alert; Stop only stops the looping sound and leaves the notification in the shade. Handled by a background receiver, so neither opens the app.
 - Auto-remove after firing (TZ 4.2 h): a reminder with the flag on that has fired and is done (not postponed, not Monthly/Yearly) is deleted once its fire day rolls over — deferred to the next day (swept whenever the app is opened) so a same-day re-fire is never pre-empted; a Postpone or a repeating next fire keeps it. Its photos go with it.

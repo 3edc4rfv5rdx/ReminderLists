@@ -32,6 +32,10 @@ object ReminderScheduler {
     // boot delay — and would just fire on time (TZ 4.10).
     private const val MISSED_GRACE_MS = Limits.MISSED_GRACE_MINUTES * 60 * 1000L
 
+    // Within-grace catch-up delay: re-arm a slightly-late fire a minute out so it goes through
+    // the normal AlarmReceiver path (TZ 4.10).
+    private const val CATCHUP_DELAY_MS = 60_000L
+
     // Recompute next_fire_at and arm or cancel the alarm for one reminder. The single
     // entry point for Save, Active toggle, delete-side cancel, post-fire re-arm and
     // rearmAll (TZ 4.10). next_fire_at is always updated; the alarm is armed only when
@@ -68,20 +72,35 @@ object ReminderScheduler {
     }
 
     // Re-arm all active reminders: boot, app update, app start (post force-stop), time/zone
-    // change, enable_reminders back on (TZ 4.10). Detects missed fires from the stale cached
-    // next_fire_at before rescheduling, then notifies once for all of them.
-    // TODO within-grace misses want the normal on-time alert (full-screen) — TZ 4.5 stage.
+    // change, enable_reminders back on (TZ 4.10). Splits past-due fires by how late (TZ 4.10):
+    // within the grace window they're just a bit late, so re-arm them a minute out and let the
+    // normal AlarmReceiver path present them (reliable full-screen, even from boot); older ones
+    // are stale — a single plain "missed" notification instead of an on-screen alert.
     suspend fun rearmAll(context: Context, db: AppDatabase) {
         if (!remindersEnabled(db)) {
             Logger.i("rearmAll skipped: reminders disabled")
             return
         }
+        val dao = db.remindersDao()
         val now = System.currentTimeMillis()
-        val active = db.remindersDao().getActive()
-        val missed = active.filter { it.nextFireAt?.let { fire -> fire < now - MISSED_GRACE_MS } == true }
-        active.forEach { reschedule(context, db, it.id) }
+        val active = dao.getActive()
+        val overdue = active.filter { it.nextFireAt != null && it.nextFireAt <= now }
+        val missed = overdue.filter { it.nextFireAt!! < now - MISSED_GRACE_MS }
+        val withinGrace = overdue.filter { it.nextFireAt!! >= now - MISSED_GRACE_MS }
+
+        // Within grace: fire in a minute via a real alarm — updating next_fire_at to that so a
+        // second rearmAll in the meantime doesn't treat it as overdue again.
+        val soon = now + CATCHUP_DELAY_MS
+        val catchUpIds = withinGrace.mapTo(HashSet()) { it.id }
+        withinGrace.forEachIndexed { rank, r ->
+            dao.updateNextFire(r.id, soon)
+            schedule(context, r.id, soon, rank)
+        }
+        // Everything else recomputes from its schedule and arms/cancels as usual.
+        active.filterNot { it.id in catchUpIds }.forEach { reschedule(context, db, it.id) }
+
         ReminderNotifier.notifyMissed(context, missed)
-        Logger.i("rearmAll done: ${active.size} active, ${missed.size} missed")
+        Logger.i("rearmAll done: ${active.size} active, ${withinGrace.size} catch-up, ${missed.size} missed")
     }
 
     // Postpone from the full-screen alert (TZ 4.5): fire again at untilMillis. Overrides
