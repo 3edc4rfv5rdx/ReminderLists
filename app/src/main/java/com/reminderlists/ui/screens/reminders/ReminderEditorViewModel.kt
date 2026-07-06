@@ -21,7 +21,6 @@ import com.reminderlists.data.reminders.RemindersRepository
 import com.reminderlists.data.reminders.RepeatType
 import com.reminderlists.ui.appViewModelFactory
 import com.reminderlists.ui.components.SnackEvent
-import com.reminderlists.ui.components.SnackType
 import com.reminderlists.util.Dates
 import com.reminderlists.util.Limits
 import com.reminderlists.util.SettingsKeys
@@ -224,7 +223,14 @@ class ReminderEditorViewModel(
 
         val error = validate(resolvedFrom, resolvedTo)
         if (error != null) {
-            snack = SnackEvent(SnackType.ERROR, appContext.getString(error))
+            // A past date/time isn't an input error — it's a warning (orange), like the card's
+            // Active toggle; real form errors stay red.
+            val message = appContext.getString(error)
+            snack = if (error == R.string.error_once_past) {
+                SnackEvent.warning(message)
+            } else {
+                SnackEvent.error(message)
+            }
             return
         }
 

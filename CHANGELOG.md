@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Snackbar reworked into one base SnackEvent (color/icon + text + optional glow, default 4s) with four semantic factories — info/success/warning/error (TZ 8); the single host sits in the lower sixth of the screen. A past date/time is now an orange warning («Date or time is in the past»), not a red error, in both the editor and the card's Active toggle.
 - Monthly/Yearly cards show and sort by the rolled-forward next fire date (TZ 4.1/4.6): after firing the alarm re-arms on the next month/year and the card/order follow it, while the anchor date stays put (so end-of-month/Feb 29 keep their day).
 - Sound selection unified into one reusable framed field (TZ 8): a wide dropdown of Default, device ringtones and attached files with a ▷ preview on every row and on the current pick, plus a 📎 file-picker. Used by both the reminder editor and Settings' Default sound; the editor's «Default» previews the actual Settings sound. The app bundles no sounds; the chosen Uri is what SoundService plays.
 - Reminders notification channel is silent (TZ 4.10): sound and vibration come only from SoundService, so a fire no longer plays the channel's system sound on top of the chosen one.

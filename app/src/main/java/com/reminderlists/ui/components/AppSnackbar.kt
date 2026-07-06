@@ -2,8 +2,6 @@ package com.reminderlists.ui.components
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -31,23 +29,44 @@ import com.reminderlists.ui.theme.SnackSuccess
 import com.reminderlists.ui.theme.SnackWarning
 import kotlinx.coroutines.delay
 
-// Single semantic snackbar model (TZ 8): color + type icon (colorblind-safe).
-enum class SnackType(val color: Color, val icon: ImageVector, val longDuration: Boolean) {
-    ERROR(SnackError, Icons.Filled.Error, longDuration = true),
-    WARNING(SnackWarning, Icons.Filled.Warning, longDuration = true),
-    SUCCESS(SnackSuccess, Icons.Filled.CheckCircle, longDuration = false),
-    INFO(SnackInfo, Icons.Filled.Info, longDuration = false),
+// Semantic snackbar kind (TZ 8): the color + icon (colorblind-safe). Default glow is 4s;
+// a SnackEvent may override it via durationMs.
+enum class SnackType(val color: Color, val icon: ImageVector) {
+    ERROR(SnackError, Icons.Filled.Error),
+    WARNING(SnackWarning, Icons.Filled.Warning),
+    SUCCESS(SnackSuccess, Icons.Filled.CheckCircle),
+    INFO(SnackInfo, Icons.Filled.Info),
+    ;
+
+    companion object {
+        const val DEFAULT_DURATION_MS = 4000L
+    }
 }
 
-data class SnackEvent(val type: SnackType, val message: String)
+// One snackbar to show: kind (color/icon), text, and an optional glow duration override. Use
+// the four semantic factories — info (blue), success (green), warning (orange), error (red).
+data class SnackEvent(val type: SnackType, val message: String, val durationMs: Long? = null) {
+    companion object {
+        fun info(message: String, durationMs: Long? = null) = SnackEvent(SnackType.INFO, message, durationMs)
+        fun success(message: String, durationMs: Long? = null) = SnackEvent(SnackType.SUCCESS, message, durationMs)
+        fun warning(message: String, durationMs: Long? = null) = SnackEvent(SnackType.WARNING, message, durationMs)
+        fun error(message: String, durationMs: Long? = null) = SnackEvent(SnackType.ERROR, message, durationMs)
+    }
+}
 
 // App-wide snackbar host (TZ 8): tab screens publish here so the single bar is hosted once in
-// AppRoot and draws above the bottom navigation bar (by Z), not hidden behind it.
+// AppRoot and draws above the bottom navigation bar (by Z), not hidden behind it. Semantic
+// helpers mirror the SnackEvent factories.
 class SnackController {
     var event by mutableStateOf<SnackEvent?>(null)
         private set
 
     fun show(event: SnackEvent) { this.event = event }
+
+    fun info(message: String, durationMs: Long? = null) = show(SnackEvent.info(message, durationMs))
+    fun success(message: String, durationMs: Long? = null) = show(SnackEvent.success(message, durationMs))
+    fun warning(message: String, durationMs: Long? = null) = show(SnackEvent.warning(message, durationMs))
+    fun error(message: String, durationMs: Long? = null) = show(SnackEvent.error(message, durationMs))
 
     fun dismiss() { event = null }
 }
@@ -60,7 +79,7 @@ val LocalSnackController = staticCompositionLocalOf<SnackController?> { null }
 fun AppSnackbar(event: SnackEvent?, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
     val current = event ?: return
     LaunchedEffect(current) {
-        delay(if (current.type.longDuration) 5000L else 2500L)
+        delay(current.durationMs ?: SnackType.DEFAULT_DURATION_MS)
         onDismiss()
     }
     Surface(
@@ -68,8 +87,7 @@ fun AppSnackbar(event: SnackEvent?, onDismiss: () -> Unit, modifier: Modifier = 
         contentColor = Color.White,
         shape = MaterialTheme.shapes.small,
         shadowElevation = 6.dp,
-        // Keep clear of the system navigation bar and the IME so the bar never slides off-screen.
-        modifier = modifier.navigationBarsPadding().imePadding().fillMaxWidth().padding(16.dp),
+        modifier = modifier.fillMaxWidth().padding(16.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

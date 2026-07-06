@@ -14,7 +14,6 @@ import com.reminderlists.data.reminders.RemindersRepository
 import com.reminderlists.reminders.NextFireCalculator
 import com.reminderlists.ui.appViewModelFactory
 import com.reminderlists.ui.components.SnackEvent
-import com.reminderlists.ui.components.SnackType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -75,7 +74,7 @@ class RemindersViewModel(
                 System.currentTimeMillis(),
             )
             if (next == null) {
-                snack = SnackEvent(SnackType.WARNING, app.getString(R.string.error_activate_no_fire))
+                snack = SnackEvent.warning(app.getString(R.string.error_once_past))
                 return
             }
         }

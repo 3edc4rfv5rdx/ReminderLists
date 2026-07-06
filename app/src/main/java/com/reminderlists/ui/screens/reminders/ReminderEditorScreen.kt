@@ -29,6 +29,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,7 +46,7 @@ import com.reminderlists.R
 import com.reminderlists.data.photo.PhotoManager
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.data.reminders.RepeatType
-import com.reminderlists.ui.components.AppSnackbar
+import com.reminderlists.ui.components.LocalSnackController
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.DateField
 import com.reminderlists.ui.components.FloatingLabelTextField
@@ -70,6 +71,12 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
     val allTags by vm.allTags.collectAsState()
     val presets by vm.timePresets.collectAsState()
     val defaultSound by vm.defaultSound.collectAsState()
+
+    // Publish validation snacks to the single app-wide host (TZ 8).
+    val snackController = LocalSnackController.current
+    LaunchedEffect(vm.snack) {
+        vm.snack?.let { snackController?.show(it); vm.snack = null }
+    }
     var viewerIndex by remember { mutableStateOf<Int?>(null) }
     var dailyPickerOpen by remember { mutableStateOf(false) }
 
@@ -276,12 +283,6 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
                 )
             }
         }
-
-        AppSnackbar(
-            event = vm.snack,
-            onDismiss = { vm.snack = null },
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
     }
 
     if (dailyPickerOpen) {

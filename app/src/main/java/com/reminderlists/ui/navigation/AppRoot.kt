@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -154,11 +154,12 @@ fun AppRoot() {
         }
       }
 
-      // Single app-wide snackbar host, above the bottom bar by Z (TZ 8).
+      // Single app-wide snackbar host, fixed in the lower sixth of the screen and above the
+      // bottom bar by Z (TZ 8).
       AppSnackbar(
           event = snackController.event,
           onDismiss = { snackController.dismiss() },
-          modifier = Modifier.align(Alignment.BottomCenter),
+          modifier = Modifier.align(BiasAlignment(0f, 0.8f)),
       )
     }
 }

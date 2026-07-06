@@ -166,8 +166,7 @@
     <string name="error_daily_fields">Add at least one time and one weekday</string>
     <string name="error_period_fields">Set From, To, time and at least one weekday</string>
     <string name="error_period_order">From must not be later than To</string>
-    <string name="error_once_past">Date and time are in the past</string>
-    <string name="error_activate_no_fire">Nothing left to fire — check the date and time</string>
+    <string name="error_once_past">Date or time is in the past</string>
 
     <!-- Missed reminder notifications (TZ 4.10) -->
     <string name="notif_missed_single">Missed reminder</string>
