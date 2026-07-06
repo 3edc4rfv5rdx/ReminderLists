@@ -28,6 +28,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +48,7 @@ import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.ui.components.AppDropdownMenu
 import com.reminderlists.ui.components.AppFab
 import com.reminderlists.ui.components.AppTopBar
+import com.reminderlists.ui.components.LocalSnackController
 import com.reminderlists.ui.components.ConfirmDialog
 import com.reminderlists.ui.components.EmptyState
 import com.reminderlists.ui.components.FabLevel
@@ -56,7 +58,10 @@ import com.reminderlists.ui.components.RowTitle
 import com.reminderlists.ui.components.SwipeActionsRow
 import com.reminderlists.ui.navigation.Routes
 import com.reminderlists.ui.screens.about.AboutDialog
+import com.reminderlists.util.Dates
 import com.reminderlists.util.Weekdays
+import java.time.Instant
+import java.time.ZoneId
 
 private val ReminderFolder.labelRes: Int
     get() = when (this) {
@@ -76,6 +81,12 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
     val currentFolder by vm.currentFolder.collectAsState()
     val folderCounts by vm.folderCounts.collectAsState()
     val reminders by vm.reminders.collectAsState()
+
+    // Publish validation snacks to the app-wide host so they draw above the bottom bar (TZ 8).
+    val snackController = LocalSnackController.current
+    LaunchedEffect(vm.snack) {
+        vm.snack?.let { snackController?.show(it); vm.snack = null }
+    }
 
     var topMenuOpen by remember { mutableStateOf(false) }
     var aboutOpen by remember { mutableStateOf(false) }
@@ -186,7 +197,7 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
                         ReminderCard(
                             detail = detail,
                             folder = folder ?: ReminderFolder.ONCE,
-                            onToggleActive = { vm.setActive(detail.reminder, it) },
+                            onToggleActive = { vm.setActive(detail, it) },
                             onEdit = {
                                 navController.navigate(Routes.reminderEditor(detail.reminder.id)) {
                                     launchSingleTop = true
@@ -215,6 +226,7 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
                 .padding(end = 16.dp)
                 .padding(bottom = FabLevel.barHeight + 16.dp),
         )
+
     }
 
     if (aboutOpen) {
@@ -305,14 +317,18 @@ private fun ReminderCard(
     }
 }
 
-// Last card line — fire date and time (TZ 4.6), from the raw form fields per type.
+// Last card line — fire date and time (TZ 4.6). Monthly/Yearly show the next computed fire
+// (next_fire_at rolls forward after each fire, TZ 4.1), falling back to the anchor date when
+// inactive; the other types read the raw form fields.
 private fun fireLine(detail: ReminderWithDetails, folder: ReminderFolder): String {
     val reminder = detail.reminder
     return when (folder) {
-        ReminderFolder.ONCE,
+        ReminderFolder.ONCE -> listOfNotNull(reminder.date, reminder.time).joinToString(" ")
+
         ReminderFolder.MONTHLY,
         ReminderFolder.YEARLY,
-        -> listOfNotNull(reminder.date, reminder.time).joinToString(" ")
+        -> reminder.nextFireAt?.let { formatFire(it) }
+            ?: listOfNotNull(reminder.date, reminder.time).joinToString(" ")
 
         ReminderFolder.DAILY -> detail.times.map { it.time }.sorted().joinToString(", ")
 
@@ -323,4 +339,9 @@ private fun fireLine(detail: ReminderWithDetails, folder: ReminderFolder): Strin
             reminder.time,
         ).joinToString(" ")
     }
+}
+
+private fun formatFire(millis: Long): String {
+    val dt = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDateTime()
+    return "${Dates.format(dt.toLocalDate())} ${Dates.format(dt.toLocalTime())}"
 }

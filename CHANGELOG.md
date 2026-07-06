@@ -1,7 +1,13 @@
 # Changelog
 
 ## Unreleased
-- Settings wired for the reminder engine (TZ 5): Enable reminders toggle (cancels/re-arms all alarms), and Default sound Duration (0–180s) and Sound level (0–100) sliders that SoundService reads on the next fire.
+- Monthly/Yearly cards show and sort by the rolled-forward next fire date (TZ 4.1/4.6): after firing the alarm re-arms on the next month/year and the card/order follow it, while the anchor date stays put (so end-of-month/Feb 29 keep their day).
+- Sound selection unified into one reusable framed field (TZ 8): a wide dropdown of Default, device ringtones and attached files with a ▷ preview on every row and on the current pick, plus a 📎 file-picker. Used by both the reminder editor and Settings' Default sound; the editor's «Default» previews the actual Settings sound. The app bundles no sounds; the chosen Uri is what SoundService plays.
+- Reminders notification channel is silent (TZ 4.10): sound and vibration come only from SoundService, so a fire no longer plays the channel's system sound on top of the chosen one.
+- Single app-wide snackbar host above the bottom bar (TZ 8): validation snacks draw over the navigation bar (by Z) instead of hiding behind it, and never slide under the nav bar or keyboard.
+- Full screen alert checkbox restores the user's choice when leaving the Period type (TZ 4.2) instead of staying forced on.
+- Block saving an active one-time reminder whose date/time is already in the past (TZ 4.2), including via the card's Active toggle — it could never fire; Monthly/Yearly are exempt since they roll forward.
+- Settings wired for the reminder engine (TZ 5): Enable reminders toggle (cancels/re-arms all alarms), and Default sound Duration (0–90s) and Sound level (0–100) sliders that SoundService reads on the next fire.
 - Reminder sound (TZ 4.10): a foreground SoundService loops the reminder sound (own MediaPlayer, USAGE_ALARM) bounded by the Duration setting, at the Sound level volume, with a Stop action; sound is suppressed in silent mode/DND while vibration always fires; falls back to the system alarm ringtone when no custom sound is set.
 - Reminder firing (TZ 4.5): a heads-up notification on the Reminders channel when an alarm fires, with the fire logged to reminder_events; sound and full-screen alert are next stages.
 - Firing lights up the screen for ~10s so the fired device is identifiable regardless of system settings; a one-shot Once drops its Active flag after firing (Monthly/Yearly roll over, Daily/Period keep firing).

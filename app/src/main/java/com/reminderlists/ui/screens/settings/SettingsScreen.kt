@@ -30,6 +30,7 @@ import androidx.navigation.NavController
 import com.reminderlists.R
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.PinSetupDialog
+import com.reminderlists.ui.components.SoundField
 import com.reminderlists.ui.navigation.Routes
 import com.reminderlists.util.Limits
 
@@ -44,6 +45,7 @@ fun SettingsScreen(navController: NavController) {
     val enableReminders by vm.enableReminders.collectAsState()
     val soundDuration by vm.soundDuration.collectAsState()
     val soundLevel by vm.soundLevel.collectAsState()
+    val defaultSoundUri by vm.defaultSoundUri.collectAsState()
 
     Column(Modifier.fillMaxSize()) {
         AppTopBar(
@@ -75,8 +77,14 @@ fun SettingsScreen(navController: NavController) {
             SettingRow(stringResource(R.string.settings_write_logs))
             SettingRow(stringResource(R.string.settings_time_presets))
 
-            // Default sound Duration and Sound level for firing (TZ 5 / 4.10).
-            Text(stringResource(R.string.settings_default_sound), Modifier.padding(top = 6.dp))
+            // Default sound: one self-contained field (picker + preview + Add file), then
+            // Duration and Sound level (TZ 5 / 4.10).
+            SoundField(
+                label = stringResource(R.string.settings_default_sound),
+                defaultLabel = stringResource(R.string.settings_sound_system_default),
+                value = defaultSoundUri,
+                onPick = { vm.setDefaultSound(it) },
+            )
             Text("${stringResource(R.string.settings_sound_duration)}: ${soundDuration}s")
             Slider(
                 value = soundDuration.toFloat(),
@@ -112,6 +120,7 @@ fun SettingsScreen(navController: NavController) {
             onDismiss = { pinDialogOpen = false },
         )
     }
+
 }
 
 // A settings line; screen-exit rows (dictionary, PIN, backup) get a trailing chevron.

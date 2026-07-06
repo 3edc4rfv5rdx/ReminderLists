@@ -1,15 +1,20 @@
 package com.reminderlists.ui.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -20,7 +25,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.reminderlists.data.reminders.ReminderFolder
+import com.reminderlists.ui.components.AppSnackbar
 import com.reminderlists.ui.components.FabLevel
+import com.reminderlists.ui.components.LocalSnackController
+import com.reminderlists.ui.components.SnackController
 import com.reminderlists.ui.screens.dictionary.DictionaryScreen
 import com.reminderlists.ui.screens.filters.FiltersScreen
 import com.reminderlists.ui.screens.filters.TagFilterScreen
@@ -44,8 +52,11 @@ fun AppRoot() {
         currentRoute?.hierarchy?.any { it.route == tab.route } == true
     }
     val density = LocalDensity.current
+    val snackController = remember { SnackController() }
 
-    Scaffold(
+    Box(Modifier.fillMaxSize()) {
+      CompositionLocalProvider(LocalSnackController provides snackController) {
+        Scaffold(
         // Status-bar inset is handled by AppTopBar itself; without this the content padding
         // would add it a second time and push the top bar down.
         contentWindowInsets = WindowInsets(0),
@@ -140,5 +151,14 @@ fun AppRoot() {
             composable(Routes.TAG_FILTER) { TagFilterScreen(navController) }
             // Welcome (TZ 4.8) is a dialog, not a route — see WelcomeDialog.
         }
+        }
+      }
+
+      // Single app-wide snackbar host, above the bottom bar by Z (TZ 8).
+      AppSnackbar(
+          event = snackController.event,
+          onDismiss = { snackController.dismiss() },
+          modifier = Modifier.align(Alignment.BottomCenter),
+      )
     }
 }

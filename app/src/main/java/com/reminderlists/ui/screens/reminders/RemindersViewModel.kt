@@ -1,12 +1,20 @@
 package com.reminderlists.ui.screens.reminders
 
+import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.reminderlists.R
 import com.reminderlists.data.db.dao.ReminderWithDetails
 import com.reminderlists.data.db.entity.ReminderEntity
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.data.reminders.RemindersRepository
+import com.reminderlists.reminders.NextFireCalculator
 import com.reminderlists.ui.appViewModelFactory
+import com.reminderlists.ui.components.SnackEvent
+import com.reminderlists.ui.components.SnackType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,10 +27,16 @@ import kotlinx.coroutines.launch
 // Reminders tab state (TZ 4.1 / 4.6): root shows the five fixed type-folders; opening one
 // is in-tab state (bottom bar stays, tab state survives tab switches). One live query
 // feeds folder counts and the opened folder's cards.
-class RemindersViewModel(private val repo: RemindersRepository) : ViewModel() {
+class RemindersViewModel(
+    private val repo: RemindersRepository,
+    private val app: Application,
+) : ViewModel() {
 
     private val currentFolderFlow = MutableStateFlow<ReminderFolder?>(null)
     val currentFolder: StateFlow<ReminderFolder?> = currentFolderFlow.asStateFlow()
+
+    // Validation feedback for the Active toggle (TZ 8 snackbar).
+    var snack by mutableStateOf<SnackEvent?>(null)
 
     // All reminders grouped by their derived type-folder (TZ 4.1).
     private val byFolder: StateFlow<Map<ReminderFolder, List<ReminderWithDetails>>> =
@@ -49,20 +63,38 @@ class RemindersViewModel(private val repo: RemindersRepository) : ViewModel() {
         currentFolderFlow.value = folder
     }
 
-    fun setActive(reminder: ReminderEntity, active: Boolean) {
-        viewModelScope.launch { repo.setActive(reminder, active) }
+    // Refuse to activate a reminder that has nothing left to fire (past one-time, a period
+    // fully in the past, …) — it would sit checked but never ring (TZ 4.2). The card's checkbox
+    // is bound to the DB state, so a refusal simply leaves it unchecked.
+    fun setActive(detail: ReminderWithDetails, active: Boolean) {
+        if (active) {
+            val times = detail.times.map { it.time }
+            val next = NextFireCalculator.compute(
+                detail.reminder.copy(active = true),
+                times,
+                System.currentTimeMillis(),
+            )
+            if (next == null) {
+                snack = SnackEvent(SnackType.WARNING, app.getString(R.string.error_activate_no_fire))
+                return
+            }
+        }
+        viewModelScope.launch { repo.setActive(detail.reminder, active) }
     }
 
     fun delete(reminder: ReminderEntity) {
         viewModelScope.launch { repo.delete(reminder) }
     }
 
-    // 'YYYY-MM-DD' and 'HH:MM' sort correctly as plain strings.
+    // 'YYYY-MM-DD' and 'HH:MM' sort correctly as plain strings. Monthly/Yearly sort by the
+    // rolled-forward next_fire_at (TZ 4.1), inactive ones (null) last.
     private fun sorted(folder: ReminderFolder, list: List<ReminderWithDetails>) = when (folder) {
-        ReminderFolder.ONCE,
+        ReminderFolder.ONCE ->
+            list.sortedWith(compareBy({ it.reminder.date.orEmpty() }, { it.reminder.time.orEmpty() }))
+
         ReminderFolder.MONTHLY,
         ReminderFolder.YEARLY,
-        -> list.sortedWith(compareBy({ it.reminder.date.orEmpty() }, { it.reminder.time.orEmpty() }))
+        -> list.sortedWith(compareBy(nullsLast()) { it.reminder.nextFireAt })
 
         ReminderFolder.DAILY ->
             list.sortedBy { detail -> detail.times.minOfOrNull { it.time }.orEmpty() }
@@ -73,7 +105,7 @@ class RemindersViewModel(private val repo: RemindersRepository) : ViewModel() {
 
     companion object {
         val Factory = appViewModelFactory { db, app ->
-            RemindersViewModel(RemindersRepository(db, app))
+            RemindersViewModel(RemindersRepository(db, app), app)
         }
     }
 }

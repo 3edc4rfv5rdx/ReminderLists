@@ -9,7 +9,6 @@ import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
-import android.media.RingtoneManager
 import android.net.Uri
 import android.os.IBinder
 import android.os.VibrationAttributes
@@ -82,15 +81,10 @@ class SoundService : Service() {
         }
     }
 
-    // null / Default -> the settings default, then the system alarm ringtone. 'builtin:<id>'
-    // has no bundled assets yet, so it falls back to the alarm ringtone. Otherwise a file in
-    // sounds/ (TZ 6.2). Returns null when nothing usable resolves.
-    private fun resolveSound(name: String?): Uri? = when {
-        name == null || name.startsWith("builtin:") ->
-            RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_ALARM)
-                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-        else -> SoundStore.fileFor(this, name).takeIf { it.exists() }?.let { Uri.fromFile(it) }
-    }
+    // null (no custom sound and no settings default) -> the system alarm ringtone; otherwise a
+    // system Uri or a user file, resolved by the shared store (TZ 6.2 / 8).
+    private fun resolveSound(name: String?): Uri? =
+        if (name == null) SoundStore.systemDefaultAlarm(this) else SoundStore.mediaUri(this, name)
 
     private fun playSound(uri: Uri?, loop: Boolean, level: Int) {
         uri ?: return

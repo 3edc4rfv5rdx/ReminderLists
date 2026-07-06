@@ -1,7 +1,5 @@
 package com.reminderlists.ui.screens.reminders
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,21 +16,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -54,7 +45,6 @@ import com.reminderlists.R
 import com.reminderlists.data.photo.PhotoManager
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.data.reminders.RepeatType
-import com.reminderlists.ui.components.AppDropdownMenu
 import com.reminderlists.ui.components.AppSnackbar
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.DateField
@@ -62,6 +52,7 @@ import com.reminderlists.ui.components.FloatingLabelTextField
 import com.reminderlists.ui.components.PhotoStrip
 import com.reminderlists.ui.components.PhotoViewerDialog
 import com.reminderlists.ui.components.PriorityEditor
+import com.reminderlists.ui.components.SoundField
 import com.reminderlists.ui.components.TagsField
 import com.reminderlists.ui.components.TimeField
 import com.reminderlists.ui.components.TimePickerDialog
@@ -78,12 +69,9 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
     val context = LocalContext.current
     val allTags by vm.allTags.collectAsState()
     val presets by vm.timePresets.collectAsState()
+    val defaultSound by vm.defaultSound.collectAsState()
     var viewerIndex by remember { mutableStateOf<Int?>(null) }
     var dailyPickerOpen by remember { mutableStateOf(false) }
-    var soundMenuOpen by remember { mutableStateOf(false) }
-    val soundPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let(vm::attachSound)
-    }
 
     val presetPairs = listOf(
         stringResource(R.string.preset_morning) to presets.morning,
@@ -272,65 +260,20 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
                     }
                 }
 
-                // i–j: Loop sound + Sound row (TZ 4.2). Picking/attaching/previewing sounds
-                // is the sound stage — the row shows Default only for now.
+                // i–j: Loop sound + Sound row (TZ 4.2): a field that opens the shared sound
+                // picker (Default, device ringtones, attached files) with in-place preview.
                 CheckboxRow(
                     label = stringResource(R.string.field_loop_sound),
                     checked = vm.loopSound,
                     onCheckedChange = { vm.loopSound = it },
                 )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.field_sound))
-                    Box(Modifier.weight(1f).padding(start = 8.dp)) {
-                        OutlinedButton(
-                            onClick = { soundMenuOpen = true },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(
-                                vm.soundUri ?: stringResource(R.string.sound_default),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
-                        }
-                        AppDropdownMenu(
-                            expanded = soundMenuOpen,
-                            onDismissRequest = { soundMenuOpen = false },
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.sound_default)) },
-                                onClick = {
-                                    vm.soundUri = null
-                                    soundMenuOpen = false
-                                },
-                            )
-                            vm.sounds.forEach { name ->
-                                DropdownMenuItem(
-                                    text = { Text(name) },
-                                    onClick = {
-                                        vm.soundUri = name
-                                        soundMenuOpen = false
-                                    },
-                                )
-                            }
-                        }
-                    }
-                    IconButton(onClick = { soundPicker.launch("audio/*") }) {
-                        Icon(Icons.Filled.AttachFile, contentDescription = stringResource(R.string.action_attach_sound))
-                    }
-                    // ▷ preview only for a non-Default sound (TZ 4.2 j).
-                    if (vm.soundUri != null) {
-                        IconButton(onClick = vm::togglePreview) {
-                            Icon(
-                                if (vm.previewing) Icons.Filled.Stop else Icons.Filled.PlayArrow,
-                                contentDescription = stringResource(R.string.action_play_sound),
-                            )
-                        }
-                    }
-                }
+                SoundField(
+                    label = stringResource(R.string.field_sound),
+                    defaultLabel = stringResource(R.string.sound_default),
+                    value = vm.soundUri,
+                    onPick = { vm.soundUri = it },
+                    defaultPreviewValue = defaultSound,
+                )
             }
         }
 

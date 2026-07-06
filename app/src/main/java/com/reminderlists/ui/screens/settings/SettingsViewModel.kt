@@ -39,6 +39,18 @@ class SettingsViewModel(
             .map { it?.toIntOrNull() ?: SettingsKeys.DEFAULT_SOUND_LEVEL_VALUE }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsKeys.DEFAULT_SOUND_LEVEL_VALUE)
 
+    // Selected default sound Uri; null = the system default alarm ringtone (TZ 5).
+    val defaultSoundUri: StateFlow<String?> =
+        settingsDao.observe(SettingsKeys.DEFAULT_SOUND_URI)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    // The sound list, preview and file-picker all live inside the shared SoundField (TZ 8).
+    fun setDefaultSound(uri: String?) {
+        viewModelScope.launch {
+            settingsDao.put(SettingEntity(SettingsKeys.DEFAULT_SOUND_URI, uri))
+        }
+    }
+
     // Silence mode (TZ 5 / 4.10): off cancels armed alarms (cache kept), on re-arms them.
     fun setEnableReminders(enabled: Boolean) {
         viewModelScope.launch {

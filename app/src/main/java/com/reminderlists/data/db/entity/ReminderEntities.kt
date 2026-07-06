@@ -39,7 +39,8 @@ data class ReminderEntity(
     val weekdaysMask: Int? = null,
 
     val loopSound: Boolean = true,
-    // null = Default (settings); 'builtin:<id>' = bundled; else file name in sounds/
+    // null = Default (settings); a system Uri (content://…) = device ringtone; else a file
+    // name in sounds/ (TZ 6.2).
     val soundUri: String? = null,
 
     // Denormalized next-fire cache (unixtime, wall-clock derived). Source of truth for

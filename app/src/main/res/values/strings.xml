@@ -107,6 +107,7 @@
     <string name="settings_default_sound">Default sound</string>
     <string name="settings_sound_duration">Sound duration</string>
     <string name="settings_sound_level">Sound level</string>
+    <string name="settings_sound_system_default">System default</string>
     <string name="settings_default_pin">Default PIN</string>
 
     <!-- About (TZ 4.9) -->
@@ -165,6 +166,8 @@
     <string name="error_daily_fields">Add at least one time and one weekday</string>
     <string name="error_period_fields">Set From, To, time and at least one weekday</string>
     <string name="error_period_order">From must not be later than To</string>
+    <string name="error_once_past">Date and time are in the past</string>
+    <string name="error_activate_no_fire">Nothing left to fire — check the date and time</string>
 
     <!-- Missed reminder notifications (TZ 4.10) -->
     <string name="notif_missed_single">Missed reminder</string>

@@ -2,6 +2,8 @@ package com.reminderlists.ui.components
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -14,6 +16,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,6 +41,19 @@ enum class SnackType(val color: Color, val icon: ImageVector, val longDuration: 
 
 data class SnackEvent(val type: SnackType, val message: String)
 
+// App-wide snackbar host (TZ 8): tab screens publish here so the single bar is hosted once in
+// AppRoot and draws above the bottom navigation bar (by Z), not hidden behind it.
+class SnackController {
+    var event by mutableStateOf<SnackEvent?>(null)
+        private set
+
+    fun show(event: SnackEvent) { this.event = event }
+
+    fun dismiss() { event = null }
+}
+
+val LocalSnackController = staticCompositionLocalOf<SnackController?> { null }
+
 // Single snackbar presenter (TZ 8): semantic color + type icon, auto-dismisses after a
 // type-dependent duration. The caller positions it (usually the bottom of a Box).
 @Composable
@@ -49,7 +68,8 @@ fun AppSnackbar(event: SnackEvent?, onDismiss: () -> Unit, modifier: Modifier = 
         contentColor = Color.White,
         shape = MaterialTheme.shapes.small,
         shadowElevation = 6.dp,
-        modifier = modifier.fillMaxWidth().padding(16.dp),
+        // Keep clear of the system navigation bar and the IME so the bar never slides off-screen.
+        modifier = modifier.navigationBarsPadding().imePadding().fillMaxWidth().padding(16.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

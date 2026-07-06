@@ -1,7 +1,6 @@
 package com.reminderlists.ui.screens.reminders
 
 import android.app.Application
-import android.media.MediaPlayer
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -20,7 +19,6 @@ import com.reminderlists.data.photo.PhotoManager
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.data.reminders.RemindersRepository
 import com.reminderlists.data.reminders.RepeatType
-import com.reminderlists.data.sound.SoundStore
 import com.reminderlists.ui.appViewModelFactory
 import com.reminderlists.ui.components.SnackEvent
 import com.reminderlists.ui.components.SnackType
@@ -30,8 +28,8 @@ import com.reminderlists.util.SettingsKeys
 import com.reminderlists.util.TextFormat
 import com.reminderlists.util.Weekdays
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -80,6 +78,10 @@ class ReminderEditorViewModel(
         },
     )
         private set
+
+    // Last full-screen choice made outside Period, restored when leaving Period (which forces
+    // it on). New PERIODS default: user hasn't chosen, so off.
+    private var userFullScreen = false
     var time by mutableStateOf("") // One time / Period
     var monthlyRepeat by mutableStateOf(initialFolder == ReminderFolder.MONTHLY)
         private set
@@ -91,16 +93,9 @@ class ReminderEditorViewModel(
     var periodTo by mutableStateOf("")
     var weekdaysMask by mutableIntStateOf(Weekdays.ALL) // Every day preset (TZ 4.2)
     var loopSound by mutableStateOf(true)
-    // null = Default from Settings; otherwise a file name in sounds/ (TZ 4.2 j / 6.2).
+    // null = Default from Settings; a system Uri, or a file name in sounds/ (TZ 4.2 j / 6.2).
+    // The list, preview and file-picker all live inside the shared SoundField (TZ 8).
     var soundUri by mutableStateOf<String?>(null)
-
-    // Attached sounds offered in the dropdown (TZ 4.2 j).
-    var sounds by mutableStateOf<List<String>>(emptyList())
-        private set
-
-    private var player: MediaPlayer? = null
-    var previewing by mutableStateOf(false)
-        private set
 
     val photos = mutableStateListOf<ReminderEditorPhoto>()
     private var saved = false
@@ -127,8 +122,13 @@ class ReminderEditorViewModel(
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DEFAULT_PRESETS)
 
+    // The Settings default sound, so the editor's «Default» entry previews what will actually
+    // play (TZ 4.2 j / 5), not the raw system ringtone.
+    val defaultSound: StateFlow<String?> =
+        settingsDao.observe(SettingsKeys.DEFAULT_SOUND_URI)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     init {
-        viewModelScope.launch(Dispatchers.IO) { sounds = SoundStore.listSounds(appContext) }
         if (isEdit) {
             viewModelScope.launch {
                 repo.getWithDetails(reminderId)?.let { detail ->
@@ -142,6 +142,7 @@ class ReminderEditorViewModel(
                     active = r.active
                     fullScreenAlert = r.fullScreenAlert
                     repeatType = RepeatType.of(r.repeatType)
+                    userFullScreen = if (repeatType != RepeatType.PERIOD) r.fullScreenAlert else false
                     time = r.time.orEmpty()
                     monthlyRepeat = r.monthlyRepeat
                     yearlyRepeat = r.yearlyRepeat
@@ -160,12 +161,16 @@ class ReminderEditorViewModel(
 
     fun setType(type: RepeatType) {
         repeatType = type
-        // Period only fires through the full-screen alert — forced on (TZ 4.2 b).
-        if (type == RepeatType.PERIOD) fullScreenAlert = true
+        // Period only fires through the full-screen alert — forced on (TZ 4.2 b); leaving
+        // Period restores the user's own choice instead of leaving it stuck on.
+        fullScreenAlert = if (type == RepeatType.PERIOD) true else userFullScreen
     }
 
     fun setFullScreen(value: Boolean) {
-        if (repeatType != RepeatType.PERIOD) fullScreenAlert = value
+        if (repeatType != RepeatType.PERIOD) {
+            userFullScreen = value
+            fullScreenAlert = value
+        }
     }
 
     // Monthly and Yearly repeat are mutually exclusive (TZ 4.1).
@@ -189,41 +194,6 @@ class ReminderEditorViewModel(
 
     fun removeDailyTime(value: String) {
         dailyTimes.remove(value)
-    }
-
-    // Attach a picked audio file: copy into sounds/ and select it (TZ 4.2 j).
-    fun attachSound(source: Uri) {
-        viewModelScope.launch {
-            val name = SoundStore.importSound(appContext, source) ?: return@launch
-            sounds = SoundStore.listSounds(appContext)
-            soundUri = name
-        }
-    }
-
-    // ▷ preview of a non-Default sound (TZ 4.2 j); tap again to stop.
-    fun togglePreview() {
-        if (previewing) {
-            stopPreview()
-            return
-        }
-        val name = soundUri ?: return
-        try {
-            player = MediaPlayer().apply {
-                setDataSource(SoundStore.fileFor(appContext, name).path)
-                setOnCompletionListener { stopPreview() }
-                prepare()
-                start()
-            }
-            previewing = true
-        } catch (_: Exception) {
-            stopPreview()
-        }
-    }
-
-    private fun stopPreview() {
-        player?.release()
-        player = null
-        previewing = false
     }
 
     fun addPhoto(source: Uri) {
@@ -305,6 +275,12 @@ class ReminderEditorViewModel(
             (Dates.parseDate(date) == null || Dates.parseTime(time) == null) ->
             R.string.error_once_date_time
 
+        // A plain active Once in the past would never fire (Monthly/Yearly roll forward, so
+        // they're exempt) — block it instead of silently saving a dead alarm (TZ 4.2).
+        repeatType == RepeatType.ONE_TIME && !monthlyRepeat && !yearlyRepeat &&
+            active && oncePast() ->
+            R.string.error_once_past
+
         repeatType == RepeatType.DAILY &&
             (dailyTimes.isEmpty() || weekdaysMask == Weekdays.NONE) ->
             R.string.error_daily_fields
@@ -320,10 +296,15 @@ class ReminderEditorViewModel(
         else -> null
     }
 
+    private fun oncePast(): Boolean {
+        val d = Dates.parseDate(date) ?: return false
+        val t = Dates.parseTime(time) ?: return false
+        return LocalDateTime.of(d, t).isBefore(LocalDateTime.now())
+    }
+
     // Back without Save: drop imported-but-unattached files (crash leftovers are caught
     // by the startup orphan sweep, TZ 8).
     override fun onCleared() {
-        stopPreview()
         if (!saved) {
             photos.filter { it.entity == null }
                 .forEach { PhotoManager.fileFor(appContext, it.fileName).delete() }
