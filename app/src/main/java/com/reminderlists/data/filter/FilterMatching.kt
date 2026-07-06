@@ -1,5 +1,6 @@
 package com.reminderlists.data.filter
 
+import com.reminderlists.data.db.dao.NoteWithDetails
 import com.reminderlists.data.db.dao.ReminderWithDetails
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.util.Dates
@@ -58,3 +59,34 @@ private fun TabFilter.matchesTagNames(detail: ReminderWithDetails): Boolean {
 // "Active only" toggle (TZ 4.3 addition): keep only reminders with Active on.
 private fun TabFilter.matchesActive(detail: ReminderWithDetails): Boolean =
     !activeOnly || detail.reminder.active
+
+// Note-side application of a tab filter (TZ 4A.5). Fields set is Date from/to, Tags, Priority —
+// no Active (notes don't fire). Tag Filter and Filters are mutually exclusive.
+fun TabFilter.matchesNote(detail: NoteWithDetails): Boolean = when {
+    tagActive -> matchesTags(detail.tags.mapTo(HashSet()) { it.id })
+    fieldsActive -> matchesNoteDate(detail) && matchesNotePriority(detail) && matchesNoteTagNames(detail)
+    else -> true
+}
+
+// Date range (TZ 4A.5): only notes whose Date parses as 'YYYY-MM-DD' take part; an empty or
+// unparseable Date is never cut by the date filter.
+private fun TabFilter.matchesNoteDate(detail: NoteWithDetails): Boolean {
+    if (dateFrom == null && dateTo == null) return true
+    val date = detail.note.date?.let { Dates.parseDate(it) } ?: return true
+    val df = dateFrom?.let { Dates.parseDate(it) }
+    val dt = dateTo?.let { Dates.parseDate(it) }
+    return (df == null || date >= df) && (dt == null || date <= dt)
+}
+
+private fun TabFilter.matchesNotePriority(detail: NoteWithDetails): Boolean =
+    priority <= 0 || detail.note.priority == priority
+
+private fun TabFilter.matchesNoteTagNames(detail: NoteWithDetails): Boolean {
+    if (tagNames.isEmpty()) return true
+    val recordNames = detail.tags.mapTo(HashSet()) { it.name.lowercase() }
+    return if (tagNamesMode == TagMode.AND) {
+        tagNames.all { it in recordNames }
+    } else {
+        tagNames.any { it in recordNames }
+    }
+}

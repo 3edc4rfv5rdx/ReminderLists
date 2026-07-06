@@ -69,8 +69,8 @@
     <string name="field_comment">Comment</string>
     <string name="folder_root">Root</string>
     <string name="delete_folder_title">Delete folder</string>
-    <string name="delete_folder_keep_lists">Move lists to root</string>
-    <string name="delete_folder_delete_lists">Delete lists inside</string>
+    <string name="delete_folder_keep_lists">Move contents to root</string>
+    <string name="delete_folder_delete_lists">Delete contents inside</string>
     <string name="delete_list_title">Delete list</string>
     <string name="empty_items">No items yet</string>
 
@@ -109,6 +109,8 @@
     <string name="empty_lists">No lists yet</string>
     <string name="empty_reminders">No reminders here</string>
     <string name="empty_notes">No notes yet</string>
+    <string name="editor_new_note">New note</string>
+    <string name="delete_note_title">Delete note</string>
     <string name="empty_today">No reminders for today</string>
     <string name="today_reminders_off">Reminders are currently off</string>
 

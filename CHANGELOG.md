@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Notes module (TZ 4A): a full Notes tab — one-level folders + note cards, no firing. Notes reuse the reminder form fields (Title required, Content, free-text Date, Photos, Tags, Priority) and the list-style folders/PIN gate; own Filters/Tag Filter state with the All/T/F/TF indicator (Date/Tags/Priority set, no Active). Cards support swipe edit/delete, To folder, Protect/Unprotect, Share and sort by parsed date (oldest first, undated last by title). Extracted a shared FolderRow and made the folder-delete dialog wording neutral so Lists and Notes share it.
 - Reminder notifications now use a dedicated monochrome status-bar icon (a bell) instead of the tinted launcher icon (TZ 4.10), and the armed alarm's status-bar affordance opens the app instead of re-firing the alarm broadcast.
 - Russian and Ukrainian translations caught up to the base strings (182 keys each): the notification permission onboarding dialog and the +10 min notification action.
 - Notification permission onboarding (TZ 4.10): a rationale dialog now explains why reminders need notifications before the system request fires, instead of asking cold on launch. A permanent denial switches the dialog to an Open settings action; Not now backs off and it returns on the next launch while still ungranted.

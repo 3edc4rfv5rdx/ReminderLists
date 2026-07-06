@@ -43,4 +43,10 @@ object Routes {
     const val REMINDER_EDITOR = "reminder_editor?reminderId={reminderId}&folder={folder}"
     fun reminderEditor(reminderId: Long = 0, folder: ReminderFolder = ReminderFolder.ONCE) =
         "reminder_editor?reminderId=$reminderId&folder=${folder.name}"
+
+    // Note add/edit form (TZ 4A.2); noteId <= 0 means a new note, folderId (-1 = root) is the
+    // folder a new note lands in — the opened folder on the Notes tab (TZ 3.9).
+    const val NOTE_EDITOR = "note_editor?noteId={noteId}&folderId={folderId}"
+    fun noteEditor(noteId: Long = 0, folderId: Long? = null) =
+        "note_editor?noteId=$noteId&folderId=${folderId ?: -1L}"
 }

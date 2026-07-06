@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CreateNewFolder
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenuItem
@@ -53,6 +52,7 @@ import com.reminderlists.ui.components.ConfirmDialog
 import com.reminderlists.ui.components.DeleteFolderDialog
 import com.reminderlists.ui.components.EditTextDialog
 import com.reminderlists.ui.components.EmptyState
+import com.reminderlists.ui.components.FolderRow
 import com.reminderlists.ui.components.FolderPickerDialog
 import com.reminderlists.ui.components.NameCommentDialog
 import com.reminderlists.ui.components.PinDialog
@@ -138,10 +138,11 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                         items(folders, key = { "folder-${it.id}" }) { folder ->
                             val listCount = folderCounts[folder.id] ?: 0
                             FolderRow(
-                                folder = folder,
+                                name = folder.name,
+                                comment = folder.comment,
                                 // No counter for an empty folder; non-empty is bold (TZ 3.1).
                                 countsText = if (listCount > 0) "($listCount)" else null,
-                                fontWeight = if (listCount > 0) FontWeight.Bold else null,
+                                bold = listCount > 0,
                                 onOpen = { vm.openFolder(folder) },
                                 onRename = { dialog = ListsDialog.RenameFolder(folder) },
                                 onEditComment = { dialog = ListsDialog.FolderComment(folder) },
@@ -334,46 +335,6 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
             onDismiss = { pinGate = null },
         )
     }
-}
-
-// Folder row (TZ 3.1): tap opens; «⋯» = context menu (TZ 8, no long-press on records).
-@Composable
-private fun FolderRow(
-    folder: FolderEntity,
-    countsText: String?,
-    fontWeight: FontWeight?,
-    onOpen: () -> Unit,
-    onRename: () -> Unit,
-    onEditComment: () -> Unit,
-    onDelete: () -> Unit,
-) {
-    ListItem(
-        headlineContent = {
-            RowTitle(name = folder.name, countsText = countsText, fontWeight = fontWeight, textDecoration = null)
-        },
-        supportingContent = folder.comment?.let {
-            { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-        },
-        leadingContent = {
-            Icon(Icons.Filled.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-        },
-        trailingContent = {
-            RowMenuButton { dismiss -> FolderMenuItems(dismiss, onRename, onEditComment, onDelete) }
-        },
-        modifier = Modifier.clickable { onOpen() },
-    )
-}
-
-@Composable
-private fun FolderMenuItems(
-    dismiss: () -> Unit,
-    onRename: () -> Unit,
-    onEditComment: () -> Unit,
-    onDelete: () -> Unit,
-) {
-    MenuItem(R.string.action_rename) { dismiss(); onRename() }
-    MenuItem(R.string.action_edit_comment) { dismiss(); onEditComment() }
-    MenuItem(R.string.action_delete) { dismiss(); onDelete() }
 }
 
 // List row (TZ 3.2): lock icon marks a PIN-protected list (TZ 3.6).

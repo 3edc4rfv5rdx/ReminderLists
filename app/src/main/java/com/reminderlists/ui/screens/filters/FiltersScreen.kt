@@ -73,6 +73,9 @@ fun FiltersScreen(navController: NavController, tab: FilterTab) {
     // OK is only hard-blocked by an unparseable date; the range is recoverable via the swap.
     val okEnabled = !fromError && !toError
 
+    // Notes don't fire, so the "Active only" toggle isn't part of their Filters set (TZ 4A.5).
+    val showActiveOnly = tab == FilterTab.REMINDERS
+
     // Build and apply a draft, or warn (blue) and stay if it matches nothing.
     val applyFilter: (String?, String?) -> Unit = { from, to ->
         val draft = TabFilter(
@@ -81,9 +84,9 @@ fun FiltersScreen(navController: NavController, tab: FilterTab) {
             tagNames = TextFormat.parseTags(tagsText).toSet(),
             tagNamesMode = tagsMode,
             priority = priority,
-            activeOnly = activeOnly,
+            activeOnly = activeOnly && showActiveOnly,
         )
-        if (draft.isActive && tab == FilterTab.REMINDERS && vm.matchCount(draft) == 0) {
+        if (draft.isActive && vm.matchCount(draft) == 0) {
             snackController?.info(noMatchesMsg)
         } else {
             FilterStore.update(tab) { draft }
@@ -167,12 +170,14 @@ fun FiltersScreen(navController: NavController, tab: FilterTab) {
                 Text(stringResource(R.string.field_priority))
                 PriorityEditor(priority = priority, onPriorityChange = { priority = it })
             }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            ) {
-                Text(stringResource(R.string.filter_active_only), Modifier.weight(1f))
-                Switch(checked = activeOnly, onCheckedChange = { activeOnly = it })
+            if (showActiveOnly) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                ) {
+                    Text(stringResource(R.string.filter_active_only), Modifier.weight(1f))
+                    Switch(checked = activeOnly, onCheckedChange = { activeOnly = it })
+                }
             }
         }
     }

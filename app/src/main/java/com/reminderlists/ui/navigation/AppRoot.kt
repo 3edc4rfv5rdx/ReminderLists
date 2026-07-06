@@ -36,6 +36,7 @@ import com.reminderlists.ui.screens.filters.TagFilterScreen
 import com.reminderlists.ui.screens.lists.ItemEditorScreen
 import com.reminderlists.ui.screens.lists.ListDetailScreen
 import com.reminderlists.ui.screens.lists.ListsScreen
+import com.reminderlists.ui.screens.notes.NoteEditorScreen
 import com.reminderlists.ui.screens.notes.NotesScreen
 import com.reminderlists.ui.screens.reminders.ReminderEditorScreen
 import com.reminderlists.ui.screens.reminders.RemindersScreen
@@ -152,6 +153,27 @@ fun AppRoot() {
                     folder = ReminderFolder.valueOf(
                         entry.arguments?.getString("folder") ?: ReminderFolder.ONCE.name,
                     ),
+                )
+            }
+
+            composable(
+                Routes.NOTE_EDITOR,
+                arguments = listOf(
+                    navArgument("noteId") {
+                        type = NavType.LongType
+                        defaultValue = 0L
+                    },
+                    navArgument("folderId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    },
+                ),
+            ) { entry ->
+                NoteEditorScreen(
+                    navController,
+                    noteId = entry.arguments?.getLong("noteId") ?: 0L,
+                    // -1 encodes "root" (no folder) — the nav arg can't carry a nullable Long.
+                    folderId = entry.arguments?.getLong("folderId")?.takeIf { it >= 0 },
                 )
             }
 
