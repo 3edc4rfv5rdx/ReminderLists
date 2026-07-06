@@ -116,13 +116,6 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                     }
                     AppDropdownMenu(expanded = topMenuOpen, onDismissRequest = { topMenuOpen = false }) {
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_settings)) },
-                            onClick = {
-                                topMenuOpen = false
-                                navController.navigate(Routes.SETTINGS)
-                            },
-                        )
-                        DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_dictionary)) },
                             onClick = {
                                 topMenuOpen = false

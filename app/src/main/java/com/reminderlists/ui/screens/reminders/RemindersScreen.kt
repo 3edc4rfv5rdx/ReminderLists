@@ -140,13 +140,6 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
                             },
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_settings)) },
-                            onClick = {
-                                topMenuOpen = false
-                                navController.navigate(Routes.SETTINGS)
-                            },
-                        )
-                        DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_about)) },
                             onClick = {
                                 topMenuOpen = false

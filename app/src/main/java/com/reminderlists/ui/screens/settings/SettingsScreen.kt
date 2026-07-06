@@ -2,6 +2,7 @@ package com.reminderlists.ui.screens.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,7 +39,7 @@ import com.reminderlists.util.Limits
 // logs, time presets, default sound, default PIN, backup/restore. Wired: enable reminders,
 // default sound Duration/level, default PIN, dictionary; the rest are placeholders.
 @Composable
-fun SettingsScreen(navController: NavController) {
+fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) {
     val vm: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
     var pinDialogOpen by remember { mutableStateOf(false) }
 
@@ -47,11 +48,9 @@ fun SettingsScreen(navController: NavController) {
     val soundLevel by vm.soundLevel.collectAsState()
     val defaultSoundUri by vm.defaultSoundUri.collectAsState()
 
-    Column(Modifier.fillMaxSize()) {
-        AppTopBar(
-            title = stringResource(R.string.menu_settings),
-            onBack = { navController.popBackStack() },
-        )
+    // Settings is now a bottom-bar tab (TZ 3.9): no back arrow, content inset from the bar.
+    Column(Modifier.fillMaxSize().padding(contentPadding)) {
+        AppTopBar(title = stringResource(R.string.menu_settings))
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
         ) {

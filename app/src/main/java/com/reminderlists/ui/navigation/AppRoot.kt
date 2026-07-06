@@ -82,8 +82,18 @@ fun AppRoot() {
                                     restoreState = true
                                 }
                             },
-                            icon = { androidx.compose.material3.Icon(tab.icon, contentDescription = null) },
-                            label = { Text(stringResource(tab.labelRes)) },
+                            icon = {
+                                androidx.compose.material3.Icon(
+                                    tab.icon,
+                                    contentDescription = stringResource(tab.labelRes),
+                                )
+                            },
+                            // Settings shows just the gear, no label (user rule).
+                            label = if (tab == Tab.SETTINGS) {
+                                null
+                            } else {
+                                { Text(stringResource(tab.labelRes)) }
+                            },
                         )
                     }
                 }
@@ -146,7 +156,7 @@ fun AppRoot() {
 
             composable(Routes.DICTIONARY) { DictionaryScreen(navController) }
 
-            composable(Routes.SETTINGS) { SettingsScreen(navController) }
+            composable(Routes.SETTINGS) { SettingsScreen(navController, padding) }
             composable(Routes.FILTERS) { FiltersScreen(navController) }
             composable(Routes.TAG_FILTER) { TagFilterScreen(navController) }
             // Welcome (TZ 4.8) is a dialog, not a route — see WelcomeDialog.
