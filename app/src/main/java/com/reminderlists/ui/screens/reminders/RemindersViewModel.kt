@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reminderlists.R
+import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.db.dao.ReminderWithDetails
 import com.reminderlists.data.db.entity.ReminderEntity
 import com.reminderlists.data.reminders.ReminderFolder
@@ -14,6 +15,9 @@ import com.reminderlists.data.reminders.RemindersRepository
 import com.reminderlists.reminders.NextFireCalculator
 import com.reminderlists.ui.appViewModelFactory
 import com.reminderlists.ui.components.SnackEvent
+import com.reminderlists.util.SettingsKeys
+import java.time.LocalDate
+import java.time.LocalTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +26,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+// One of today's fire times for the Today dialog (TZ 4.11): the reminder + its detail, the
+// time it fires today, and its derived type-folder (for the row icon).
+data class TodayItem(
+    val detail: ReminderWithDetails,
+    val time: LocalTime,
+    val folder: ReminderFolder,
+)
 
 // Reminders tab state (TZ 4.1 / 4.6): root shows the five fixed type-folders; opening one
 // is in-tab state (bottom bar stays, tab state survives tab switches). One live query
@@ -61,6 +73,20 @@ class RemindersViewModel(
     fun openFolder(folder: ReminderFolder?) {
         currentFolderFlow.value = folder
     }
+
+    // enable_reminders (TZ 5): shown as a silent-mode note atop the Today dialog (TZ 4.11).
+    val remindersEnabled: StateFlow<Boolean> =
+        AppDatabase.get(app).settingsDao().observe(SettingsKeys.ENABLE_REMINDERS)
+            .map { it != "0" }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    // Today's fire times across all active reminders, sorted ascending (TZ 4.11). Computed on
+    // demand from the current snapshot; Notes never appear (they don't fire).
+    fun todayItems(today: LocalDate): List<TodayItem> =
+        byFolder.value.values.flatten().flatMap { detail ->
+            NextFireCalculator.todayOccurrences(detail.reminder, detail.times.map { it.time }, today)
+                .map { time -> TodayItem(detail, time, ReminderFolder.of(detail.reminder)) }
+        }.sortedBy { it.time }
 
     // Refuse to activate a reminder that has nothing left to fire (past one-time, a period
     // fully in the past, …) — it would sit checked but never ring (TZ 4.2). The card's checkbox

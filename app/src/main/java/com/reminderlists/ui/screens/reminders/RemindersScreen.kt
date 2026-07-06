@@ -61,6 +61,7 @@ import com.reminderlists.ui.screens.about.AboutDialog
 import com.reminderlists.util.Dates
 import com.reminderlists.util.Weekdays
 import java.time.Instant
+import java.time.LocalDateTime
 import java.time.ZoneId
 
 private val ReminderFolder.labelRes: Int
@@ -91,6 +92,9 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
     var topMenuOpen by remember { mutableStateOf(false) }
     var aboutOpen by remember { mutableStateOf(false) }
     var deleteTarget by remember { mutableStateOf<ReminderWithDetails?>(null) }
+    // Today snapshot, captured at open so the row order/divider reflect that moment (TZ 4.11).
+    var todayOpen by remember { mutableStateOf<LocalDateTime?>(null) }
+    val remindersEnabled by vm.remindersEnabled.collectAsState()
 
     val inFolder = currentFolder != null
     BackHandler(enabled = inFolder) { vm.openFolder(null) }
@@ -106,7 +110,7 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
                     null
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO Today dialog (TZ 4.11) */ }) {
+                    IconButton(onClick = { todayOpen = LocalDateTime.now() }) {
                         Icon(Icons.Outlined.Alarm, contentDescription = stringResource(R.string.action_today))
                     }
                     // TODO filter indicator All/T/F/TF (TZ 3.9) — arrives with Filters.
@@ -243,6 +247,19 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
                 deleteTarget = null
             },
             onDismiss = { deleteTarget = null },
+        )
+    }
+
+    todayOpen?.let { now ->
+        TodayDialog(
+            items = vm.todayItems(now.toLocalDate()),
+            nowTime = now.toLocalTime(),
+            remindersEnabled = remindersEnabled,
+            onItemClick = { id ->
+                todayOpen = null
+                navController.navigate(Routes.reminderEditor(id)) { launchSingleTop = true }
+            },
+            onDismiss = { todayOpen = null },
         )
     }
 }

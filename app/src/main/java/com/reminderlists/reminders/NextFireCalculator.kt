@@ -65,6 +65,50 @@ object NextFireCalculator {
         }
     }
 
+    /**
+     * Fire times that fall on [today] for the Today dialog (TZ 4.11) — computed from the
+     * schedule, not next_fire_at. Empty if the reminder is inactive or doesn't fire today.
+     */
+    fun todayOccurrences(
+        reminder: ReminderEntity,
+        dailyTimes: List<String>,
+        today: LocalDate,
+    ): List<LocalTime> {
+        // Scheduled today regardless of active — Today is an overview; the UI strikes through
+        // past times and whole inactive (fired / switched off) rows (TZ 4.11).
+        val weekdayOn = { mask: Int -> Weekdays.has(mask, today.dayOfWeek.value - 1) }
+        return when (RepeatType.of(reminder.repeatType)) {
+            RepeatType.ONE_TIME -> {
+                val date = Dates.parseDate(reminder.date.orEmpty()) ?: return emptyList()
+                val time = Dates.parseTime(reminder.time.orEmpty()) ?: return emptyList()
+                val firesToday = when {
+                    reminder.monthlyRepeat -> dayOfMonthMatches(date, today)
+                    reminder.yearlyRepeat -> date.month == today.month && dayOfMonthMatches(date, today)
+                    else -> date == today
+                }
+                if (firesToday) listOf(time) else emptyList()
+            }
+
+            RepeatType.DAILY -> {
+                val mask = reminder.weekdaysMask ?: Weekdays.NONE
+                if (weekdayOn(mask)) dailyTimes.mapNotNull { Dates.parseTime(it) }.sorted() else emptyList()
+            }
+
+            RepeatType.PERIOD -> {
+                val from = Dates.parseDate(reminder.periodFrom.orEmpty()) ?: return emptyList()
+                val to = Dates.parseDate(reminder.periodTo.orEmpty()) ?: return emptyList()
+                val time = Dates.parseTime(reminder.time.orEmpty()) ?: return emptyList()
+                val mask = reminder.weekdaysMask ?: Weekdays.NONE
+                if (!today.isBefore(from) && !today.isAfter(to) && weekdayOn(mask)) listOf(time) else emptyList()
+            }
+        }
+    }
+
+    // Monthly/Yearly fire day within today's month, clamped to short months (anchor 31 -> the
+    // month's last day), matches today's day-of-month (TZ 4.1).
+    private fun dayOfMonthMatches(anchor: LocalDate, today: LocalDate): Boolean =
+        minOf(anchor.dayOfMonth, today.lengthOfMonth()) == today.dayOfMonth
+
     // Nearest date in [start..end] whose weekday is in the mask, at the earliest of the
     // given times that is still in the future (Daily d′/f′, Period h″ — TZ 4.2).
     private fun nextWeekdaySlot(

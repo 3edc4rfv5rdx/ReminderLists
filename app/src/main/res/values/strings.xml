@@ -95,6 +95,7 @@
     <string name="empty_reminders">No reminders here</string>
     <string name="empty_notes">No notes yet</string>
     <string name="empty_today">No reminders for today</string>
+    <string name="today_reminders_off">Reminders are currently off</string>
 
     <!-- Settings (TZ 5) -->
     <string name="settings_theme">Theme</string>
