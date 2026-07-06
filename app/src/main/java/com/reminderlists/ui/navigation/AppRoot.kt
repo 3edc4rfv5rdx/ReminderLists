@@ -158,7 +158,17 @@ fun AppRoot() {
             composable(Routes.DICTIONARY) { DictionaryScreen(navController) }
 
             composable(Routes.SETTINGS) { SettingsScreen(navController, padding) }
-            composable(Routes.FILTERS) { FiltersScreen(navController) }
+            composable(
+                Routes.FILTERS,
+                arguments = listOf(navArgument("tab") { type = NavType.StringType }),
+            ) { entry ->
+                FiltersScreen(
+                    navController,
+                    tab = FilterTab.valueOf(
+                        entry.arguments?.getString("tab") ?: FilterTab.REMINDERS.name,
+                    ),
+                )
+            }
             composable(
                 Routes.TAG_FILTER,
                 arguments = listOf(navArgument("tab") { type = NavType.StringType }),

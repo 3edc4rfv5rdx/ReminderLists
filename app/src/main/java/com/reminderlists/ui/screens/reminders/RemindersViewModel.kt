@@ -13,6 +13,7 @@ import com.reminderlists.data.db.entity.ReminderEntity
 import com.reminderlists.data.filter.FilterStore
 import com.reminderlists.data.filter.FilterTab
 import com.reminderlists.data.filter.TabFilter
+import com.reminderlists.data.filter.matchesReminder
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.data.reminders.RemindersRepository
 import com.reminderlists.reminders.NextFireCalculator
@@ -67,12 +68,10 @@ class RemindersViewModel(
     // folder's counter matches what opening it shows.
     private val filteredByFolder: StateFlow<Map<ReminderFolder, List<ReminderWithDetails>>> =
         combine(byFolder, filter) { groups, f ->
-            if (!f.tagActive) {
+            if (!f.isActive) {
                 groups
             } else {
-                groups.mapValues { (_, list) ->
-                    list.filter { f.matchesTags(it.tags.mapTo(HashSet()) { tag -> tag.id }) }
-                }
+                groups.mapValues { (_, list) -> list.filter { f.matchesReminder(it) } }
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 

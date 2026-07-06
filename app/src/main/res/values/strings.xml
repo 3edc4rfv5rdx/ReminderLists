@@ -33,6 +33,12 @@
     <string name="tag_filter_hint_or">Any tag from the set</string>
     <string name="tag_filter_hint_and">All tags from the set</string>
     <string name="filter_no_matches">Nothing matches this filter</string>
+    <string name="filter_date_from">Date from</string>
+    <string name="filter_date_to">Date to</string>
+    <string name="error_date_invalid">Use format YYYY-MM-DD</string>
+    <string name="error_date_range">Date from is after date to</string>
+    <string name="filter_active_only">Active only</string>
+    <string name="filter_swap_dates_q">Date from is after date to. Swap them?</string>
     <string name="menu_dictionary">Dictionary</string>
     <string name="menu_backup_restore">Backup and Restore</string>
 

@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Filters screen (TZ 4.3): Date from/to (with pickers + validation), Tags with a shared OR/AND toggle, exact Priority match, and an "Active only" switch — applied to Reminders (date cut per type: Once/Monthly/Yearly by date, Period by range overlap, Daily never). From-after-To offers a swap dialog instead of blocking; a filter matching nothing warns with a blue snackbar.
+- Filters and Tag Filter are mutually exclusive — applying one clears the other (indicator is only ever T or F). The top-bar T/F badge is now a button that re-opens the active filter.
 - Changing or clearing the default PIN now requires entering the current one first (TZ 3.6 / 5) — it guards protected lists/notes, so it can't be silently re-keyed.
 - Tag Filter (TZ 4.4): a usage-sorted tag cloud (5 font tiers, "name (N)") with a centered OR/AND toggle (accent-colored, plain-language hint) applied to Reminders — filters cards and folder counts (Today stays unfiltered), shows the All/T/F/TF indicator in the top bar, and Clear all filters resets it; OK on a filter that matches nothing warns with a blue snackbar and stays put. Notes carries its own filter state for when that tab is built.
 - Empty Reminders type-folders are hidden while a filter is active (shown always otherwise, TZ 3.9).

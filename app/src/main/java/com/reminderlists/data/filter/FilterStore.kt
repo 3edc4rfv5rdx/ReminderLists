@@ -15,16 +15,24 @@ enum class TagMode { OR, AND }
 enum class FilterIndicator { ALL, T, F, TF }
 
 // One tab's active filter — the single source of truth shared by the tab and the Filters /
-// Tag Filter screens. The Filters (4.3) date/priority fields slot in here later; for now only
-// the Tag Filter (4.4) portion is populated.
+// Tag Filter screens. The two are mutually exclusive by user decision: applying one clears
+// the other (so the indicator is only ever T or F, never TF).
 data class TabFilter(
+    // Tag Filter (4.4) — indicator T.
     val tagIds: Set<Long> = emptySet(),
     val tagMode: TagMode = TagMode.OR,
+    // Filters (4.3) — indicator F. dates are 'YYYY-MM-DD'; priority 0 = any, else an exact match.
+    val dateFrom: String? = null,
+    val dateTo: String? = null,
+    val tagNames: Set<String> = emptySet(),
+    val tagNamesMode: TagMode = TagMode.OR,
+    val priority: Int = 0,
+    val activeOnly: Boolean = false,
 ) {
     val tagActive: Boolean get() = tagIds.isNotEmpty()
 
-    // Wired when Filters (TZ 4.3) lands; keeps the indicator/AND logic forward-compatible.
-    val fieldsActive: Boolean get() = false
+    val fieldsActive: Boolean
+        get() = dateFrom != null || dateTo != null || tagNames.isNotEmpty() || priority > 0 || activeOnly
 
     val isActive: Boolean get() = tagActive || fieldsActive
 

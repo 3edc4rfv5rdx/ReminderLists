@@ -44,6 +44,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.reminderlists.R
 import com.reminderlists.data.db.dao.ReminderWithDetails
+import com.reminderlists.data.filter.FilterIndicator
 import com.reminderlists.data.filter.FilterTab
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.ui.components.AppDropdownMenu
@@ -114,8 +115,20 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
                     IconButton(onClick = { todayOpen = LocalDateTime.now() }) {
                         Icon(Icons.Outlined.Alarm, contentDescription = stringResource(R.string.action_today))
                     }
-                    // Filter indicator All/T/F/TF (TZ 3.9) — reflects this tab's filter state.
-                    FilterIndicatorBadge(filter.indicator)
+                    // Filter indicator All/T/F/TF (TZ 3.9) — reflects this tab's filter state;
+                    // when active it re-opens the filter behind it.
+                    FilterIndicatorBadge(
+                        indicator = filter.indicator,
+                        onClick = when (filter.indicator) {
+                            FilterIndicator.T -> {
+                                { navController.navigate(Routes.tagFilter(FilterTab.REMINDERS)) { launchSingleTop = true } }
+                            }
+                            FilterIndicator.F, FilterIndicator.TF -> {
+                                { navController.navigate(Routes.filters(FilterTab.REMINDERS)) { launchSingleTop = true } }
+                            }
+                            FilterIndicator.ALL -> null
+                        },
+                    )
                     IconButton(onClick = { topMenuOpen = true }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.action_menu))
                     }
@@ -124,7 +137,9 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
                             text = { Text(stringResource(R.string.menu_filters)) },
                             onClick = {
                                 topMenuOpen = false
-                                navController.navigate(Routes.FILTERS) { launchSingleTop = true }
+                                navController.navigate(Routes.filters(FilterTab.REMINDERS)) {
+                                    launchSingleTop = true
+                                }
                             },
                         )
                         DropdownMenuItem(

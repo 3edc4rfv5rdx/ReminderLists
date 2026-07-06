@@ -1,6 +1,7 @@
 package com.reminderlists.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -14,9 +15,14 @@ import com.reminderlists.R
 import com.reminderlists.data.filter.FilterIndicator
 
 // Top App Bar filter badge (TZ 3.9): All / T / F / TF for the tab's active filter state.
-// A neutral pill when All (nothing applied), accent-tinted when a filter is on.
+// Neutral pill when All (nothing applied), accent-tinted when a filter is on. When active it
+// is a button that re-opens the filter behind it (onClick, wired by the tab).
 @Composable
-fun FilterIndicatorBadge(indicator: FilterIndicator, modifier: Modifier = Modifier) {
+fun FilterIndicatorBadge(
+    indicator: FilterIndicator,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+) {
     val active = indicator != FilterIndicator.ALL
     val labelRes = when (indicator) {
         FilterIndicator.ALL -> R.string.filter_ind_all
@@ -33,6 +39,9 @@ fun FilterIndicatorBadge(indicator: FilterIndicator, modifier: Modifier = Modifi
             .background(
                 if (active) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.surfaceVariant,
+            )
+            .then(
+                if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier,
             )
             .padding(horizontal = 8.dp, vertical = 4.dp),
     )
