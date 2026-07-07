@@ -103,9 +103,20 @@
     <string name="today_reminders_off">Напоминания сейчас отключены</string>
 
     <string name="settings_theme">Тема</string>
+    <string name="settings_theme_color">Цвет</string>
+    <string name="settings_theme_mode_light">Светлая</string>
+    <string name="settings_theme_mode_dark">Тёмная</string>
+    <string name="settings_theme_mode_system">Системная</string>
+    <string name="theme_teal">Бирюзовая</string>
+    <string name="theme_indigo">Индиго</string>
+    <string name="theme_forest">Лесная</string>
+    <string name="theme_plum">Сливовая</string>
     <string name="settings_language">Язык</string>
+    <string name="language_system">Как в системе</string>
+    <string name="language_english">English</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_ukrainian">Українська</string>
     <string name="settings_enable_reminders">Включить напоминания</string>
-    <string name="settings_welcome_screen">Экран приветствия</string>
     <string name="settings_keep_screen_on">Не гасить экран в режиме крупного шрифта</string>
     <string name="settings_write_logs">Писать логи в файл</string>
     <string name="settings_time_presets">Пресеты времени</string>

@@ -1,12 +1,17 @@
 package com.reminderlists.ui.screens.settings
 
 import android.app.Application
+import android.app.LocaleManager
+import android.os.LocaleList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.db.entity.SettingEntity
 import com.reminderlists.reminders.ReminderScheduler
 import com.reminderlists.ui.appViewModelFactory
+import com.reminderlists.ui.theme.AppTheme
+import com.reminderlists.ui.theme.ThemeMode
+import com.reminderlists.util.Logger
 import com.reminderlists.util.SettingsKeys
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,14 +19,46 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// Settings screen state (TZ 5). Wired: default PIN, enable reminders, default sound
-// Duration/level. The rest are still TODO.
+// Settings screen state (TZ 5).
 class SettingsViewModel(
     private val db: AppDatabase,
     private val app: Application,
 ) : ViewModel() {
 
     private val settingsDao = db.settingsDao()
+
+    // Theme color preset and Light/Dark/System mode (TZ 5); defaults Teal + Light.
+    val themeColor: StateFlow<AppTheme> =
+        settingsDao.observe(SettingsKeys.THEME)
+            .map { AppTheme.fromKey(it) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AppTheme.TEAL)
+
+    val themeMode: StateFlow<ThemeMode> =
+        settingsDao.observe(SettingsKeys.THEME_MODE)
+            .map { ThemeMode.fromKey(it) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ThemeMode.LIGHT)
+
+    // Keep screen on in large-font mode (TZ 3.5 / 5), default ON; "false" is the off sentinel.
+    val keepScreenOn: StateFlow<Boolean> =
+        settingsDao.observe(SettingsKeys.KEEP_SCREEN_ON_LARGE_FONT)
+            .map { it != "false" }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    // Write debug logs to file (TZ 5 / 8), default OFF.
+    val writeLogs: StateFlow<Boolean> =
+        settingsDao.observe(SettingsKeys.WRITE_LOGS_TO_FILE)
+            .map { it == "1" }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    // Time presets used by the reminder form (TZ 5 / 4.2); "HH:mm" strings.
+    val morningPreset: StateFlow<String> = presetFlow(SettingsKeys.TIME_PRESET_MORNING, SettingsKeys.DEFAULT_MORNING)
+    val dayPreset: StateFlow<String> = presetFlow(SettingsKeys.TIME_PRESET_DAY, SettingsKeys.DEFAULT_DAY)
+    val eveningPreset: StateFlow<String> = presetFlow(SettingsKeys.TIME_PRESET_EVENING, SettingsKeys.DEFAULT_EVENING)
+
+    private fun presetFlow(key: String, default: String): StateFlow<String> =
+        settingsDao.observe(key)
+            .map { it ?: default }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), default)
 
     // enable_reminders: absent means on (TZ 5 / 4.10).
     val enableReminders: StateFlow<Boolean> =
@@ -82,6 +119,45 @@ class SettingsViewModel(
         viewModelScope.launch {
             settingsDao.put(SettingEntity(SettingsKeys.DEFAULT_PIN, pin.takeIf { it.isNotEmpty() }))
         }
+    }
+
+    fun setThemeColor(theme: AppTheme) {
+        viewModelScope.launch { settingsDao.put(SettingEntity(SettingsKeys.THEME, theme.name)) }
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch { settingsDao.put(SettingEntity(SettingsKeys.THEME_MODE, mode.name)) }
+    }
+
+    fun setKeepScreenOn(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsDao.put(SettingEntity(SettingsKeys.KEEP_SCREEN_ON_LARGE_FONT, if (enabled) "true" else "false"))
+        }
+    }
+
+    fun setWriteLogs(enabled: Boolean) {
+        Logger.writeToFile = enabled // take effect immediately, not just next launch
+        viewModelScope.launch {
+            settingsDao.put(SettingEntity(SettingsKeys.WRITE_LOGS_TO_FILE, if (enabled) "1" else "0"))
+        }
+    }
+
+    fun setTimePreset(key: String, time: String) {
+        viewModelScope.launch { settingsDao.put(SettingEntity(key, time)) }
+    }
+
+    // UI language (TZ 5). Per-app locale via the framework LocaleManager (API 33+, pure AOSP);
+    // the system persists it and recreates the activity. null tag = follow the system language.
+    fun currentLanguageTag(): String? =
+        app.getSystemService(LocaleManager::class.java)
+            .applicationLocales
+            .takeUnless { it.isEmpty }
+            ?.get(0)
+            ?.language
+
+    fun setLanguage(tag: String?) {
+        app.getSystemService(LocaleManager::class.java).applicationLocales =
+            if (tag == null) LocaleList.getEmptyLocaleList() else LocaleList.forLanguageTags(tag)
     }
 
     companion object {

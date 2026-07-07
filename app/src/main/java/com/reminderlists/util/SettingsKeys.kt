@@ -3,7 +3,7 @@ package com.reminderlists.util
 // Keys for the settings table (TZ 5 / 6.3).
 object SettingsKeys {
     const val THEME = "theme"
-    const val LANGUAGE = "language"
+    const val THEME_MODE = "theme_mode"
     const val DEFAULT_PIN = "default_pin"
     const val ENABLE_REMINDERS = "enable_reminders"
     const val KEEP_SCREEN_ON_LARGE_FONT = "keep_screen_on_large_font"
@@ -14,7 +14,6 @@ object SettingsKeys {
     const val DEFAULT_SOUND_URI = "default_sound_uri"
     const val DEFAULT_SOUND_DURATION_SEC = "default_sound_duration_sec"
     const val DEFAULT_SOUND_LEVEL = "default_sound_level"
-    const val WELCOME_SHOWN = "welcome_shown"
 
     // Defaults (TZ 5).
     const val DEFAULT_MORNING = "09:30"

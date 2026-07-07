@@ -9,8 +9,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -19,7 +21,10 @@ import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.reminders.RemindersRepository
 import com.reminderlists.ui.navigation.AppRoot
 import com.reminderlists.ui.screens.permission.NotificationPermissionDialog
+import com.reminderlists.ui.theme.AppTheme
 import com.reminderlists.ui.theme.ReminderListsTheme
+import com.reminderlists.ui.theme.ThemeMode
+import com.reminderlists.util.SettingsKeys
 import kotlinx.coroutines.launch
 
 // Single-Activity host. Splash via androidx.core.splashscreen (TZ 7); UI is AppRoot (TZ 3.9).
@@ -47,8 +52,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         if (!notificationsGranted()) notifPrompt = NotifPrompt.RATIONALE
         setContent {
-            // TODO read theme from settings for the ReminderListsTheme(theme = ...) argument (TZ 5).
-            ReminderListsTheme {
+            // Theme color preset + Light/Dark/System mode come from settings (TZ 5); observing
+            // them here re-themes the whole app the moment either changes.
+            val db = remember { AppDatabase.get(this) }
+            val themeKey by db.settingsDao().observe(SettingsKeys.THEME).collectAsState(initial = null)
+            val modeKey by db.settingsDao().observe(SettingsKeys.THEME_MODE).collectAsState(initial = null)
+            ReminderListsTheme(
+                theme = AppTheme.fromKey(themeKey),
+                mode = ThemeMode.fromKey(modeKey),
+            ) {
                 AppRoot()
                 if (notifPrompt != NotifPrompt.NONE) {
                     NotificationPermissionDialog(

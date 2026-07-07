@@ -28,7 +28,6 @@ object Routes {
     fun filters(tab: FilterTab) = "filters/${tab.name}"
     const val TAG_FILTER = "tag_filter/{tab}"
     fun tagFilter(tab: FilterTab) = "tag_filter/${tab.name}"
-    // Welcome (TZ 4.8) is shown as a dialog, not a route.
 
     // Opened list (TZ 3.2); folder browsing is in-tab state, not a route.
     const val LIST_DETAIL = "list/{listId}"

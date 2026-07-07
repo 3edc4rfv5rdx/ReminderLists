@@ -90,12 +90,7 @@ fun AppRoot() {
                                     contentDescription = stringResource(tab.labelRes),
                                 )
                             },
-                            // Settings shows just the gear, no label (user rule).
-                            label = if (tab == Tab.SETTINGS) {
-                                null
-                            } else {
-                                { Text(stringResource(tab.labelRes)) }
-                            },
+                            label = { Text(stringResource(tab.labelRes)) },
                         )
                     }
                 }
@@ -202,7 +197,6 @@ fun AppRoot() {
                     ),
                 )
             }
-            // Welcome (TZ 4.8) is a dialog, not a route — see WelcomeDialog.
         }
         }
       }

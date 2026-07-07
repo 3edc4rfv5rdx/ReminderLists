@@ -11,15 +11,39 @@ enum class AppTheme(val seed: androidx.compose.ui.graphics.Color) {
     TEAL(Teal),
     INDIGO(Indigo),
     FOREST(Forest),
-    PLUM(Plum),
+    PLUM(Plum);
+
+    companion object {
+        // Stored as the enum name; unknown/absent falls back to the default (TZ 5).
+        fun fromKey(key: String?): AppTheme =
+            entries.firstOrNull { it.name == key } ?: TEAL
+    }
+}
+
+// Light/Dark/System selector (TZ 5). Default is LIGHT — the app does not follow the system
+// dark theme unless the user picks SYSTEM.
+enum class ThemeMode {
+    LIGHT,
+    DARK,
+    SYSTEM;
+
+    companion object {
+        fun fromKey(key: String?): ThemeMode =
+            entries.firstOrNull { it.name == key } ?: LIGHT
+    }
 }
 
 @Composable
 fun ReminderListsTheme(
     theme: AppTheme = AppTheme.TEAL,
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    mode: ThemeMode = ThemeMode.LIGHT,
     content: @Composable () -> Unit,
 ) {
+    val darkTheme = when (mode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    }
     val colorScheme = if (darkTheme) {
         darkColorScheme(primary = theme.seed)
     } else {
