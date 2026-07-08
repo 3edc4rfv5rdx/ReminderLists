@@ -8,6 +8,8 @@ import androidx.core.app.NotificationManagerCompat
 import com.reminderlists.MainActivity
 import com.reminderlists.R
 import com.reminderlists.data.db.entity.ReminderEntity
+import com.reminderlists.data.reminders.IntervalUnit
+import com.reminderlists.data.reminders.RepeatType
 
 // Builds and posts reminder notifications (TZ 4.10). Missed fires are presented here as a
 // plain notification (never full-screen): one per reminder up to a threshold, a single
@@ -35,8 +37,15 @@ object ReminderNotifier {
             .addAction(0, context.getString(R.string.notif_postpone_10), ReminderActionReceiver.postponeIntent(context, reminder.id))
             .addAction(0, context.getString(R.string.notif_sound_stop), ReminderActionReceiver.stopIntent(context, reminder.id))
         reminder.content?.let { builder.setContentText(it) }
+        // Minute-interval reminders fire often — auto-expire a stale one from the shade after
+        // 20s so it doesn't linger until the next fire replaces it (TZ 4.10).
+        if (isMinuteInterval(reminder)) builder.setTimeoutAfter(20_000)
         nm.notify(notifId(reminder.id), builder.build())
     }
+
+    private fun isMinuteInterval(reminder: ReminderEntity): Boolean =
+        RepeatType.of(reminder.repeatType) == RepeatType.INTERVAL &&
+            IntervalUnit.of(reminder.intervalUnit) == IntervalUnit.MINUTES
 
     // On-time fire with Full screen alert on / Period (TZ 4.5): a HIGH-channel notification
     // carrying a full-screen intent to FullScreenAlertActivity. The OS launches the activity

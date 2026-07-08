@@ -51,6 +51,7 @@ import com.reminderlists.ui.components.LocalSnackController
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.DateField
 import com.reminderlists.ui.components.FloatingLabelTextField
+import com.reminderlists.ui.components.IntervalField
 import com.reminderlists.ui.components.PhotoStrip
 import com.reminderlists.ui.components.PhotoViewerDialog
 import com.reminderlists.ui.components.PriorityEditor
@@ -169,6 +170,9 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
                     RepeatTypeOption(R.string.repeat_period, vm.repeatType == RepeatType.PERIOD) {
                         vm.setType(RepeatType.PERIOD)
                     }
+                    RepeatTypeOption(R.string.repeat_interval, vm.repeatType == RepeatType.INTERVAL) {
+                        vm.setType(RepeatType.INTERVAL)
+                    }
                 }
 
                 when (vm.repeatType) {
@@ -261,6 +265,27 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
                         WeekdayPicker(
                             mask = vm.weekdaysMask,
                             onMaskChange = { vm.weekdaysMask = it },
+                        )
+                    }
+
+                    // d‴–f‴: start Date + Time + presets, then «Every N [unit]» (TZ 4.2 f‴).
+                    RepeatType.INTERVAL -> {
+                        DateField(
+                            value = vm.date,
+                            onValueChange = { vm.date = it },
+                            label = stringResource(R.string.field_date),
+                        )
+                        TimeField(
+                            value = vm.time,
+                            onValueChange = { vm.time = it },
+                            label = stringResource(R.string.field_time),
+                        )
+                        TimePresetRow(presets = presetPairs, onPick = { vm.time = it })
+                        IntervalField(
+                            count = vm.intervalCount,
+                            onCountChange = { vm.intervalCount = it },
+                            unit = vm.intervalUnit,
+                            onUnitChange = { vm.intervalUnit = it },
                         )
                     }
                 }

@@ -10,6 +10,7 @@
     <string name="folder_periods">Періоди</string>
     <string name="folder_monthly">Щомісячні</string>
     <string name="folder_yearly">Щорічні</string>
+    <string name="folder_intervals">Інтервали</string>
 
     <string name="action_menu">Меню</string>
     <string name="action_back">Назад</string>
@@ -158,6 +159,13 @@
     <string name="repeat_one_time">Одноразово</string>
     <string name="repeat_daily">Щодня</string>
     <string name="repeat_period">Період</string>
+    <string name="repeat_interval">Інтервал</string>
+    <string name="field_interval_every">Кожні</string>
+    <string name="interval_unit_minutes">хвилини</string>
+    <string name="interval_unit_hours">години</string>
+    <string name="interval_unit_days">дні</string>
+    <string name="interval_unit_weeks">тижні</string>
+    <string name="interval_unit_months">місяці</string>
     <string name="field_monthly_repeat">Щомісяця</string>
     <string name="field_yearly_repeat">Щороку</string>
     <string name="field_auto_remove">Видаляти після спрацювання</string>
@@ -198,6 +206,7 @@
     <string name="error_period_order">«З» не може бути пізніше «До»</string>
     <string name="error_period_mixed">Для «З» і «До» використовуйте або числа днів, або дати</string>
     <string name="error_once_past">Дата або час у минулому</string>
+    <string name="error_interval_fields">Вкажіть дату початку, час та інтервал</string>
 
     <!-- Missed reminder notifications (TZ 4.10) -->
     <string name="notif_missed_single">Пропущене нагадування</string>

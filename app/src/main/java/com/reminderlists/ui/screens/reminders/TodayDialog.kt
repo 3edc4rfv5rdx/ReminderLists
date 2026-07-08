@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -139,4 +140,5 @@ private fun folderIcon(folder: ReminderFolder): ImageVector = when (folder) {
     ReminderFolder.PERIODS -> Icons.Filled.DateRange
     ReminderFolder.MONTHLY -> Icons.Filled.CalendarMonth
     ReminderFolder.YEARLY -> Icons.Filled.CalendarMonth
+    ReminderFolder.INTERVALS -> Icons.Filled.Timelapse
 }

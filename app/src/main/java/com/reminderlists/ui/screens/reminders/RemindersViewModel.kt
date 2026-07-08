@@ -151,6 +151,10 @@ class RemindersViewModel(
         // fire (like Monthly/Yearly), inactive/ended ones (null) last.
         ReminderFolder.PERIODS ->
             list.sortedWith(compareBy(nullsLast()) { it.reminder.nextFireAt })
+
+        // Interval has no calendar anchor to sort on — order by the next computed fire.
+        ReminderFolder.INTERVALS ->
+            list.sortedWith(compareBy(nullsLast()) { it.reminder.nextFireAt })
     }
 
     companion object {

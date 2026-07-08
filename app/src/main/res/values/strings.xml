@@ -13,6 +13,7 @@
     <string name="folder_periods">Periods</string>
     <string name="folder_monthly">Monthly</string>
     <string name="folder_yearly">Yearly</string>
+    <string name="folder_intervals">Intervals</string>
 
     <!-- Top app bar / menu (TZ 3.9) -->
     <string name="action_menu">Menu</string>
@@ -170,6 +171,13 @@
     <string name="repeat_one_time">One time</string>
     <string name="repeat_daily">Daily</string>
     <string name="repeat_period">Period</string>
+    <string name="repeat_interval">Interval</string>
+    <string name="field_interval_every">Every</string>
+    <string name="interval_unit_minutes">minutes</string>
+    <string name="interval_unit_hours">hours</string>
+    <string name="interval_unit_days">days</string>
+    <string name="interval_unit_weeks">weeks</string>
+    <string name="interval_unit_months">months</string>
     <string name="field_monthly_repeat">Monthly repeat</string>
     <string name="field_yearly_repeat">Yearly repeat</string>
     <string name="field_auto_remove">Auto-remove after firing</string>
@@ -210,6 +218,7 @@
     <string name="error_period_order">From must not be later than To</string>
     <string name="error_period_mixed">Use day numbers or dates for both From and To</string>
     <string name="error_once_past">Date or time is in the past</string>
+    <string name="error_interval_fields">Set start date, time and interval</string>
 
     <!-- Missed reminder notifications (TZ 4.10) -->
     <string name="notif_missed_single">Missed reminder</string>

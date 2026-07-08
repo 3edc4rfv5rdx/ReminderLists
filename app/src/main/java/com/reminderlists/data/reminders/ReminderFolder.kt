@@ -7,10 +7,27 @@ enum class RepeatType(val value: Int) {
     ONE_TIME(0),
     DAILY(1),
     PERIOD(2),
+    INTERVAL(3),
     ;
 
     companion object {
         fun of(value: Int): RepeatType = entries.firstOrNull { it.value == value } ?: ONE_TIME
+    }
+}
+
+// Interval unit stored in reminders.intervalUnit (TZ 4.2 f‴ / 6.2). Years intentionally
+// absent — "once a year" is the Yearly type. Minutes/hours are absolute (Instant) intervals;
+// days/weeks/months are wall-clock (LocalDate) — the split is applied in NextFireCalculator.
+enum class IntervalUnit(val value: Int) {
+    MINUTES(0),
+    HOURS(1),
+    DAYS(2),
+    WEEKS(3),
+    MONTHS(4),
+    ;
+
+    companion object {
+        fun of(value: Int?): IntervalUnit = entries.firstOrNull { it.value == value } ?: DAYS
     }
 }
 
@@ -28,6 +45,7 @@ enum class ReminderFolder {
     PERIODS,
     MONTHLY,
     YEARLY,
+    INTERVALS,
     ;
 
     companion object {
@@ -35,6 +53,7 @@ enum class ReminderFolder {
             when (RepeatType.of(reminder.repeatType)) {
                 RepeatType.DAILY -> DAILY
                 RepeatType.PERIOD -> PERIODS
+                RepeatType.INTERVAL -> INTERVALS
                 RepeatType.ONE_TIME -> when {
                     reminder.monthlyRepeat -> MONTHLY
                     reminder.yearlyRepeat -> YEARLY

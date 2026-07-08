@@ -74,9 +74,10 @@ private val ReminderFolder.labelRes: Int
         ReminderFolder.PERIODS -> R.string.folder_periods
         ReminderFolder.MONTHLY -> R.string.folder_monthly
         ReminderFolder.YEARLY -> R.string.folder_yearly
+        ReminderFolder.INTERVALS -> R.string.folder_intervals
     }
 
-// Reminders tab (TZ 3.9 / 4.1 / 4.6): four fixed type-folders + the Once cards in the
+// Reminders tab (TZ 3.9 / 4.1 / 4.6): five fixed type-folders + the Once cards in the
 // root, reminder cards inside an opened folder. Today and the filter indicator arrive
 // with their features.
 @Composable
@@ -172,9 +173,9 @@ fun RemindersScreen(navController: NavController, contentPadding: PaddingValues)
             } else {
                 LazyColumn(Modifier.fillMaxSize()) {
                     if (folder == null) {
-                        // Root: the four fixed type-folders, then the Once cards (TZ 3.9).
+                        // Root: the five fixed type-folders, then the Once cards (TZ 3.9).
                         // With a filter active, empty folders are hidden to cut clutter; without
-                        // a filter all four always show (TZ 3.9 — fixed type-folders).
+                        // a filter all five always show (TZ 3.9 — fixed type-folders).
                         val visibleFolders = ReminderFolder.entries
                             .filter { it != ReminderFolder.ONCE }
                             .filter { !filter.isActive || (folderCounts[it] ?: 0) > 0 }
@@ -365,6 +366,11 @@ private fun fireLine(detail: ReminderWithDetails, folder: ReminderFolder): Strin
             reminder.periodTo,
             reminder.time,
         ).joinToString(" ")
+
+        // Interval: the next computed fire (rolls forward after each fire), falling back to the
+        // start date/time when inactive (TZ 4.6).
+        ReminderFolder.INTERVALS -> reminder.nextFireAt?.let { formatFire(it) }
+            ?: listOfNotNull(reminder.date, reminder.time).joinToString(" ")
     }
 }
 

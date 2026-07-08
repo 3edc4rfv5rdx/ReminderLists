@@ -1,6 +1,7 @@
 package com.reminderlists.reminders
 
 import com.reminderlists.data.db.entity.ReminderEntity
+import com.reminderlists.data.reminders.IntervalUnit
 import com.reminderlists.data.reminders.RepeatType
 import com.reminderlists.util.Dates
 import com.reminderlists.util.Weekdays
@@ -72,6 +73,12 @@ object NextFireCalculator {
                     nextMonthlyWindowSlot(fromDay, toDay, time, mask, now, zone)
                 }
             }
+
+            RepeatType.INTERVAL -> {
+                val start = intervalStart(reminder) ?: return null
+                val count = reminder.intervalCount?.takeIf { it >= 1 } ?: return null
+                nextInterval(start, count, IntervalUnit.of(reminder.intervalUnit), now, zone)
+            }
         }
     }
 
@@ -120,6 +127,16 @@ object NextFireCalculator {
                     fromDay != null && toDay != null && inMonthlyWindow(today, fromDay, toDay)
                 }
                 if (inRange) listOf(time) else emptyList()
+            }
+
+            RepeatType.INTERVAL -> {
+                val unit = IntervalUnit.of(reminder.intervalUnit)
+                // Minute intervals would flood the Today dialog with hundreds of rows — excluded;
+                // hours and coarser are listed like Daily (at most ~24 for hourly) (TZ 4.11).
+                if (unit == IntervalUnit.MINUTES) return emptyList()
+                val start = intervalStart(reminder) ?: return emptyList()
+                val count = reminder.intervalCount?.takeIf { it >= 1 } ?: return emptyList()
+                intervalOccurrencesOn(start, count, unit, today)
             }
         }
     }
@@ -211,9 +228,89 @@ object NextFireCalculator {
         }
     }
 
+    // Interval start = the reminder's date + time (TZ 4.2 f‴). Null if either is unset/invalid.
+    private fun intervalStart(reminder: ReminderEntity): LocalDateTime? {
+        val date = Dates.parseDate(reminder.date.orEmpty()) ?: return null
+        val time = Dates.parseTime(reminder.time.orEmpty()) ?: return null
+        return LocalDateTime.of(date, time)
+    }
+
+    // Next interval fire strictly after now (TZ 4.10). Minutes/hours are absolute (Instant
+    // arithmetic, DST-agnostic); days/weeks/months are wall-clock (LocalDateTime, months clamp
+    // short-month days via java.time). Returns the first fire when the start is still in future.
+    private fun nextInterval(
+        start: LocalDateTime,
+        count: Int,
+        unit: IntervalUnit,
+        now: Long,
+        zone: ZoneId,
+    ): Long {
+        val startMillis = toMillis(start, zone)
+        if (startMillis > now) return startMillis
+        if (unit == IntervalUnit.MINUTES || unit == IntervalUnit.HOURS) {
+            val step = count.toLong() * if (unit == IntervalUnit.MINUTES) 60_000L else 3_600_000L
+            val k = (now - startMillis) / step + 1
+            return startMillis + k * step
+        }
+        // Wall-clock units: estimate k from average step length, then correct with a bounded
+        // scan (a few iterations) so DST/short-month drift can't misplace the fire.
+        val approxStepMinutes = count.toLong() * when (unit) {
+            IntervalUnit.DAYS -> 1_440L
+            IntervalUnit.WEEKS -> 10_080L
+            else -> 43_800L // months ~30.4 days, only a starting estimate
+        }
+        var k = maxOf(0L, (now - startMillis) / 60_000L / approxStepMinutes)
+        while (k > 0 && toMillis(plusSteps(start, unit, count * k), zone) > now) k--
+        while (toMillis(plusSteps(start, unit, count * k), zone) <= now) k++
+        return toMillis(plusSteps(start, unit, count * k), zone)
+    }
+
+    // Wall-clock fire times of an Interval reminder falling on [today], for the Today dialog
+    // (TZ 4.11). Bounded scan around today; caller excludes minute intervals.
+    private fun intervalOccurrencesOn(
+        start: LocalDateTime,
+        count: Int,
+        unit: IntervalUnit,
+        today: LocalDate,
+    ): List<LocalTime> {
+        val dayStart = today.atStartOfDay()
+        val dayEnd = today.plusDays(1).atStartOfDay()
+        if (start.isAfter(dayEnd)) return emptyList()
+        val approxStepMinutes = count.toLong() * when (unit) {
+            IntervalUnit.HOURS -> 60L
+            IntervalUnit.DAYS -> 1_440L
+            IntervalUnit.WEEKS -> 10_080L
+            else -> 43_800L
+        }
+        val minutesToDay = java.time.Duration.between(start, dayStart).toMinutes()
+        var k = maxOf(0L, minutesToDay / approxStepMinutes)
+        while (k > 0 && !plusSteps(start, unit, count * k).isBefore(dayStart)) k--
+        val out = mutableListOf<LocalTime>()
+        var guard = 0
+        while (guard++ < 100_000) {
+            val occ = plusSteps(start, unit, count * k)
+            if (!occ.isBefore(dayEnd)) break
+            if (!occ.isBefore(dayStart)) out += occ.toLocalTime()
+            k++
+        }
+        return out
+    }
+
+    private fun plusSteps(start: LocalDateTime, unit: IntervalUnit, steps: Long): LocalDateTime =
+        when (unit) {
+            IntervalUnit.MINUTES -> start.plusMinutes(steps)
+            IntervalUnit.HOURS -> start.plusHours(steps)
+            IntervalUnit.DAYS -> start.plusDays(steps)
+            IntervalUnit.WEEKS -> start.plusWeeks(steps)
+            IntervalUnit.MONTHS -> start.plusMonths(steps)
+        }
+
     private fun localDate(now: Long, zone: ZoneId): LocalDate =
         Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
 
     private fun toMillis(date: LocalDate, time: LocalTime, zone: ZoneId): Long =
         LocalDateTime.of(date, time).atZone(zone).toInstant().toEpochMilli()
+
+    private fun toMillis(dateTime: LocalDateTime, zone: ZoneId): Long =
+        dateTime.atZone(zone).toInstant().toEpochMilli()
 }

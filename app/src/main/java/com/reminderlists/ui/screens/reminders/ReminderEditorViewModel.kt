@@ -16,6 +16,7 @@ import com.reminderlists.data.db.dao.TagsDao
 import com.reminderlists.data.db.entity.ReminderEntity
 import com.reminderlists.data.db.entity.ReminderPhotoEntity
 import com.reminderlists.data.photo.PhotoManager
+import com.reminderlists.data.reminders.IntervalUnit
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.data.reminders.RemindersRepository
 import com.reminderlists.data.reminders.RepeatType
@@ -72,6 +73,7 @@ class ReminderEditorViewModel(
         when (initialFolder) {
             ReminderFolder.DAILY -> RepeatType.DAILY
             ReminderFolder.PERIODS -> RepeatType.PERIOD
+            ReminderFolder.INTERVALS -> RepeatType.INTERVAL
             else -> RepeatType.ONE_TIME
         },
     )
@@ -89,6 +91,9 @@ class ReminderEditorViewModel(
     val dailyTimes = mutableStateListOf<String>()
     var periodFrom by mutableStateOf("")
     var periodTo by mutableStateOf("")
+    // Interval: N units from the start (date + time). Count is edited as text (TZ 4.2 f‴).
+    var intervalCount by mutableStateOf("1")
+    var intervalUnit by mutableStateOf(IntervalUnit.DAYS)
     var weekdaysMask by mutableIntStateOf(Weekdays.ALL) // Every day preset (TZ 4.2)
     var loopSound by mutableStateOf(true)
     // null = Default from Settings; a system Uri, or a file name in sounds/ (TZ 4.2 j / 6.2).
@@ -148,6 +153,8 @@ class ReminderEditorViewModel(
                     dailyTimes += detail.times.map { it.time }.sorted()
                     periodFrom = r.periodFrom.orEmpty()
                     periodTo = r.periodTo.orEmpty()
+                    intervalCount = r.intervalCount?.toString() ?: "1"
+                    intervalUnit = IntervalUnit.of(r.intervalUnit)
                     weekdaysMask = r.weekdaysMask ?: Weekdays.ALL
                     loopSound = r.loopSound
                     soundUri = r.soundUri
@@ -239,6 +246,7 @@ class ReminderEditorViewModel(
         val base = existing
         val oneTime = repeatType == RepeatType.ONE_TIME
         val period = repeatType == RepeatType.PERIOD
+        val interval = repeatType == RepeatType.INTERVAL
         val entity = ReminderEntity(
             id = base?.id ?: 0,
             title = title.trim(),
@@ -247,8 +255,9 @@ class ReminderEditorViewModel(
             active = active,
             fullScreenAlert = fullScreenAlert,
             repeatType = repeatType.value,
-            date = date.trim().takeIf { oneTime },
-            time = time.trim().takeIf { oneTime || period },
+            // One time uses date as its fire date; Interval uses it as the start date.
+            date = date.trim().takeIf { oneTime || interval },
+            time = time.trim().takeIf { oneTime || period || interval },
             monthlyRepeat = oneTime && monthlyRepeat,
             yearlyRepeat = oneTime && yearlyRepeat,
             autoRemove = oneTime && autoRemove,
@@ -256,7 +265,9 @@ class ReminderEditorViewModel(
             // (one-shot range), TZ 4.2 e″/f″.
             periodFrom = periodFrom.trim().takeIf { period },
             periodTo = periodTo.trim().takeIf { period },
-            weekdaysMask = weekdaysMask.takeIf { !oneTime },
+            intervalCount = intervalCount.trim().toIntOrNull().takeIf { interval },
+            intervalUnit = intervalUnit.value.takeIf { interval },
+            weekdaysMask = weekdaysMask.takeIf { repeatType == RepeatType.DAILY || period },
             loopSound = loopSound,
             soundUri = soundUri,
             // Recomputed and armed by the repository right after save (TZ 4.10).
@@ -295,6 +306,11 @@ class ReminderEditorViewModel(
             R.string.error_daily_fields
 
         repeatType == RepeatType.PERIOD -> validatePeriod()
+
+        repeatType == RepeatType.INTERVAL &&
+            (Dates.parseDate(date) == null || Dates.parseTime(time) == null ||
+                (intervalCount.trim().toIntOrNull() ?: 0) < 1) ->
+            R.string.error_interval_fields
 
         else -> null
     }

@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- New Interval reminder type — repeats every N minutes/hours/days/weeks/months from a start date/time; own Intervals folder, minute-interval notifications auto-expire after 20s, and DST-aware next-fire math (minutes/hours absolute, days+ wall-clock) (TZ 4).
 - App launcher icon replaced with a clipboard-and-bell design (list + reminder), as an adaptive icon with white background, per-density foreground and a themed monochrome layer; the clipboard shows two list rows and a checked item.
 - `10-MakeRelease.sh` now folds only `build_number.txt` into the previous commit (`--amend --only`), so Room schema export or other build-time changes no longer block the version bump from being committed.
 - Russian and Ukrainian translations caught up with the latest strings (warm theme names, delete-checked confirmation, note titles).

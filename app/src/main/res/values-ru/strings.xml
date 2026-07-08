@@ -10,6 +10,7 @@
     <string name="folder_periods">Периоды</string>
     <string name="folder_monthly">Ежемесячные</string>
     <string name="folder_yearly">Ежегодные</string>
+    <string name="folder_intervals">Интервалы</string>
 
     <string name="action_menu">Меню</string>
     <string name="action_back">Назад</string>
@@ -158,6 +159,13 @@
     <string name="repeat_one_time">Разово</string>
     <string name="repeat_daily">Ежедневно</string>
     <string name="repeat_period">Период</string>
+    <string name="repeat_interval">Интервал</string>
+    <string name="field_interval_every">Каждые</string>
+    <string name="interval_unit_minutes">минуты</string>
+    <string name="interval_unit_hours">часы</string>
+    <string name="interval_unit_days">дни</string>
+    <string name="interval_unit_weeks">недели</string>
+    <string name="interval_unit_months">месяцы</string>
     <string name="field_monthly_repeat">Ежемесячно</string>
     <string name="field_yearly_repeat">Ежегодно</string>
     <string name="field_auto_remove">Удалять после срабатывания</string>
@@ -198,6 +206,7 @@
     <string name="error_period_order">«С» не может быть позже «По»</string>
     <string name="error_period_mixed">Для «С» и «По» используйте либо числа дней, либо даты</string>
     <string name="error_once_past">Дата или время в прошлом</string>
+    <string name="error_interval_fields">Укажите дату начала, время и интервал</string>
 
     <!-- Missed reminder notifications (TZ 4.10) -->
     <string name="notif_missed_single">Пропущенное напоминание</string>

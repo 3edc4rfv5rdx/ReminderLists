@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.reminderlists.data.db.dao.DictionaryDao
 import com.reminderlists.data.db.dao.ListsDao
 import com.reminderlists.data.db.dao.NotesDao
@@ -52,7 +54,7 @@ import com.reminderlists.data.db.entity.TagEntity
         // Settings (6.3)
         SettingEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -65,6 +67,14 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         private const val DB_NAME = "reminderlists.db"
+
+        // v2: Interval reminder type (TZ 4.2 f‴ / 6.2) — two nullable columns on reminders.
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE reminders ADD COLUMN intervalCount INTEGER")
+                db.execSQL("ALTER TABLE reminders ADD COLUMN intervalUnit INTEGER")
+            }
+        }
 
         @Volatile
         private var instance: AppDatabase? = null
@@ -89,6 +99,7 @@ abstract class AppDatabase : RoomDatabase() {
         private fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, DB_NAME)
                 // Foreign keys enforced (ON DELETE CASCADE / SET NULL, see entities).
+                .addMigrations(MIGRATION_1_2)
                 .build()
     }
 }

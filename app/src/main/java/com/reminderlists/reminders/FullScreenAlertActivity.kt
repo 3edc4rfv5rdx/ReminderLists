@@ -144,7 +144,7 @@ private data class AlertUiState(
     val variant: AlertVariant,
 )
 
-private enum class AlertVariant { ONCE, DAILY, MONTHLY_YEARLY, PERIOD }
+private enum class AlertVariant { ONCE, DAILY, MONTHLY_YEARLY, PERIOD, INTERVAL }
 
 private fun alertStateOf(r: ReminderEntity): AlertUiState =
     AlertUiState(
@@ -154,6 +154,7 @@ private fun alertStateOf(r: ReminderEntity): AlertUiState =
         variant = when (RepeatType.of(r.repeatType)) {
             RepeatType.PERIOD -> AlertVariant.PERIOD
             RepeatType.DAILY -> AlertVariant.DAILY
+            RepeatType.INTERVAL -> AlertVariant.INTERVAL
             RepeatType.ONE_TIME -> if (r.monthlyRepeat || r.yearlyRepeat) AlertVariant.MONTHLY_YEARLY else AlertVariant.ONCE
         },
     )

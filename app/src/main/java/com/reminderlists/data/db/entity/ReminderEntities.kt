@@ -21,7 +21,7 @@ data class ReminderEntity(
     val active: Boolean = true,
     val fullScreenAlert: Boolean = false,
 
-    // 0 = One time, 1 = Daily, 2 = Period
+    // 0 = One time, 1 = Daily, 2 = Period, 3 = Interval
     val repeatType: Int = 0,
 
     // One time (and derived Monthly / Yearly)
@@ -34,6 +34,10 @@ data class ReminderEntity(
     // Period
     val periodFrom: String? = null,
     val periodTo: String? = null,
+
+    // Interval (start = date + time above). count >= 1, unit per IntervalUnit (0..4).
+    val intervalCount: Int? = null,
+    val intervalUnit: Int? = null,
 
     // Weekday bitmask for Daily / Period: bit0 = Mon .. bit6 = Sun
     val weekdaysMask: Int? = null,

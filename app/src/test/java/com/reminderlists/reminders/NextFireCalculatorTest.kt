@@ -58,6 +58,20 @@ class NextFireCalculatorTest {
         updatedAt = 0,
     )
 
+    private fun interval(date: String, time: String, count: Int, unit: Int, active: Boolean = true) =
+        ReminderEntity(
+            id = 1,
+            title = "t",
+            active = active,
+            repeatType = 3,
+            date = date,
+            time = time,
+            intervalCount = count,
+            intervalUnit = unit,
+            createdAt = 0,
+            updatedAt = 0,
+        )
+
     private fun compute(r: ReminderEntity, times: List<String> = emptyList(), now: Long) =
         NextFireCalculator.compute(r, times, now, zone)
 
@@ -208,5 +222,55 @@ class NextFireCalculatorTest {
         // Kyiv 2026-03-29: clocks jump 03:00 -> 04:00, so 03:30 becomes 04:30 EEST.
         val next = compute(daily(Weekdays.ALL), listOf("03:30"), now = at("2026-03-28", "12:00"))
         assertEquals(Instant.parse("2026-03-29T01:30:00Z").toEpochMilli(), next)
+    }
+
+    // Interval (TZ 4.10): start + k·interval, minutes/hours absolute, days/weeks/months wall-clock.
+
+    @Test
+    fun intervalFirstFireIsStartWhenInFuture() {
+        val r = interval("2026-07-10", "08:00", 15, 0) // every 15 minutes
+        assertEquals(at("2026-07-10", "08:00"), compute(r, now = at("2026-07-09", "23:00")))
+    }
+
+    @Test
+    fun intervalMinutesStepsPastNow() {
+        // Started 08:00, every 15 min; at 08:37 the next fire is 08:45.
+        val r = interval("2026-07-10", "08:00", 15, 0)
+        assertEquals(at("2026-07-10", "08:45"), compute(r, now = at("2026-07-10", "08:37")))
+    }
+
+    @Test
+    fun intervalHoursStepsPastNow() {
+        // Every 2 hours from 08:00; at 13:10 the next is 14:00.
+        val r = interval("2026-07-10", "08:00", 2, 1)
+        assertEquals(at("2026-07-10", "14:00"), compute(r, now = at("2026-07-10", "13:10")))
+    }
+
+    @Test
+    fun intervalDaysStepsPastNow() {
+        // Every 10 days from 2026-07-01 09:00; after 2026-07-15 the next is 2026-07-21.
+        val r = interval("2026-07-01", "09:00", 10, 2)
+        assertEquals(at("2026-07-21", "09:00"), compute(r, now = at("2026-07-15", "12:00")))
+    }
+
+    @Test
+    fun intervalMonthsClampsShortMonth() {
+        // Every 1 month from Jan 31: java.time clamps Feb to the 28th, keeping the anchor.
+        val r = interval("2026-01-31", "09:00", 1, 4)
+        assertEquals(at("2026-02-28", "09:00"), compute(r, now = at("2026-02-01", "09:00")))
+    }
+
+    @Test
+    fun intervalHoursAreAbsoluteAcrossDst() {
+        // Hours are an absolute (Instant) step: 30 min after the start the next fire is exactly
+        // one real hour after the start, regardless of the 03:00->04:00 spring-forward jump.
+        val r = interval("2026-03-29", "01:30", 1, 1) // every 1 hour
+        val start = at("2026-03-29", "01:30")
+        assertEquals(start + 60 * 60_000L, compute(r, now = start + 30 * 60_000L))
+    }
+
+    @Test
+    fun intervalInactiveReturnsNull() {
+        assertNull(compute(interval("2026-07-10", "08:00", 15, 0, active = false), now = at("2026-07-09", "12:00")))
     }
 }
