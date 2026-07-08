@@ -17,8 +17,12 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -184,6 +188,8 @@ private fun FullScreenAlert(
             LiveClock()
             ReminderText(state, dimmed = !unlocked)
             if (unlocked) {
+                // Drop the whole «Postpone for» block down so it doesn't crowd the reminder text.
+                Spacer(Modifier.height(40.dp))
                 ActionArea(state, onPostpone, onOk, onDone, onContinue)
             }
         }
@@ -314,6 +320,7 @@ private fun ActionArea(
         FlowRow(
             Modifier.fillMaxWidth().padding(top = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             AlertButton(stringResource(R.string.alert_done), onClick = onDone)
             AlertButton(stringResource(R.string.alert_continue), onClick = onContinue)
@@ -327,19 +334,52 @@ private fun ActionArea(
         color = AlertControl,
         modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
     )
-    FlowRow(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-    ) {
-        for ((labelRes, millis) in postponeOptions(state.variant)) {
-            AlertButton(stringResource(labelRes)) { onPostpone(millis) }
-        }
+    // Fixed grouping: the minute options on one row, the hour(+day) options on the next, then
+    // a full-width OK — instead of an arbitrary FlowRow wrap (TZ 4.5).
+    val (minutes, longer) = postponeOptions(state.variant).partition { it.second < HOUR }
+    PostponeRow(minutes, onPostpone)
+    if (longer.isNotEmpty()) {
+        PostponeRow(longer, onPostpone, Modifier.padding(top = 8.dp))
     }
     AlertButton(
         text = stringResource(R.string.action_ok),
         onClick = onOk,
         modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
     )
+}
+
+// One row of equal-width postpone buttons (TZ 4.5).
+@Composable
+private fun PostponeRow(
+    options: List<Pair<Int, Long>>,
+    onPostpone: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        for ((labelRes, millis) in options) {
+            PostponeButton(stringResource(labelRes), Modifier.weight(1f)) { onPostpone(millis) }
+        }
+    }
+}
+
+// A postpone button: the amount stacked over the unit on two centered lines (e.g. «10 / мин»),
+// lowercased and in a smaller type so the value fits the narrow buttons (TZ 4.5).
+@Composable
+private fun PostponeButton(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val parts = label.lowercase().split(" ", limit = 2)
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        contentPadding = PaddingValues(vertical = 6.dp, horizontal = 4.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = AlertControl, contentColor = AlertOnControl),
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(parts[0], style = MaterialTheme.typography.titleMedium, color = AlertOnControl)
+            parts.getOrNull(1)?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = AlertOnControl)
+            }
+        }
+    }
 }
 
 @Composable
