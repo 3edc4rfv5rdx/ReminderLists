@@ -12,12 +12,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
@@ -347,11 +347,14 @@ private fun ThemeModeSelector(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
 
 @Composable
 private fun ThemeColorSelector(selected: AppTheme, onSelect: (AppTheme) -> Unit) {
-    // FlowRow so the presets wrap onto a second line — too many now for a single row.
-    FlowRow(
-        Modifier.fillMaxWidth().padding(vertical = 8.dp),
+    // One row, scrolled horizontally — too many presets for a fixed row, but a swipeable
+    // strip keeps all the colour swatches visible without wrapping.
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         AppTheme.entries.forEach { theme ->
             val isSelected = theme == selected
