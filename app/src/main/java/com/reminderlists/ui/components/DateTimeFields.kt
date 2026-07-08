@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -255,7 +256,10 @@ fun IntervalField(
         }
         Box(Modifier.weight(1f)) {
             OutlinedButton(onClick = { menuOpen = true }, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(intervalUnitLabel(unit)), modifier = Modifier.weight(1f))
+                Text(
+                    pluralStringResource(intervalUnitNoun(unit), parsed.coerceAtLeast(1)),
+                    modifier = Modifier.weight(1f),
+                )
                 Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
             }
             AppDropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
@@ -270,21 +274,49 @@ fun IntervalField(
     }
 }
 
-// Short, number-neutral unit label (e.g. «min», «дн») — used both in the unit dropdown and in
-// the card summary, so the phrase composes cleanly without per-number plural forms (TZ 4.2 f‴).
-private fun intervalUnitLabel(unit: IntervalUnit): Int = when (unit) {
-    IntervalUnit.MINUTES -> R.string.interval_short_minutes
-    IntervalUnit.HOURS -> R.string.interval_short_hours
-    IntervalUnit.DAYS -> R.string.interval_short_days
-    IntervalUnit.WEEKS -> R.string.interval_short_weeks
-    IntervalUnit.MONTHS -> R.string.interval_short_months
+// Bare unit noun declined by the entered count (e.g. «day/days», «дня/дней») for the picker
+// button, so it composes with the floating «Every» label into «Every 5 days» (TZ 4.2 f‴).
+private fun intervalUnitNoun(unit: IntervalUnit): Int = when (unit) {
+    IntervalUnit.MINUTES -> R.plurals.interval_noun_minutes
+    IntervalUnit.HOURS -> R.plurals.interval_noun_hours
+    IntervalUnit.DAYS -> R.plurals.interval_noun_days
+    IntervalUnit.WEEKS -> R.plurals.interval_noun_weeks
+    IntervalUnit.MONTHS -> R.plurals.interval_noun_months
 }
 
-// Composed "Every N unit" summary, shared by the editor and reminder cards (TZ 4.6 / 8): the
-// leading word + the number + the invariant short unit, so no per-number plural strings.
+// Neutral, number-independent unit name for the dropdown menu items (e.g. «Minutes», «Дни»).
+private fun intervalUnitLabel(unit: IntervalUnit): Int = when (unit) {
+    IntervalUnit.MINUTES -> R.string.interval_unit_minutes
+    IntervalUnit.HOURS -> R.string.interval_unit_hours
+    IntervalUnit.DAYS -> R.string.interval_unit_days
+    IntervalUnit.WEEKS -> R.string.interval_unit_weeks
+    IntervalUnit.MONTHS -> R.string.interval_unit_months
+}
+
+// Singular "Every <unit>" phrase (count == 1, no number) — kept separate because Slavic «one»
+// plural category also covers 21, 31… where the number must show, so it can't drop it (TZ 4.6 / 8).
+private fun intervalEveryOne(unit: IntervalUnit): Int = when (unit) {
+    IntervalUnit.MINUTES -> R.string.interval_every_one_minutes
+    IntervalUnit.HOURS -> R.string.interval_every_one_hours
+    IntervalUnit.DAYS -> R.string.interval_every_one_days
+    IntervalUnit.WEEKS -> R.string.interval_every_one_weeks
+    IntervalUnit.MONTHS -> R.string.interval_every_one_months
+}
+
+// Plural "Every %d <units>" phrase (count >= 2) — full per-number declension via <plurals>.
+private fun intervalEveryPlural(unit: IntervalUnit): Int = when (unit) {
+    IntervalUnit.MINUTES -> R.plurals.interval_every_minutes
+    IntervalUnit.HOURS -> R.plurals.interval_every_hours
+    IntervalUnit.DAYS -> R.plurals.interval_every_days
+    IntervalUnit.WEEKS -> R.plurals.interval_every_weeks
+    IntervalUnit.MONTHS -> R.plurals.interval_every_months
+}
+
+// Fully declined "Every N unit" summary, shared by the editor and reminder cards (TZ 4.6 / 8).
 @Composable
 fun intervalSummary(count: Int, unit: IntervalUnit): String =
-    "${stringResource(R.string.field_interval_every)} $count ${stringResource(intervalUnitLabel(unit))}"
+    if (count <= 1) stringResource(intervalEveryOne(unit))
+    else pluralStringResource(intervalEveryPlural(unit), count, count)
 
 // Quick presets Morning / Day / Evening (TZ 4.2 п. e): the preset time is shown inside
 // the button as a second line; values come from Settings (TZ 5 → Time presets).

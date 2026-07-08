@@ -163,11 +163,76 @@
     <string name="field_interval_every">Кожні</string>
     <string name="interval_decrease">Зменшити</string>
     <string name="interval_increase">Збільшити</string>
-    <string name="interval_short_minutes">хв</string>
-    <string name="interval_short_hours">год</string>
-    <string name="interval_short_days">дн</string>
-    <string name="interval_short_weeks">тиж</string>
-    <string name="interval_short_months">міс</string>
+    <string name="interval_unit_minutes">Хвилини</string>
+    <string name="interval_unit_hours">Години</string>
+    <string name="interval_unit_days">Дні</string>
+    <string name="interval_unit_weeks">Тижні</string>
+    <string name="interval_unit_months">Місяці</string>
+    <string name="interval_every_one_minutes">Кожну хвилину</string>
+    <string name="interval_every_one_hours">Кожну годину</string>
+    <string name="interval_every_one_days">Кожен день</string>
+    <string name="interval_every_one_weeks">Кожен тиждень</string>
+    <string name="interval_every_one_months">Кожен місяць</string>
+    <plurals name="interval_every_minutes">
+        <item quantity="one">Кожну %d хвилину</item>
+        <item quantity="few">Кожні %d хвилини</item>
+        <item quantity="many">Кожні %d хвилин</item>
+        <item quantity="other">Кожні %d хвилини</item>
+    </plurals>
+    <plurals name="interval_every_hours">
+        <item quantity="one">Кожну %d годину</item>
+        <item quantity="few">Кожні %d години</item>
+        <item quantity="many">Кожні %d годин</item>
+        <item quantity="other">Кожні %d години</item>
+    </plurals>
+    <plurals name="interval_every_days">
+        <item quantity="one">Кожен %d день</item>
+        <item quantity="few">Кожні %d дні</item>
+        <item quantity="many">Кожні %d днів</item>
+        <item quantity="other">Кожні %d дні</item>
+    </plurals>
+    <plurals name="interval_every_weeks">
+        <item quantity="one">Кожен %d тиждень</item>
+        <item quantity="few">Кожні %d тижні</item>
+        <item quantity="many">Кожні %d тижнів</item>
+        <item quantity="other">Кожні %d тижні</item>
+    </plurals>
+    <plurals name="interval_every_months">
+        <item quantity="one">Кожен %d місяць</item>
+        <item quantity="few">Кожні %d місяці</item>
+        <item quantity="many">Кожні %d місяців</item>
+        <item quantity="other">Кожні %d місяці</item>
+    </plurals>
+    <plurals name="interval_noun_minutes">
+        <item quantity="one">хвилина</item>
+        <item quantity="few">хвилини</item>
+        <item quantity="many">хвилин</item>
+        <item quantity="other">хвилини</item>
+    </plurals>
+    <plurals name="interval_noun_hours">
+        <item quantity="one">година</item>
+        <item quantity="few">години</item>
+        <item quantity="many">годин</item>
+        <item quantity="other">години</item>
+    </plurals>
+    <plurals name="interval_noun_days">
+        <item quantity="one">день</item>
+        <item quantity="few">дні</item>
+        <item quantity="many">днів</item>
+        <item quantity="other">дні</item>
+    </plurals>
+    <plurals name="interval_noun_weeks">
+        <item quantity="one">тиждень</item>
+        <item quantity="few">тижні</item>
+        <item quantity="many">тижнів</item>
+        <item quantity="other">тижні</item>
+    </plurals>
+    <plurals name="interval_noun_months">
+        <item quantity="one">місяць</item>
+        <item quantity="few">місяці</item>
+        <item quantity="many">місяців</item>
+        <item quantity="other">місяці</item>
+    </plurals>
     <string name="field_monthly_repeat">Щомісяця</string>
     <string name="field_yearly_repeat">Щороку</string>
     <string name="field_auto_remove">Видаляти після спрацювання</string>

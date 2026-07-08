@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Interval condition on cards now uses fully declined phrases ("Every 2 days", ru «Каждые 2 дня» / «Каждую минуту») via `<plurals>` with a singular-form special case; the editor's unit-picker button declines the noun by the entered count («2 дня» / «5 дней») while the dropdown menu keeps neutral unit names (Minutes/Days…).
 - Full-screen alert postpone buttons laid out in fixed rows (minutes, then hours/day, then a full-width OK) with each amount stacked over its lowercased unit on two centered lines, and the whole "Postpone for" block dropped lower so it doesn't crowd the reminder text.
 - Interval editor count is now a framed «(–) N (+)» control with a typed number field (min 1), and the interval condition uses short invariant unit suffixes (min/hr/d/wk/mo; ru мин/ч/дн./нед/мес) in both the unit dropdown and cards instead of per-number plural strings.
 - Full-screen alert layout tightened — title/time raised with the Content shown in the same block — and the Morning/Day/Evening time-preset buttons made shorter.

@@ -163,11 +163,76 @@
     <string name="field_interval_every">Каждые</string>
     <string name="interval_decrease">Уменьшить</string>
     <string name="interval_increase">Увеличить</string>
-    <string name="interval_short_minutes">мин</string>
-    <string name="interval_short_hours">ч</string>
-    <string name="interval_short_days">дн.</string>
-    <string name="interval_short_weeks">нед</string>
-    <string name="interval_short_months">мес</string>
+    <string name="interval_unit_minutes">Минуты</string>
+    <string name="interval_unit_hours">Часы</string>
+    <string name="interval_unit_days">Дни</string>
+    <string name="interval_unit_weeks">Недели</string>
+    <string name="interval_unit_months">Месяцы</string>
+    <string name="interval_every_one_minutes">Каждую минуту</string>
+    <string name="interval_every_one_hours">Каждый час</string>
+    <string name="interval_every_one_days">Каждый день</string>
+    <string name="interval_every_one_weeks">Каждую неделю</string>
+    <string name="interval_every_one_months">Каждый месяц</string>
+    <plurals name="interval_every_minutes">
+        <item quantity="one">Каждую %d минуту</item>
+        <item quantity="few">Каждые %d минуты</item>
+        <item quantity="many">Каждые %d минут</item>
+        <item quantity="other">Каждые %d минуты</item>
+    </plurals>
+    <plurals name="interval_every_hours">
+        <item quantity="one">Каждый %d час</item>
+        <item quantity="few">Каждые %d часа</item>
+        <item quantity="many">Каждые %d часов</item>
+        <item quantity="other">Каждые %d часа</item>
+    </plurals>
+    <plurals name="interval_every_days">
+        <item quantity="one">Каждый %d день</item>
+        <item quantity="few">Каждые %d дня</item>
+        <item quantity="many">Каждые %d дней</item>
+        <item quantity="other">Каждые %d дня</item>
+    </plurals>
+    <plurals name="interval_every_weeks">
+        <item quantity="one">Каждую %d неделю</item>
+        <item quantity="few">Каждые %d недели</item>
+        <item quantity="many">Каждые %d недель</item>
+        <item quantity="other">Каждые %d недели</item>
+    </plurals>
+    <plurals name="interval_every_months">
+        <item quantity="one">Каждый %d месяц</item>
+        <item quantity="few">Каждые %d месяца</item>
+        <item quantity="many">Каждые %d месяцев</item>
+        <item quantity="other">Каждые %d месяца</item>
+    </plurals>
+    <plurals name="interval_noun_minutes">
+        <item quantity="one">минута</item>
+        <item quantity="few">минуты</item>
+        <item quantity="many">минут</item>
+        <item quantity="other">минуты</item>
+    </plurals>
+    <plurals name="interval_noun_hours">
+        <item quantity="one">час</item>
+        <item quantity="few">часа</item>
+        <item quantity="many">часов</item>
+        <item quantity="other">часа</item>
+    </plurals>
+    <plurals name="interval_noun_days">
+        <item quantity="one">день</item>
+        <item quantity="few">дня</item>
+        <item quantity="many">дней</item>
+        <item quantity="other">дня</item>
+    </plurals>
+    <plurals name="interval_noun_weeks">
+        <item quantity="one">неделя</item>
+        <item quantity="few">недели</item>
+        <item quantity="many">недель</item>
+        <item quantity="other">недели</item>
+    </plurals>
+    <plurals name="interval_noun_months">
+        <item quantity="one">месяц</item>
+        <item quantity="few">месяца</item>
+        <item quantity="many">месяцев</item>
+        <item quantity="other">месяца</item>
+    </plurals>
     <string name="field_monthly_repeat">Ежемесячно</string>
     <string name="field_yearly_repeat">Ежегодно</string>
     <string name="field_auto_remove">Удалять после срабатывания</string>

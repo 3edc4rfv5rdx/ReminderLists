@@ -175,11 +175,60 @@
     <string name="field_interval_every">Every</string>
     <string name="interval_decrease">Decrease</string>
     <string name="interval_increase">Increase</string>
-    <string name="interval_short_minutes">min</string>
-    <string name="interval_short_hours">hr</string>
-    <string name="interval_short_days">d</string>
-    <string name="interval_short_weeks">wk</string>
-    <string name="interval_short_months">mo</string>
+    <!-- Full unit names for the interval unit picker (neutral plural, no number). -->
+    <string name="interval_unit_minutes">Minutes</string>
+    <string name="interval_unit_hours">Hours</string>
+    <string name="interval_unit_days">Days</string>
+    <string name="interval_unit_weeks">Weeks</string>
+    <string name="interval_unit_months">Months</string>
+    <!-- Card summary phrase for count == 1 (no number). -->
+    <string name="interval_every_one_minutes">Every minute</string>
+    <string name="interval_every_one_hours">Every hour</string>
+    <string name="interval_every_one_days">Every day</string>
+    <string name="interval_every_one_weeks">Every week</string>
+    <string name="interval_every_one_months">Every month</string>
+    <!-- Card summary phrase for count >= 2 (plural, %d = count). -->
+    <plurals name="interval_every_minutes">
+        <item quantity="one">Every %d minute</item>
+        <item quantity="other">Every %d minutes</item>
+    </plurals>
+    <plurals name="interval_every_hours">
+        <item quantity="one">Every %d hour</item>
+        <item quantity="other">Every %d hours</item>
+    </plurals>
+    <plurals name="interval_every_days">
+        <item quantity="one">Every %d day</item>
+        <item quantity="other">Every %d days</item>
+    </plurals>
+    <plurals name="interval_every_weeks">
+        <item quantity="one">Every %d week</item>
+        <item quantity="other">Every %d weeks</item>
+    </plurals>
+    <plurals name="interval_every_months">
+        <item quantity="one">Every %d month</item>
+        <item quantity="other">Every %d months</item>
+    </plurals>
+    <!-- Bare unit noun declined by the entered count (no number) for the picker button. -->
+    <plurals name="interval_noun_minutes">
+        <item quantity="one">minute</item>
+        <item quantity="other">minutes</item>
+    </plurals>
+    <plurals name="interval_noun_hours">
+        <item quantity="one">hour</item>
+        <item quantity="other">hours</item>
+    </plurals>
+    <plurals name="interval_noun_days">
+        <item quantity="one">day</item>
+        <item quantity="other">days</item>
+    </plurals>
+    <plurals name="interval_noun_weeks">
+        <item quantity="one">week</item>
+        <item quantity="other">weeks</item>
+    </plurals>
+    <plurals name="interval_noun_months">
+        <item quantity="one">month</item>
+        <item quantity="other">months</item>
+    </plurals>
     <string name="field_monthly_repeat">Monthly repeat</string>
     <string name="field_yearly_repeat">Yearly repeat</string>
     <string name="field_auto_remove">Auto-remove after firing</string>
