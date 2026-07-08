@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- List item rows show text, quantity and unit on one line joined by spaces, instead of a separate narrow amount column that wrapped long quantities into vertical letters (TZ 3.3).
+- Text fields no longer freeze when pre-filled with a value over the length limit (e.g. imported data): shrinking edits are always allowed, only growth past the limit is blocked (TZ 8).
 - Backup now writes to Documents/ReminderLists/backup_YYYYMMDD_HHmmss.zip by default via MediaStore (TZ 3.8), no picker or storage permission; restore still picks a file.
 - App-wide font scale slider in Settings (TZ 5) and pure-black text on the light scheme (TZ 8): typography is the Material default scaled by one factor, now user-adjustable live; default 1.2×.
 - Backup and Restore (TZ 3.8): Settings can now write a full backup zip (database + photos + sounds + logs + manifest) to a picked location and restore one back, validating the manifest schema version and running an SQLite integrity check in a staging dir before swapping data in; a restore confirms first and restarts the app. Logs are backed up but not restored.

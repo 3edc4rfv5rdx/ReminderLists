@@ -382,29 +382,20 @@ private fun ShareChoiceRow(text: String, onClick: () -> Unit) {
 }
 
 // Item text + "5/kg" amount, strikethrough when done — shared by the normal and the
-// move-selection rows (text, quantity and unit: one size, one color — user rule).
+// Text + quantity + unit on one flowing line, joined by spaces (user rule: one size, one
+// color — and one line, not a separate narrow amount column that wraps letters vertically).
 @Composable
 private fun RowScope.ItemTexts(item: ItemEntity) {
     val textColor = if (item.isDone) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
     val decoration = if (item.isDone) TextDecoration.LineThrough else null
+    val amount = TextFormat.formatAmount(item.quantity, item.unit)
     Text(
-        text = item.text,
+        text = if (amount.isEmpty()) item.text else "${item.text} $amount",
         style = MaterialTheme.typography.bodyLarge,
         textDecoration = decoration,
         color = textColor,
         modifier = Modifier.weight(1f).padding(vertical = 12.dp),
     )
-    val amount = TextFormat.formatAmount(item.quantity, item.unit)
-    if (amount.isNotEmpty()) {
-        Text(
-            text = amount,
-            style = MaterialTheme.typography.bodyLarge,
-            textDecoration = decoration,
-            color = textColor,
-            maxLines = 1,
-            modifier = Modifier.padding(start = 8.dp),
-        )
-    }
 }
 
 // Move/copy dialog (TZ 3.3): item selection with checkboxes, a Copy checkbox below,

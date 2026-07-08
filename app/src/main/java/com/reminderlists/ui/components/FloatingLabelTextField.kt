@@ -51,7 +51,11 @@ fun FloatingLabelTextField(
     OutlinedTextField(
         value = value,
         onValueChange = { new ->
-            if (maxLength == null || new.length <= maxLength) onValueChange(new)
+            // Block growth past the limit, but always allow shrinking — otherwise a value that
+            // is already over the limit (e.g. imported data) can never be shortened or edited.
+            if (maxLength == null || new.length <= maxLength || new.length < value.length) {
+                onValueChange(new)
+            }
         },
         label = { Text(label) },
         singleLine = singleLine,
