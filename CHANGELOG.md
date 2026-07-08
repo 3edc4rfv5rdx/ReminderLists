@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Tags are now monochrome instead of the theme accent colour: tag lines on reminder/note/Today cards are plain black and italic (to stand apart), and the selected tag-filter chip is inverted (black fill, light text) rather than a coloured fill (TZ 8).
 - Light theme now renders all low-emphasis labels, hints and icons in pure black (outline token = black) instead of faded grey; empty priority stars and disabled controls stay pale via outlineVariant, and text on coloured fills keeps its contrasting light colour (TZ 8).
 - Tag-filter cloud sizes tags by frequency rank instead of raw count, so one very frequent tag no longer shrinks all the rest to the smallest size; most-used tags get the largest tiers and equal counts share a size (TZ 4.4).
 - Bottom navigation bar is now shorter (64dp content vs the M3 default 80dp) and the active tab is highlighted with a strong primary-coloured pill (TZ 8).

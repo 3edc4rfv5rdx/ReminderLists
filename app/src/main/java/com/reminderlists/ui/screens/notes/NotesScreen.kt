@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -488,7 +489,9 @@ private fun NoteCard(
                         Text(
                             text = detail.tags.joinToString(", ") { it.name },
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
+                            // Tags in plain black; italic sets the tag line apart (TZ 8).
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontStyle = FontStyle.Italic,
                         )
                     }
                     note.date?.let {
@@ -564,7 +567,9 @@ private fun NoteViewerDialog(
                     Text(
                         text = detail.tags.joinToString(", ") { it.name },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        // Tags in plain black; italic sets the tag line apart (TZ 8).
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontStyle = FontStyle.Italic,
                         modifier = Modifier.padding(top = 8.dp),
                     )
                 }

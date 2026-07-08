@@ -148,9 +148,11 @@ private fun TagCloudChip(
 ) {
     Surface(
         shape = MaterialTheme.shapes.small,
-        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+        // Selected = inverted (black fill, light text), not the theme accent — tags stay
+        // monochrome (TZ 8). Unselected = neutral surfaceVariant with black text.
+        color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surfaceVariant,
         contentColor = if (selected) {
-            MaterialTheme.colorScheme.onPrimary
+            MaterialTheme.colorScheme.surface
         } else {
             MaterialTheme.colorScheme.onSurfaceVariant
         },

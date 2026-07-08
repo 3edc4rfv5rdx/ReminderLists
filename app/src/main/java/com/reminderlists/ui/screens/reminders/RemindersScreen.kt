@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -316,7 +317,10 @@ private fun ReminderCard(
                     Text(
                         text = detail.tags.joinToString(", ") { it.name },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        // Tags in plain black like the rest of the text, not the theme accent;
+                        // italic sets the tag line apart instead of colour (TZ 8).
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontStyle = FontStyle.Italic,
                     )
                 }
                 // Compact weekday row for types with weekdays (TZ 4.6): mtwt-ss.
