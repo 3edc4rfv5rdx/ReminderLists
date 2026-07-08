@@ -2,10 +2,11 @@ package com.reminderlists.ui.screens.permission
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.reminderlists.R
+import com.reminderlists.ui.components.DialogConfirmButton
+import com.reminderlists.ui.components.DialogDismissButton
 
 // Rationale before requesting POST_NOTIFICATIONS (TZ 4.10): without it reminders — full-screen
 // included — never show, so explain why first. When the user has blocked it for good, point them
@@ -23,12 +24,13 @@ fun NotificationPermissionDialog(
             Text(stringResource(if (blocked) R.string.notif_perm_blocked else R.string.notif_perm_rationale))
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(stringResource(if (blocked) R.string.notif_perm_open_settings else R.string.notif_perm_allow))
-            }
+            DialogConfirmButton(
+                text = stringResource(if (blocked) R.string.notif_perm_open_settings else R.string.notif_perm_allow),
+                onClick = onConfirm,
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.notif_perm_not_now)) }
+            DialogDismissButton(stringResource(R.string.notif_perm_not_now), onDismiss)
         },
     )
 }

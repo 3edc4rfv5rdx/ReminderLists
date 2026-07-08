@@ -58,6 +58,8 @@ import androidx.navigation.NavController
 import com.reminderlists.R
 import com.reminderlists.data.backup.BackupManager
 import com.reminderlists.ui.components.AppTopBar
+import com.reminderlists.ui.components.DialogConfirmButton
+import com.reminderlists.ui.components.DialogDismissButton
 import com.reminderlists.ui.components.LocalSnackController
 import com.reminderlists.ui.components.PinDialog
 import com.reminderlists.ui.components.PinSetupDialog
@@ -253,18 +255,21 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
             title = { Text(stringResource(R.string.restore_confirm_title)) },
             text = { Text(stringResource(R.string.restore_confirm_message)) },
             confirmButton = {
-                androidx.compose.material3.TextButton(onClick = {
-                    restoreUri = null
-                    scope.launch {
-                        if (BackupManager.restore(context, uri).isSuccess) restartApp(context)
-                        else snack?.error(context.getString(R.string.restore_failed))
-                    }
-                }) { Text(stringResource(R.string.action_ok)) }
+                // Restore overwrites everything — destructive (red) filled button (TZ 8).
+                DialogConfirmButton(
+                    text = stringResource(R.string.action_ok),
+                    destructive = true,
+                    onClick = {
+                        restoreUri = null
+                        scope.launch {
+                            if (BackupManager.restore(context, uri).isSuccess) restartApp(context)
+                            else snack?.error(context.getString(R.string.restore_failed))
+                        }
+                    },
+                )
             },
             dismissButton = {
-                androidx.compose.material3.TextButton(onClick = { restoreUri = null }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
+                DialogDismissButton(stringResource(R.string.action_cancel)) { restoreUri = null }
             },
         )
     }
@@ -438,9 +443,7 @@ private fun LanguageDialog(current: String?, onSelect: (String?) -> Unit, onDism
         },
         confirmButton = {},
         dismissButton = {
-            androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
-            }
+            DialogDismissButton(stringResource(R.string.action_cancel), onDismiss)
         },
     )
 }
