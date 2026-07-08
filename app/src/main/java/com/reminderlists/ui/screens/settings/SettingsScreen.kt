@@ -69,6 +69,7 @@ import com.reminderlists.ui.theme.AppTheme
 import com.reminderlists.ui.theme.ThemeMode
 import com.reminderlists.util.Dates
 import com.reminderlists.util.Limits
+import com.reminderlists.util.Logger
 import com.reminderlists.util.SettingsKeys
 import kotlinx.coroutines.launch
 
@@ -229,7 +230,11 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
                     scope.launch {
                         BackupManager.backupToDocuments(context)
                             .onSuccess { snack?.success(context.getString(R.string.backup_success)) }
-                            .onFailure { snack?.error(context.getString(R.string.backup_failed)) }
+                            .onFailure {
+                                // Surface the real reason so a silent MediaStore failure is diagnosable.
+                                Logger.e("Backup failed", it)
+                                snack?.error("${context.getString(R.string.backup_failed)}: ${it.message}")
+                            }
                     }
                 },
             )
