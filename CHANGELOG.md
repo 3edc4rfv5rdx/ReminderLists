@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Tag-filter cloud sizes tags by frequency rank instead of raw count, so one very frequent tag no longer shrinks all the rest to the smallest size; most-used tags get the largest tiers and equal counts share a size (TZ 4.4).
 - Bottom navigation bar is now shorter (64dp content vs the M3 default 80dp) and the active tab is highlighted with a strong primary-coloured pill (TZ 8).
 - Bottom-bar tab labels stay on a single line at large font scales instead of wrapping (e.g. "Reminders" no longer breaks onto two lines) (TZ 8).
 - Font-size slider in Settings now saves once on release instead of on every drag tick, avoiding a burst of DB writes and typography rebuilds mid-drag (TZ 5).

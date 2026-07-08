@@ -103,8 +103,10 @@ fun TagFilterScreen(navController: NavController, tab: FilterTab) {
             // OR/AND toggle — only affects results when 2+ tags are picked (TZ 4.4).
             TagModeToggle(mode = mode, onModeChange = { mode = it })
 
-            val maxCount = tags.first().count
-            val minCount = tags.last().count
+            // Distinct usage counts, most-used first (tags are already sorted desc).
+            // Font size is assigned by the rank of the count, not its raw magnitude,
+            // so one very frequent tag doesn't shrink all the others (TZ 4.4).
+            val distinctCounts = tags.map { it.count }.distinct()
 
             FlowRow(
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
@@ -115,7 +117,7 @@ fun TagFilterScreen(navController: NavController, tab: FilterTab) {
                     TagCloudChip(
                         tag = tag,
                         selected = tag.id in selected,
-                        fontSize = tierSize(tag.count, minCount, maxCount),
+                        fontSize = tierSize(tag.count, distinctCounts),
                         onToggle = {
                             if (tag.id in selected) selected.remove(tag.id) else selected.add(tag.id)
                         },
@@ -126,14 +128,16 @@ fun TagFilterScreen(navController: NavController, tab: FilterTab) {
     }
 }
 
-// Map a usage count onto one of five tiers between the least- and most-used tag (TZ 4.4).
-private fun tierSize(count: Int, min: Int, max: Int) =
-    if (max <= min) {
-        TIER_SIZES[TIER_SIZES.size / 2]
-    } else {
-        val tier = ((count - min).toFloat() / (max - min) * (TIER_SIZES.size - 1)).toInt()
-        TIER_SIZES[tier.coerceIn(0, TIER_SIZES.size - 1)]
-    }
+// Map a usage count onto one of five tiers by its rank among the distinct counts
+// (most-used first). The most frequent tags get the largest size; equal counts share
+// a size; evenly spread across the tiers regardless of count magnitude gaps (TZ 4.4).
+private fun tierSize(count: Int, distinctCountsDesc: List<Int>): androidx.compose.ui.unit.TextUnit {
+    val distinct = distinctCountsDesc.size
+    if (distinct <= 1) return TIER_SIZES.last()
+    val rankFromTop = distinctCountsDesc.indexOf(count) // 0 = most frequent
+    val tierFromTop = rankFromTop * (TIER_SIZES.size - 1) / (distinct - 1)
+    return TIER_SIZES[TIER_SIZES.size - 1 - tierFromTop]
+}
 
 @Composable
 private fun TagCloudChip(
