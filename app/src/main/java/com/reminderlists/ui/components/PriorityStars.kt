@@ -54,7 +54,9 @@ fun PriorityEditor(priority: Int, onPriorityChange: (Int) -> Unit, modifier: Mod
                 tint = if (index < priority) {
                     MaterialTheme.colorScheme.primary
                 } else {
-                    MaterialTheme.colorScheme.outline
+                    // Empty stars stay pale (outlineVariant) so they don't read as filled
+                    // once outline is pure black on the light scheme.
+                    MaterialTheme.colorScheme.outlineVariant
                 },
             )
         }

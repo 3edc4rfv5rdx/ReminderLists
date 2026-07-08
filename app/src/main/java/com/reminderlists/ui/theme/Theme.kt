@@ -49,11 +49,14 @@ fun ReminderListsTheme(
         darkColorScheme(primary = theme.seed)
     } else {
         // Light scheme: pure-black text/icons for maximum contrast (TZ 8), tinted only by primary.
+        // outline is black too so low-emphasis labels/icons and hints aren't faded grey; spots
+        // that must stay pale (empty priority stars, disabled tint) use outlineVariant instead.
         lightColorScheme(
             primary = theme.seed,
             onBackground = Black,
             onSurface = Black,
             onSurfaceVariant = Black,
+            outline = Black,
         )
     }
     MaterialTheme(

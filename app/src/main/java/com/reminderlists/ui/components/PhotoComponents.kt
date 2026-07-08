@@ -99,7 +99,8 @@ fun AddPhotoButton(
             Icon(
                 Icons.Filled.AddAPhoto,
                 contentDescription = stringResource(R.string.action_add_photo),
-                tint = if (enabled) tint else MaterialTheme.colorScheme.outline,
+                // Disabled tint stays pale (outlineVariant) now that outline is pure black.
+                tint = if (enabled) tint else MaterialTheme.colorScheme.outlineVariant,
             )
         }
         AppDropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
