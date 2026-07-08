@@ -229,6 +229,7 @@
     <string name="notif_sound_playing">Reminder sound playing</string>
     <string name="notif_sound_stop">Stop</string>
     <string name="notif_postpone_10">+10 min</string>
+    <string name="notif_interval_stop">Stop repeating</string>
 
     <!-- Notification permission onboarding (TZ 4.10) -->
     <string name="notif_perm_title">Enable notifications</string>

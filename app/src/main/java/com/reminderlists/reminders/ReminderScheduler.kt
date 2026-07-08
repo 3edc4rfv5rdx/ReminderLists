@@ -133,6 +133,16 @@ object ReminderScheduler {
         schedule(context, reminderId, untilMillis)
     }
 
+    // "Stop repeating" from an Interval notification (TZ 4.5): clear Active so next_fire_at
+    // recomputes to null and the armed alarm is cancelled — the interval stops firing. Sound
+    // and notification are cleared by the caller.
+    suspend fun deactivate(context: Context, db: AppDatabase, reminderId: Long) {
+        val dao = db.remindersDao()
+        val reminder = dao.get(reminderId) ?: return
+        dao.update(reminder.copy(active = false, updatedAt = System.currentTimeMillis()))
+        reschedule(context, db, reminderId)
+    }
+
     // OK on the alert (TZ 4.5): acknowledge and close. A one-shot Once already had Active
     // dropped at fire, so nothing is re-armed here; the ack is recorded for history and the
     // deferred auto-remove (TZ 4.2 h).

@@ -224,6 +224,12 @@ private fun intervalUnitLabel(unit: IntervalUnit): Int = when (unit) {
     IntervalUnit.MONTHS -> R.string.interval_unit_months
 }
 
+// Localized "Every N unit" summary of an interval, shared by the editor and reminder cards
+// (TZ 4.6 / 8). Plurals are intentionally not handled (TZ decision).
+@Composable
+fun intervalSummary(count: Int, unit: IntervalUnit): String =
+    "${stringResource(R.string.field_interval_every)} $count ${stringResource(intervalUnitLabel(unit))}"
+
 // Quick presets Morning / Day / Evening (TZ 4.2 п. e): the preset time is shown inside
 // the button as a second line; values come from Settings (TZ 5 → Time presets).
 @Composable

@@ -39,12 +39,28 @@ class ReminderActionReceiver : BroadcastReceiver() {
                     }
                 }
             }
+            // Stop repeating (Interval): deactivate so it stops firing, silence and dismiss (TZ 4.5).
+            ACTION_DISMISS -> {
+                Logger.i("Notification Stop repeating for reminder $reminderId")
+                val result = goAsync()
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val db = AppDatabase.get(context)
+                        ReminderScheduler.deactivate(context, db, reminderId)
+                        SoundService.stop(context)
+                        ReminderNotifier.cancel(context, reminderId)
+                    } finally {
+                        result.finish()
+                    }
+                }
+            }
         }
     }
 
     companion object {
         private const val ACTION_POSTPONE = "com.reminderlists.action.POSTPONE_10"
         private const val ACTION_STOP = "com.reminderlists.action.STOP_ALERT"
+        private const val ACTION_DISMISS = "com.reminderlists.action.STOP_REPEATING"
         private const val POSTPONE_MS = 10 * 60_000L
 
         fun postponeIntent(context: Context, reminderId: Long): PendingIntent =
@@ -52,6 +68,9 @@ class ReminderActionReceiver : BroadcastReceiver() {
 
         fun stopIntent(context: Context, reminderId: Long): PendingIntent =
             pendingIntent(context, reminderId, ACTION_STOP)
+
+        fun dismissIntent(context: Context, reminderId: Long): PendingIntent =
+            pendingIntent(context, reminderId, ACTION_DISMISS)
 
         // Request code keyed by id; the distinct action keeps postpone and stop separate for the
         // same reminder.

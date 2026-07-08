@@ -47,6 +47,7 @@ import com.reminderlists.R
 import com.reminderlists.data.db.dao.ReminderWithDetails
 import com.reminderlists.data.filter.FilterIndicator
 import com.reminderlists.data.filter.FilterTab
+import com.reminderlists.data.reminders.IntervalUnit
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.ui.components.AppDropdownMenu
 import com.reminderlists.ui.components.FilterIndicatorBadge
@@ -58,6 +59,7 @@ import com.reminderlists.ui.components.EmptyState
 import com.reminderlists.ui.components.FabLevel
 import com.reminderlists.ui.components.EditDeleteMenuButton
 import com.reminderlists.ui.components.PriorityStars
+import com.reminderlists.ui.components.intervalSummary
 import com.reminderlists.ui.components.RowTitle
 import com.reminderlists.ui.components.SwipeActionsRow
 import com.reminderlists.ui.navigation.Routes
@@ -331,6 +333,15 @@ private fun ReminderCard(
                             text = Weekdays.compact(mask),
                             style = MaterialTheme.typography.bodyMedium,
                             fontFamily = FontFamily.Monospace,
+                        )
+                    }
+                }
+                // Interval repeat condition, e.g. «Every 3 days», above the next-fire line (TZ 4.6).
+                if (folder == ReminderFolder.INTERVALS) {
+                    reminder.intervalCount?.let { count ->
+                        Text(
+                            text = intervalSummary(count, IntervalUnit.of(reminder.intervalUnit)),
+                            style = MaterialTheme.typography.bodyMedium,
                         )
                     }
                 }

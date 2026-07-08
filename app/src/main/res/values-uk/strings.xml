@@ -217,6 +217,7 @@
     <string name="notif_sound_playing">Звучить нагадування</string>
     <string name="notif_sound_stop">Стоп</string>
     <string name="notif_postpone_10">+10 хв</string>
+    <string name="notif_interval_stop">Припинити</string>
 
     <!-- Notification permission onboarding (TZ 4.10) -->
     <string name="notif_perm_title">Увімкнути сповіщення</string>

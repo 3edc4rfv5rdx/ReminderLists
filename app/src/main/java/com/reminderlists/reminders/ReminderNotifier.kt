@@ -26,6 +26,8 @@ object ReminderNotifier {
     fun notifyFired(context: Context, reminder: ReminderEntity) {
         val nm = NotificationManagerCompat.from(context)
         if (!nm.areNotificationsEnabled()) return
+        val minuteInterval = isMinuteInterval(reminder)
+        val isInterval = RepeatType.of(reminder.repeatType) == RepeatType.INTERVAL
         val builder = NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
             .setSmallIcon(R.drawable.ic_stat_reminder)
             .setContentTitle(reminder.title)
@@ -33,13 +35,20 @@ object ReminderNotifier {
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setAutoCancel(true)
             .setContentIntent(openApp(context))
-            // +10 min postpones and clears the alert; Stop only silences the sound (TZ 4.5).
-            .addAction(0, context.getString(R.string.notif_postpone_10), ReminderActionReceiver.postponeIntent(context, reminder.id))
-            .addAction(0, context.getString(R.string.notif_sound_stop), ReminderActionReceiver.stopIntent(context, reminder.id))
+        // +10 min postpones and clears the alert; Stop only silences the sound (TZ 4.5). On a
+        // minute interval +10 min makes no sense (it re-fires within the minute), so it's dropped.
+        if (!minuteInterval) {
+            builder.addAction(0, context.getString(R.string.notif_postpone_10), ReminderActionReceiver.postponeIntent(context, reminder.id))
+        }
+        builder.addAction(0, context.getString(R.string.notif_sound_stop), ReminderActionReceiver.stopIntent(context, reminder.id))
+        // Interval: "Stop repeating" deactivates it so it stops re-firing (TZ 4.5).
+        if (isInterval) {
+            builder.addAction(0, context.getString(R.string.notif_interval_stop), ReminderActionReceiver.dismissIntent(context, reminder.id))
+        }
         reminder.content?.let { builder.setContentText(it) }
         // Minute-interval reminders fire often — auto-expire a stale one from the shade after
         // 20s so it doesn't linger until the next fire replaces it (TZ 4.10).
-        if (isMinuteInterval(reminder)) builder.setTimeoutAfter(20_000)
+        if (minuteInterval) builder.setTimeoutAfter(20_000)
         nm.notify(notifId(reminder.id), builder.build())
     }
 
