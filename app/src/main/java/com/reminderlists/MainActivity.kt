@@ -22,6 +22,7 @@ import com.reminderlists.data.reminders.RemindersRepository
 import com.reminderlists.ui.navigation.AppRoot
 import com.reminderlists.ui.screens.permission.NotificationPermissionDialog
 import com.reminderlists.ui.theme.AppTheme
+import com.reminderlists.ui.theme.DEFAULT_FONT_SCALE
 import com.reminderlists.ui.theme.ReminderListsTheme
 import com.reminderlists.ui.theme.ThemeMode
 import com.reminderlists.util.SettingsKeys
@@ -57,9 +58,11 @@ class MainActivity : ComponentActivity() {
             val db = remember { AppDatabase.get(this) }
             val themeKey by db.settingsDao().observe(SettingsKeys.THEME).collectAsState(initial = null)
             val modeKey by db.settingsDao().observe(SettingsKeys.THEME_MODE).collectAsState(initial = null)
+            val scaleKey by db.settingsDao().observe(SettingsKeys.FONT_SCALE).collectAsState(initial = null)
             ReminderListsTheme(
                 theme = AppTheme.fromKey(themeKey),
                 mode = ThemeMode.fromKey(modeKey),
+                fontScale = scaleKey?.toFloatOrNull() ?: DEFAULT_FONT_SCALE,
             ) {
                 AppRoot()
                 if (notifPrompt != NotifPrompt.NONE) {

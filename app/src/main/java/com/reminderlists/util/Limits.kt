@@ -20,4 +20,8 @@ object Limits {
 
     const val MAX_SOUND_DURATION = 90 // Default sound loop cap, seconds (TZ 5)
     const val MAX_SOUND_LEVEL = 100 // Default sound volume 0..100 (TZ 5)
+
+    // App-wide font scale factor (TZ 5 / 8); default is DEFAULT_FONT_SCALE.
+    const val FONT_SCALE_MIN = 0.8f
+    const val FONT_SCALE_MAX = 1.8f
 }

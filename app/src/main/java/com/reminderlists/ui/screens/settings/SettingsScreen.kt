@@ -1,5 +1,10 @@
 package com.reminderlists.ui.screens.settings
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -37,7 +42,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +55,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.reminderlists.R
+import com.reminderlists.data.backup.BackupManager
 import com.reminderlists.ui.components.AppTopBar
+import com.reminderlists.ui.components.LocalSnackController
 import com.reminderlists.ui.components.PinDialog
 import com.reminderlists.ui.components.PinSetupDialog
 import com.reminderlists.ui.components.SoundField
@@ -60,6 +69,7 @@ import com.reminderlists.ui.theme.ThemeMode
 import com.reminderlists.util.Dates
 import com.reminderlists.util.Limits
 import com.reminderlists.util.SettingsKeys
+import kotlinx.coroutines.launch
 
 // Settings (TZ 5): theme (color + Light/Dark/System), language, dictionary, enable reminders,
 // keep-screen-on, logs, time presets, default sound, default PIN, backup/restore.
@@ -71,9 +81,30 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
     var pinDialogOpen by remember { mutableStateOf(false) }
     var aboutOpen by remember { mutableStateOf(false) }
     var languageDialogOpen by remember { mutableStateOf(false) }
+    var restoreUri by remember { mutableStateOf<Uri?>(null) }
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snack = LocalSnackController.current
+
+    // Backup/Restore go through the system document picker — no storage permission, no cloud
+    // (TZ 3.8 / 9). A restore is confirmed first, then swaps data and restarts the app.
+    val backupLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/zip"),
+    ) { uri ->
+        if (uri != null) scope.launch {
+            val ok = BackupManager.backup(context, uri).isSuccess
+            if (ok) snack?.success(context.getString(R.string.backup_success))
+            else snack?.error(context.getString(R.string.backup_failed))
+        }
+    }
+    val restoreLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri -> if (uri != null) restoreUri = uri }
 
     val themeColor by vm.themeColor.collectAsState()
     val themeMode by vm.themeMode.collectAsState()
+    val fontScale by vm.fontScale.collectAsState()
     val keepScreenOn by vm.keepScreenOn.collectAsState()
     val writeLogs by vm.writeLogs.collectAsState()
     val enableReminders by vm.enableReminders.collectAsState()
@@ -103,6 +134,18 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
             SectionHeader(stringResource(R.string.settings_theme))
             ThemeModeSelector(mode = themeMode, onSelect = { vm.setThemeMode(it) })
             ThemeColorSelector(selected = themeColor, onSelect = { vm.setThemeColor(it) })
+
+            // App-wide font scale (TZ 5). Rebuilds Typography live for the whole app.
+            Text(
+                "${stringResource(R.string.settings_font_size)}: ${(fontScale * 100).toInt()}%",
+                Modifier.padding(top = 8.dp),
+            )
+            Slider(
+                value = fontScale,
+                onValueChange = { vm.setFontScale(it) },
+                valueRange = Limits.FONT_SCALE_MIN..Limits.FONT_SCALE_MAX,
+                steps = 19, // snap in 5% increments (80%..180%)
+            )
 
             // Per-app language (TZ 5). Applied via LocaleManager; opens a chooser.
             ValueRow(
@@ -162,12 +205,14 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
                 value = soundDuration.toFloat(),
                 onValueChange = { vm.setSoundDuration(it.toInt()) },
                 valueRange = 0f..Limits.MAX_SOUND_DURATION.toFloat(),
+                steps = 17, // snap every 5 s (0..90)
             )
             Text("${stringResource(R.string.settings_sound_level)}: $soundLevel")
             Slider(
                 value = soundLevel.toFloat(),
                 onValueChange = { vm.setSoundLevel(it.toInt()) },
                 valueRange = 0f..Limits.MAX_SOUND_LEVEL.toFloat(),
+                steps = 19, // snap every 5 (0..100)
             )
 
             SectionDivider()
@@ -177,8 +222,44 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
                 // Gate the change behind the current PIN; skip straight to setup if none set.
                 onClick = { if (defaultPin.isNullOrEmpty()) pinDialogOpen = true else pinGateOpen = true },
             )
-            NavRow(stringResource(R.string.menu_backup_restore), onClick = {})
+
+            SectionDivider()
+
+            // Backup/Restore (TZ 3.8).
+            SectionHeader(stringResource(R.string.menu_backup_restore))
+            NavRow(
+                stringResource(R.string.settings_backup_create),
+                onClick = { backupLauncher.launch(backupFileName()) },
+            )
+            NavRow(
+                stringResource(R.string.settings_backup_restore),
+                onClick = { restoreLauncher.launch(arrayOf("application/zip", "application/octet-stream")) },
+            )
         }
+    }
+
+    // Restore overwrites everything, so confirm first (TZ 3.8). On success the app restarts to
+    // reopen the swapped database cleanly.
+    restoreUri?.let { uri ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { restoreUri = null },
+            title = { Text(stringResource(R.string.restore_confirm_title)) },
+            text = { Text(stringResource(R.string.restore_confirm_message)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    restoreUri = null
+                    scope.launch {
+                        if (BackupManager.restore(context, uri).isSuccess) restartApp(context)
+                        else snack?.error(context.getString(R.string.restore_failed))
+                    }
+                }) { Text(stringResource(R.string.action_ok)) }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { restoreUri = null }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            },
+        )
     }
 
     if (languageDialogOpen) {
@@ -361,6 +442,20 @@ private fun languageLabel(tag: String?): String = stringResource(
         else -> R.string.language_system
     },
 )
+
+// Suggested backup name carries a timestamp so successive backups don't clash (TZ 3.8).
+private fun backupFileName(): String {
+    val ts = java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.US).format(java.util.Date())
+    return "reminderlists-backup-$ts.zip"
+}
+
+// Relaunch the app after a restore so every ViewModel/DAO rebinds to the swapped database.
+private fun restartApp(context: Context) {
+    val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+        ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    context.startActivity(intent)
+    Runtime.getRuntime().exit(0)
+}
 
 private fun themeName(theme: AppTheme): Int = when (theme) {
     AppTheme.TEAL -> R.string.theme_teal

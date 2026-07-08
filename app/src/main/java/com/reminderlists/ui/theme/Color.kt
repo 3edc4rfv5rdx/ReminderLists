@@ -12,6 +12,9 @@ val Indigo = Color(0xFF3F51B5)
 val Forest = Color(0xFF2E7D46)
 val Plum = Color(0xFF6A3E7A)
 
+// Pure black for light-scheme text/icons (TZ 8).
+val Black = Color(0xFF000000)
+
 // Semantic snackbar colors (TZ 8): Error / Warning / Success / Info.
 val SnackError = Color(0xFFC62828)
 val SnackWarning = Color(0xFFEF6C00)

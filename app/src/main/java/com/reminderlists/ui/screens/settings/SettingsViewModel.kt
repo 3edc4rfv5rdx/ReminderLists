@@ -10,6 +10,7 @@ import com.reminderlists.data.db.entity.SettingEntity
 import com.reminderlists.reminders.ReminderScheduler
 import com.reminderlists.ui.appViewModelFactory
 import com.reminderlists.ui.theme.AppTheme
+import com.reminderlists.ui.theme.DEFAULT_FONT_SCALE
 import com.reminderlists.ui.theme.ThemeMode
 import com.reminderlists.util.Logger
 import com.reminderlists.util.SettingsKeys
@@ -37,6 +38,12 @@ class SettingsViewModel(
         settingsDao.observe(SettingsKeys.THEME_MODE)
             .map { ThemeMode.fromKey(it) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ThemeMode.LIGHT)
+
+    // App-wide font scale (TZ 5); default DEFAULT_FONT_SCALE.
+    val fontScale: StateFlow<Float> =
+        settingsDao.observe(SettingsKeys.FONT_SCALE)
+            .map { it?.toFloatOrNull() ?: DEFAULT_FONT_SCALE }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DEFAULT_FONT_SCALE)
 
     // Keep screen on in large-font mode (TZ 3.5 / 5), default ON; "false" is the off sentinel.
     val keepScreenOn: StateFlow<Boolean> =
@@ -127,6 +134,10 @@ class SettingsViewModel(
 
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch { settingsDao.put(SettingEntity(SettingsKeys.THEME_MODE, mode.name)) }
+    }
+
+    fun setFontScale(scale: Float) {
+        viewModelScope.launch { settingsDao.put(SettingEntity(SettingsKeys.FONT_SCALE, scale.toString())) }
     }
 
     fun setKeepScreenOn(enabled: Boolean) {

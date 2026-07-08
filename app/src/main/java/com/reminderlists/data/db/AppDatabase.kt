@@ -74,6 +74,18 @@ abstract class AppDatabase : RoomDatabase() {
                 instance ?: build(context).also { instance = it }
             }
 
+        // Close and drop the singleton so the next get() reopens from disk. Used by Restore
+        // (TZ 3.8) before swapping the DB file underneath; the app restarts right after.
+        fun closeInstance() {
+            synchronized(this) {
+                instance?.close()
+                instance = null
+            }
+        }
+
+        fun databaseFile(context: Context): java.io.File =
+            context.getDatabasePath(DB_NAME)
+
         private fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, DB_NAME)
                 // Foreign keys enforced (ON DELETE CASCADE / SET NULL, see entities).

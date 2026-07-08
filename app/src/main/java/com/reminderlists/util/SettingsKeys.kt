@@ -4,6 +4,7 @@ package com.reminderlists.util
 object SettingsKeys {
     const val THEME = "theme"
     const val THEME_MODE = "theme_mode"
+    const val FONT_SCALE = "font_scale"
     const val DEFAULT_PIN = "default_pin"
     const val ENABLE_REMINDERS = "enable_reminders"
     const val KEEP_SCREEN_ON_LARGE_FONT = "keep_screen_on_large_font"

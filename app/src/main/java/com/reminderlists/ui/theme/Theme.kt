@@ -37,6 +37,7 @@ enum class ThemeMode {
 fun ReminderListsTheme(
     theme: AppTheme = AppTheme.TEAL,
     mode: ThemeMode = ThemeMode.LIGHT,
+    fontScale: Float = DEFAULT_FONT_SCALE,
     content: @Composable () -> Unit,
 ) {
     val darkTheme = when (mode) {
@@ -47,11 +48,17 @@ fun ReminderListsTheme(
     val colorScheme = if (darkTheme) {
         darkColorScheme(primary = theme.seed)
     } else {
-        lightColorScheme(primary = theme.seed)
+        // Light scheme: pure-black text/icons for maximum contrast (TZ 8), tinted only by primary.
+        lightColorScheme(
+            primary = theme.seed,
+            onBackground = Black,
+            onSurface = Black,
+            onSurfaceVariant = Black,
+        )
     }
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = AppTypography,
+        typography = appTypography(fontScale),
         content = content,
     )
 }

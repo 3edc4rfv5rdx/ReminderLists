@@ -103,6 +103,7 @@
     <string name="today_reminders_off">Напоминания сейчас отключены</string>
 
     <string name="settings_theme">Тема</string>
+    <string name="settings_font_size">Размер шрифта</string>
     <string name="settings_theme_color">Цвет</string>
     <string name="settings_theme_mode_light">Светлая</string>
     <string name="settings_theme_mode_dark">Тёмная</string>
@@ -125,6 +126,13 @@
     <string name="settings_sound_level">Громкость звука</string>
     <string name="settings_sound_system_default">Системный по умолчанию</string>
     <string name="settings_default_pin">PIN по умолчанию</string>
+    <string name="settings_backup_create">Создать резервную копию</string>
+    <string name="settings_backup_restore">Восстановить</string>
+    <string name="backup_success">Резервная копия сохранена</string>
+    <string name="backup_failed">Не удалось создать копию</string>
+    <string name="restore_confirm_title">Восстановление из копии</string>
+    <string name="restore_confirm_message">Все текущие данные будут заменены данными из копии. Продолжить?</string>
+    <string name="restore_failed">Не удалось восстановить — текущие данные сохранены</string>
 
     <string name="about_description">Списки, напоминания и заметки. Локально, без облака</string>
     <string name="about_version">Версия</string>

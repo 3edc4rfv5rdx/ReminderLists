@@ -17,3 +17,6 @@ key.properties
 *.apk
 *.apkx
 /tmp
+
+# Local one-time migration data from memlists (personal data, large zips)
+IMPEX/

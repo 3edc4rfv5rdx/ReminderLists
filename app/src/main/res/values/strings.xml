@@ -116,6 +116,7 @@
 
     <!-- Settings (TZ 5) -->
     <string name="settings_theme">Theme</string>
+    <string name="settings_font_size">Font size</string>
     <string name="settings_theme_color">Color</string>
     <string name="settings_theme_mode_light">Light</string>
     <string name="settings_theme_mode_dark">Dark</string>
@@ -138,6 +139,13 @@
     <string name="settings_sound_level">Sound level</string>
     <string name="settings_sound_system_default">System default</string>
     <string name="settings_default_pin">Default PIN</string>
+    <string name="settings_backup_create">Create backup</string>
+    <string name="settings_backup_restore">Restore</string>
+    <string name="backup_success">Backup saved</string>
+    <string name="backup_failed">Backup failed</string>
+    <string name="restore_confirm_title">Restore from backup</string>
+    <string name="restore_confirm_message">This replaces all current data with the backup. Continue?</string>
+    <string name="restore_failed">Restore failed — current data kept</string>
 
     <!-- About (TZ 4.9) -->
     <string name="about_description">Lists, Reminders and Notes. Local, no cloud</string>
