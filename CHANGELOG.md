@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Bottom navigation bar is now shorter (64dp content vs the M3 default 80dp) and the active tab is highlighted with a strong primary-coloured pill (TZ 8).
+- Bottom-bar tab labels stay on a single line at large font scales instead of wrapping (e.g. "Reminders" no longer breaks onto two lines) (TZ 8).
 - Font-size slider in Settings now saves once on release instead of on every drag tick, avoiding a burst of DB writes and typography rebuilds mid-drag (TZ 5).
 - Lists tab rows now support swipe gestures like other modules (TZ 8): swipe right edits a list or renames a folder, swipe left deletes; the list swipe honours the PIN gate.
 - List item rows show text, quantity and unit on one line joined by spaces, instead of a separate narrow amount column that wrapped long quantities into vertical letters (TZ 3.3).

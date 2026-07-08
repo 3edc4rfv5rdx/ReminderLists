@@ -2,9 +2,14 @@ package com.reminderlists.ui.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
@@ -16,6 +21,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -42,6 +49,9 @@ import com.reminderlists.ui.screens.reminders.ReminderEditorScreen
 import com.reminderlists.ui.screens.reminders.RemindersScreen
 import com.reminderlists.ui.screens.settings.SettingsScreen
 
+// Compact bottom-bar content height (excl. the system gesture inset); M3 default is 80dp.
+private val BOTTOM_BAR_HEIGHT = 64.dp
+
 // Root: single Scaffold + bottom navigation shared by all tabs (TZ 3.9). Tab state is
 // preserved via saveState/restoreState. Service screens are separate routes.
 @Composable
@@ -64,12 +74,17 @@ fun AppRoot() {
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (onTabRoute) {
+                // Shorter than the M3 default 80dp: fixed content height + the gesture inset
+                // so the bar clears the system nav area but stays compact.
+                val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                 NavigationBar(
                     // Measure the bar once at startup: every FAB on every screen is drawn at
                     // this level from the window bottom, so it never jumps (TZ 8).
-                    modifier = Modifier.onSizeChanged { size ->
-                        FabLevel.barHeight = with(density) { size.height.toDp() }
-                    },
+                    modifier = Modifier
+                        .height(BOTTOM_BAR_HEIGHT + bottomInset)
+                        .onSizeChanged { size ->
+                            FabLevel.barHeight = with(density) { size.height.toDp() }
+                        },
                 ) {
                     Tab.entries.forEach { tab ->
                         val selected = currentRoute?.hierarchy?.any { it.route == tab.route } == true
@@ -90,7 +105,22 @@ fun AppRoot() {
                                     contentDescription = stringResource(tab.labelRes),
                                 )
                             },
-                            label = { Text(stringResource(tab.labelRes)) },
+                            // Keep the label on one line at any font scale (TZ 5/8):
+                            // a large scale must not wrap "Reminders" onto two lines.
+                            label = {
+                                Text(
+                                    stringResource(tab.labelRes),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            },
+                            // Strong primary pill behind the active tab so the current
+                            // section is unmistakable (user request).
+                            colors = NavigationBarItemDefaults.colors(
+                                indicatorColor = MaterialTheme.colorScheme.primary,
+                                selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                            ),
                         )
                     }
                 }
