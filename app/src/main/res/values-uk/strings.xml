@@ -71,6 +71,7 @@
     <string name="field_quantity">Кількість</string>
     <string name="field_unit">Одиниця виміру</string>
     <string name="delete_item_title">Видалити елемент</string>
+    <string name="delete_note_title">Видалити нотатку</string>
 
     <string name="dictionary_new_entry">Новий запис</string>
     <string name="delete_entry_title">Видалити запис</string>
@@ -85,6 +86,7 @@
     <string name="delete_photo_title">Видалити фото</string>
     <string name="save_to_gallery">Зберегти в галерею</string>
     <string name="menu_delete_checked">Видалити позначені</string>
+    <string name="delete_checked_message">Видалити всі готові елементи?</string>
     <string name="menu_uncheck_all">Зняти позначки</string>
     <string name="menu_move">Перемістити</string>
     <string name="move_dialog_title">Перемістити до списку</string>
@@ -112,6 +114,10 @@
     <string name="theme_indigo">Індиго</string>
     <string name="theme_forest">Лісова</string>
     <string name="theme_plum">Сливова</string>
+    <string name="theme_amber">Бурштинова</string>
+    <string name="theme_orange">Помаранчева</string>
+    <string name="theme_beige">Бежева</string>
+    <string name="theme_olive">Оливкова</string>
     <string name="settings_language">Мова</string>
     <string name="language_system">Як у системі</string>
     <string name="language_english">English</string>
@@ -139,6 +145,7 @@
     <string name="about_build">Збірка</string>
 
     <!-- Reminders (TZ 4.2 / 4.6) -->
+    <string name="editor_new_note">Нова нотатка</string>
     <string name="editor_new_memo">Новий запис</string>
     <string name="field_title">Заголовок</string>
     <string name="field_content">Вміст</string>

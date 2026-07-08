@@ -71,6 +71,7 @@
     <string name="field_quantity">Количество</string>
     <string name="field_unit">Единица измерения</string>
     <string name="delete_item_title">Удалить элемент</string>
+    <string name="delete_note_title">Удалить заметку</string>
 
     <string name="dictionary_new_entry">Новая запись</string>
     <string name="delete_entry_title">Удалить запись</string>
@@ -85,6 +86,7 @@
     <string name="delete_photo_title">Удалить фото</string>
     <string name="save_to_gallery">Сохранить в галерею</string>
     <string name="menu_delete_checked">Удалить отмеченные</string>
+    <string name="delete_checked_message">Удалить все готовые элементы?</string>
     <string name="menu_uncheck_all">Снять отметки</string>
     <string name="menu_move">Переместить</string>
     <string name="move_dialog_title">Переместить в список</string>
@@ -112,6 +114,10 @@
     <string name="theme_indigo">Индиго</string>
     <string name="theme_forest">Лесная</string>
     <string name="theme_plum">Сливовая</string>
+    <string name="theme_amber">Янтарная</string>
+    <string name="theme_orange">Оранжевая</string>
+    <string name="theme_beige">Бежевая</string>
+    <string name="theme_olive">Оливковая</string>
     <string name="settings_language">Язык</string>
     <string name="language_system">Как в системе</string>
     <string name="language_english">English</string>
@@ -139,6 +145,7 @@
     <string name="about_build">Сборка</string>
 
     <!-- Reminders (TZ 4.2 / 4.6) -->
+    <string name="editor_new_note">Новая заметка</string>
     <string name="editor_new_memo">Новая запись</string>
     <string name="field_title">Заголовок</string>
     <string name="field_content">Содержание</string>

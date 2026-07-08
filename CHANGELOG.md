@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Russian and Ukrainian translations caught up with the latest strings (warm theme names, delete-checked confirmation, note titles).
 - "Delete checked" in a list now asks for confirmation before removing all done items, instead of deleting them immediately (TZ 8).
 - Restore confirmation, language picker and notification-permission dialogs now use the shared filled colour buttons instead of plain text buttons; the destructive restore OK is red (TZ 8).
 - Backup failures now log the real exception and show its reason in the snackbar instead of a generic "Backup failed" (TZ 3.8).
