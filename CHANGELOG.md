@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- App launcher icon replaced with a clipboard-and-bell design (list + reminder), as an adaptive icon with white background, per-density foreground and a themed monochrome layer.
+- `10-MakeRelease.sh` now folds only `build_number.txt` into the previous commit (`--amend --only`), so Room schema export or other build-time changes no longer block the version bump from being committed.
 - Russian and Ukrainian translations caught up with the latest strings (warm theme names, delete-checked confirmation, note titles).
 - "Delete checked" in a list now asks for confirmation before removing all done items, instead of deleting them immediately (TZ 8).
 - Restore confirmation, language picker and notification-permission dialogs now use the shared filled colour buttons instead of plain text buttons; the destructive restore OK is red (TZ 8).

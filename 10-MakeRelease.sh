@@ -30,20 +30,20 @@ echo "Release APKs: app/build/outputs/apk/release/"
 ls -1 app/build/outputs/apk/release/*.apk 2>/dev/null
 
 # Fold the build_number bump into the previous commit, if safe.
-# Safe = HEAD is not yet on any remote branch AND the only modified file is build_number.txt.
+# Safe = HEAD is not yet on any remote branch. Only build_number.txt is folded in;
+# other changes the build may have made (e.g. Room schema export) are left untouched.
 echo
 if git rev-parse --verify HEAD >/dev/null 2>&1; then
-    dirty=$(git status --porcelain | awk '{print $2}')
-    if [[ "$dirty" == "$BUILD_FILE" ]]; then
+    if [[ -n "$(git status --porcelain -- "$BUILD_FILE")" ]]; then
         if [[ -z "$(git branch -r --contains HEAD 2>/dev/null)" ]]; then
             git add "$BUILD_FILE"
-            git commit --amend --no-edit >/dev/null
+            git commit --amend --no-edit --only -- "$BUILD_FILE" >/dev/null
             echo ">>> Folded $BUILD_FILE into $(git log -1 --pretty=format:'%h %s')"
         else
             echo ">>> HEAD already pushed; leaving $BUILD_FILE uncommitted."
         fi
     else
-        echo ">>> Other changes present; leaving $BUILD_FILE uncommitted."
+        echo ">>> $BUILD_FILE unchanged; nothing to fold."
     fi
 fi
 
