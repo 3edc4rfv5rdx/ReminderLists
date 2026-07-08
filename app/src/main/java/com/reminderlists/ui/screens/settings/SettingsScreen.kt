@@ -127,14 +127,17 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
             ThemeModeSelector(mode = themeMode, onSelect = { vm.setThemeMode(it) })
             ThemeColorSelector(selected = themeColor, onSelect = { vm.setThemeColor(it) })
 
-            // App-wide font scale (TZ 5). Rebuilds Typography live for the whole app.
+            // App-wide font scale (TZ 5). Rebuilds Typography for the whole app, but only
+            // once on release: drag updates a local value, persist on onValueChangeFinished.
+            var sliderScale by remember(fontScale) { mutableStateOf(fontScale) }
             Text(
-                "${stringResource(R.string.settings_font_size)}: ${(fontScale * 100).toInt()}%",
+                "${stringResource(R.string.settings_font_size)}: ${(sliderScale * 100).toInt()}%",
                 Modifier.padding(top = 8.dp),
             )
             Slider(
-                value = fontScale,
-                onValueChange = { vm.setFontScale(it) },
+                value = sliderScale,
+                onValueChange = { sliderScale = it },
+                onValueChangeFinished = { vm.setFontScale(sliderScale) },
                 valueRange = Limits.FONT_SCALE_MIN..Limits.FONT_SCALE_MAX,
                 steps = 19, // snap in 5% increments (80%..180%)
             )
