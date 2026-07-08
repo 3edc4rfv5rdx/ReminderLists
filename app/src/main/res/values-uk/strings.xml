@@ -128,7 +128,7 @@
     <string name="settings_default_pin">PIN за замовчуванням</string>
     <string name="settings_backup_create">Створити резервну копію</string>
     <string name="settings_backup_restore">Відновити</string>
-    <string name="backup_success">Резервну копію збережено</string>
+    <string name="backup_success">Копію збережено в Documents/ReminderLists</string>
     <string name="backup_failed">Не вдалося створити копію</string>
     <string name="restore_confirm_title">Відновлення з копії</string>
     <string name="restore_confirm_message">Усі поточні дані буде замінено даними з копії. Продовжити?</string>

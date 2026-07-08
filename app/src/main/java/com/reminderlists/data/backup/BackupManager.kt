@@ -1,8 +1,11 @@
 package com.reminderlists.data.backup
 
+import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
+import android.os.Environment
+import android.provider.MediaStore
 import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.photo.PhotoManager
 import com.reminderlists.util.Logger
@@ -29,10 +32,45 @@ object BackupManager {
 
     class RestoreException(message: String) : Exception(message)
 
+    // Default backup location (TZ 3.8): Documents/ReminderLists/.
+    const val BACKUP_DIR = "Documents/ReminderLists"
+
     private fun soundsDir(context: Context) = File(context.filesDir, "sounds")
     private fun logsDir(context: Context) = File(context.filesDir, "logs")
 
+    private fun backupFileName(): String {
+        val ts = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(java.util.Date())
+        return "backup_$ts.zip"
+    }
+
     // --- Backup ------------------------------------------------------------------------
+
+    // Default backup: writes to Documents/ReminderLists/ via MediaStore (no storage permission,
+    // no picker — TZ 3.8 / 9). Returns the created file's display name.
+    suspend fun backupToDocuments(context: Context): Result<String> = withContext(Dispatchers.IO) {
+        runCatching {
+            val name = backupFileName()
+            val resolver = context.contentResolver
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+                put(MediaStore.MediaColumns.MIME_TYPE, "application/zip")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "${Environment.DIRECTORY_DOCUMENTS}/ReminderLists")
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+            val collection = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            val uri = resolver.insert(collection, values) ?: error("Cannot create backup file")
+            try {
+                backup(context, uri).getOrThrow()
+            } catch (e: Exception) {
+                resolver.delete(uri, null, null) // don't leave a half-written pending file
+                throw e
+            }
+            values.clear()
+            values.put(MediaStore.MediaColumns.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+            name
+        }
+    }
 
     suspend fun backup(context: Context, dest: Uri): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {

@@ -141,7 +141,7 @@
     <string name="settings_default_pin">Default PIN</string>
     <string name="settings_backup_create">Create backup</string>
     <string name="settings_backup_restore">Restore</string>
-    <string name="backup_success">Backup saved</string>
+    <string name="backup_success">Backup saved to Documents/ReminderLists</string>
     <string name="backup_failed">Backup failed</string>
     <string name="restore_confirm_title">Restore from backup</string>
     <string name="restore_confirm_message">This replaces all current data with the backup. Continue?</string>

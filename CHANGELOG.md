@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Backup now writes to Documents/ReminderLists/backup_YYYYMMDD_HHmmss.zip by default via MediaStore (TZ 3.8), no picker or storage permission; restore still picks a file.
 - App-wide font scale slider in Settings (TZ 5) and pure-black text on the light scheme (TZ 8): typography is the Material default scaled by one factor, now user-adjustable live; default 1.2×.
 - Backup and Restore (TZ 3.8): Settings can now write a full backup zip (database + photos + sounds + logs + manifest) to a picked location and restore one back, validating the manifest schema version and running an SQLite integrity check in a staging dir before swapping data in; a restore confirms first and restarts the app. Logs are backed up but not restored.
 - Migration from the previous app (memlists): a Python converter (IMPEX/) turns a memlists backup into a ReminderLists restore zip — lists/folders/items/dictionary, notes, reminders (Once/Daily/Period/Monthly/Yearly), tags and photos — imported through the standard Restore.

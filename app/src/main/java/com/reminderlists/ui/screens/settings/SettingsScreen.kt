@@ -87,17 +87,9 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
     val scope = rememberCoroutineScope()
     val snack = LocalSnackController.current
 
-    // Backup/Restore go through the system document picker — no storage permission, no cloud
-    // (TZ 3.8 / 9). A restore is confirmed first, then swaps data and restarts the app.
-    val backupLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/zip"),
-    ) { uri ->
-        if (uri != null) scope.launch {
-            val ok = BackupManager.backup(context, uri).isSuccess
-            if (ok) snack?.success(context.getString(R.string.backup_success))
-            else snack?.error(context.getString(R.string.backup_failed))
-        }
-    }
+    // Backup writes to Documents/ReminderLists/ by default (TZ 3.8); restore picks a file via the
+    // system document picker — no storage permission, no cloud (TZ 9). Restore confirms first,
+    // then swaps data and restarts the app.
     val restoreLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument(),
     ) { uri -> if (uri != null) restoreUri = uri }
@@ -229,7 +221,13 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
             SectionHeader(stringResource(R.string.menu_backup_restore))
             NavRow(
                 stringResource(R.string.settings_backup_create),
-                onClick = { backupLauncher.launch(backupFileName()) },
+                onClick = {
+                    scope.launch {
+                        BackupManager.backupToDocuments(context)
+                            .onSuccess { snack?.success(context.getString(R.string.backup_success)) }
+                            .onFailure { snack?.error(context.getString(R.string.backup_failed)) }
+                    }
+                },
             )
             NavRow(
                 stringResource(R.string.settings_backup_restore),
@@ -442,12 +440,6 @@ private fun languageLabel(tag: String?): String = stringResource(
         else -> R.string.language_system
     },
 )
-
-// Suggested backup name carries a timestamp so successive backups don't clash (TZ 3.8).
-private fun backupFileName(): String {
-    val ts = java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.US).format(java.util.Date())
-    return "reminderlists-backup-$ts.zip"
-}
 
 // Relaunch the app after a restore so every ViewModel/DAO rebinds to the swapped database.
 private fun restartApp(context: Context) {
