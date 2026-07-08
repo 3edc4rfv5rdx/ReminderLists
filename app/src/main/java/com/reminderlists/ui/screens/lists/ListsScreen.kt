@@ -53,6 +53,7 @@ import com.reminderlists.ui.components.DeleteFolderDialog
 import com.reminderlists.ui.components.EditTextDialog
 import com.reminderlists.ui.components.EmptyState
 import com.reminderlists.ui.components.FolderRow
+import com.reminderlists.ui.components.SwipeActionsRow
 import com.reminderlists.ui.components.FolderPickerDialog
 import com.reminderlists.ui.components.NameCommentDialog
 import com.reminderlists.ui.components.PinDialog
@@ -339,6 +340,7 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
 
 // List row (TZ 3.2): lock icon marks a PIN-protected list (TZ 3.6).
 // Tap opens; «⋯» = context menu (TZ 8, no long-press on records).
+// Swipe right = edit, swipe left = delete (TZ 8 §735); both go through the PIN gate.
 @Composable
 private fun ListRow(
     list: ListEntity,
@@ -351,34 +353,36 @@ private fun ListRow(
     onProtect: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    ListItem(
-        headlineContent = {
-            RowTitle(name = list.name, countsText = countsText, fontWeight = fontWeight, textDecoration = textDecoration)
-        },
-        // A protected list must not leak its comment before the PIN gate (TZ 3.6).
-        supportingContent = list.comment?.takeIf { !list.pinEnabled }?.let {
-            { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-        },
-        leadingContent = {
-            Icon(Icons.AutoMirrored.Filled.ListAlt, contentDescription = null)
-        },
-        trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (list.pinEnabled) {
-                    Icon(
-                        Icons.Filled.Lock,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.outline,
-                    )
+    SwipeActionsRow(onEdit = onEdit, onDelete = onDelete) {
+        ListItem(
+            headlineContent = {
+                RowTitle(name = list.name, countsText = countsText, fontWeight = fontWeight, textDecoration = textDecoration)
+            },
+            // A protected list must not leak its comment before the PIN gate (TZ 3.6).
+            supportingContent = list.comment?.takeIf { !list.pinEnabled }?.let {
+                { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            },
+            leadingContent = {
+                Icon(Icons.AutoMirrored.Filled.ListAlt, contentDescription = null)
+            },
+            trailingContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (list.pinEnabled) {
+                        Icon(
+                            Icons.Filled.Lock,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.outline,
+                        )
+                    }
+                    RowMenuButton { dismiss ->
+                        ListMenuItems(dismiss, list.pinEnabled, onEdit, onMove, onProtect, onDelete)
+                    }
                 }
-                RowMenuButton { dismiss ->
-                    ListMenuItems(dismiss, list.pinEnabled, onEdit, onMove, onProtect, onDelete)
-                }
-            }
-        },
-        modifier = Modifier.clickable { onOpen() },
-    )
+            },
+            modifier = Modifier.clickable { onOpen() },
+        )
+    }
 }
 
 @Composable

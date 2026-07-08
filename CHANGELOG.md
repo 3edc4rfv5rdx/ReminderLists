@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Lists tab rows now support swipe gestures like other modules (TZ 8): swipe right edits a list or renames a folder, swipe left deletes; the list swipe honours the PIN gate.
 - List item rows show text, quantity and unit on one line joined by spaces, instead of a separate narrow amount column that wrapped long quantities into vertical letters (TZ 3.3).
 - Text fields no longer freeze when pre-filled with a value over the length limit (e.g. imported data): shrinking edits are always allowed, only growth past the limit is blocked (TZ 8).
 - Backup now writes to Documents/ReminderLists/backup_YYYYMMDD_HHmmss.zip by default via MediaStore (TZ 3.8), no picker or storage permission; restore still picks a file.
