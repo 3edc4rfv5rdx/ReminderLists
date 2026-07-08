@@ -104,6 +104,7 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
     var topMenuOpen by remember { mutableStateOf(false) }
     var shareDialogOpen by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<ItemEntity?>(null) }
+    var confirmDeleteChecked by remember { mutableStateOf(false) }
     var photoViewerItem by remember { mutableStateOf<ItemEntity?>(null) }
 
     // Move/copy dialog (TZ 3.3): opened via the in-list menu "Move" (no long-press — user decision).
@@ -171,7 +172,7 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                             enabled = doneItems.isNotEmpty(),
                             onClick = {
                                 topMenuOpen = false
-                                vm.deleteChecked()
+                                confirmDeleteChecked = true
                             },
                         )
                         DropdownMenuItem(
@@ -333,6 +334,20 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                 pendingDelete = null
             },
             onDismiss = { pendingDelete = null },
+        )
+    }
+
+    // "Delete checked" removes every done item at once, so confirm first (TZ 8).
+    if (confirmDeleteChecked) {
+        ConfirmDialog(
+            title = stringResource(R.string.menu_delete_checked),
+            text = stringResource(R.string.delete_checked_message),
+            confirmLabel = stringResource(R.string.action_delete),
+            onConfirm = {
+                vm.deleteChecked()
+                confirmDeleteChecked = false
+            },
+            onDismiss = { confirmDeleteChecked = false },
         )
     }
 

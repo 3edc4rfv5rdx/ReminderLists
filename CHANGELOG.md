@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- "Delete checked" in a list now asks for confirmation before removing all done items, instead of deleting them immediately (TZ 8).
 - Restore confirmation, language picker and notification-permission dialogs now use the shared filled colour buttons instead of plain text buttons; the destructive restore OK is red (TZ 8).
 - Backup failures now log the real exception and show its reason in the snackbar instead of a generic "Backup failed" (TZ 3.8).
 - Four warm theme presets added — Amber, Orange, Beige, Olive — alongside the existing four; the theme swatches sit in a single horizontally-scrolling row, and content colour on the accent adapts to its brightness so text stays legible on light accents (TZ 5/8).

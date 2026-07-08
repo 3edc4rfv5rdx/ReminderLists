@@ -94,6 +94,7 @@
     <string name="delete_photo_title">Delete photo</string>
     <string name="save_to_gallery">Save to gallery</string>
     <string name="menu_delete_checked">Delete checked</string>
+    <string name="delete_checked_message">Delete all done items?</string>
     <string name="menu_uncheck_all">Uncheck all</string>
     <string name="menu_move">Move</string>
     <string name="move_dialog_title">Move to list</string>
