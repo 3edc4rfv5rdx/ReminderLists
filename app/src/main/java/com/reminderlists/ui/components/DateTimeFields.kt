@@ -1,15 +1,26 @@
 package com.reminderlists.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
@@ -18,9 +29,12 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -30,8 +44,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.reminderlists.R
 import com.reminderlists.data.reminders.IntervalUnit
@@ -175,8 +191,9 @@ fun TimePickerDialog(
     )
 }
 
-// Interval repeat field «Every [N] [unit ▾]» (TZ 4.2 f‴): a number input plus a unit
-// dropdown. The single reusable interval control for the app (TZ 8).
+// Interval repeat field «(–) | NNNN | (+)  [unit ▾]» (TZ 4.2 f‴): a framed segmented stepper —
+// minus / typed number / plus — with a floating «Every» label cut into its top border, plus a
+// separate unit dropdown. The single reusable interval control for the app (TZ 8).
 @Composable
 fun IntervalField(
     count: String,
@@ -186,20 +203,57 @@ fun IntervalField(
     modifier: Modifier = Modifier,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
+    // The number is typed directly (e.g. 58) or nudged with the buttons; min 1 (TZ 4.2 f‴).
+    val parsed = count.toIntOrNull() ?: 0
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.fillMaxWidth(),
     ) {
-        FloatingLabelTextField(
-            value = count,
-            // Digits only: strip anything else so the count stays parseable (TZ 4.2 f‴).
-            onValueChange = { new -> onCountChange(new.filter { it.isDigit() }) },
-            label = stringResource(R.string.field_interval_every),
-            keyboardType = KeyboardType.Number,
-            modifier = Modifier.weight(0.4f),
-        )
-        Box(Modifier.weight(0.6f)) {
+        // Framed «(–) | N | (+)» with the «Every» label sitting on the top border.
+        Box {
+            Row(
+                Modifier.border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(4.dp)),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(
+                    onClick = { onCountChange((parsed - 1).coerceAtLeast(1).toString()) },
+                    enabled = parsed > 1,
+                ) {
+                    Icon(Icons.Filled.Remove, contentDescription = stringResource(R.string.interval_decrease))
+                }
+                VerticalDivider(Modifier.height(28.dp))
+                BasicTextField(
+                    value = count,
+                    // Digits only, capped at 4 so the field can't grow absurd; empty is allowed
+                    // while typing (validation catches a blank on Save).
+                    onValueChange = { new -> onCountChange(new.filter { it.isDigit() }.take(4)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    textStyle = LocalTextStyle.current.copy(
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    ),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    modifier = Modifier.width(56.dp).padding(horizontal = 4.dp),
+                )
+                VerticalDivider(Modifier.height(28.dp))
+                IconButton(onClick = { onCountChange((parsed + 1).coerceAtLeast(1).toString()) }) {
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.interval_increase))
+                }
+            }
+            Text(
+                stringResource(R.string.field_interval_every),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .offset(x = 12.dp, y = (-7).dp)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 4.dp),
+            )
+        }
+        Box(Modifier.weight(1f)) {
             OutlinedButton(onClick = { menuOpen = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(intervalUnitLabel(unit)), modifier = Modifier.weight(1f))
                 Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
@@ -216,16 +270,18 @@ fun IntervalField(
     }
 }
 
+// Short, number-neutral unit label (e.g. «min», «дн») — used both in the unit dropdown and in
+// the card summary, so the phrase composes cleanly without per-number plural forms (TZ 4.2 f‴).
 private fun intervalUnitLabel(unit: IntervalUnit): Int = when (unit) {
-    IntervalUnit.MINUTES -> R.string.interval_unit_minutes
-    IntervalUnit.HOURS -> R.string.interval_unit_hours
-    IntervalUnit.DAYS -> R.string.interval_unit_days
-    IntervalUnit.WEEKS -> R.string.interval_unit_weeks
-    IntervalUnit.MONTHS -> R.string.interval_unit_months
+    IntervalUnit.MINUTES -> R.string.interval_short_minutes
+    IntervalUnit.HOURS -> R.string.interval_short_hours
+    IntervalUnit.DAYS -> R.string.interval_short_days
+    IntervalUnit.WEEKS -> R.string.interval_short_weeks
+    IntervalUnit.MONTHS -> R.string.interval_short_months
 }
 
-// Localized "Every N unit" summary of an interval, shared by the editor and reminder cards
-// (TZ 4.6 / 8). Plurals are intentionally not handled (TZ decision).
+// Composed "Every N unit" summary, shared by the editor and reminder cards (TZ 4.6 / 8): the
+// leading word + the number + the invariant short unit, so no per-number plural strings.
 @Composable
 fun intervalSummary(count: Int, unit: IntervalUnit): String =
     "${stringResource(R.string.field_interval_every)} $count ${stringResource(intervalUnitLabel(unit))}"
@@ -242,12 +298,14 @@ fun TimePresetRow(
         presets.forEach { (label, time) ->
             OutlinedButton(
                 onClick = { onPick(time) },
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                // Tighter than the default button height: no vertical padding and a smaller time
+                // line, so the two-line preset stays compact.
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                 modifier = Modifier.weight(1f),
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(label)
-                    Text(time)
+                    Text(label, style = MaterialTheme.typography.bodyMedium)
+                    Text(time, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }

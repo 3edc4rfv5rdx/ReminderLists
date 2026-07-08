@@ -91,7 +91,8 @@ class ReminderEditorViewModel(
     val dailyTimes = mutableStateListOf<String>()
     var periodFrom by mutableStateOf("")
     var periodTo by mutableStateOf("")
-    // Interval: N units from the start (date + time). Count is edited as text (TZ 4.2 f‴).
+    // Interval: N units from the start (date + time). Edited as text (typed or via the –/+
+    // buttons), N >= 1, parsed on Save (TZ 4.2 f‴).
     var intervalCount by mutableStateOf("1")
     var intervalUnit by mutableStateOf(IntervalUnit.DAYS)
     var weekdaysMask by mutableIntStateOf(Weekdays.ALL) // Every day preset (TZ 4.2)

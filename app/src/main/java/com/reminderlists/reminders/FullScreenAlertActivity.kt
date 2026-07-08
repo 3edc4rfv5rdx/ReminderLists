@@ -172,9 +172,9 @@ private fun FullScreenAlert(
     BoxWithConstraints(Modifier.fillMaxSize().background(AlertBackground)) {
         val screenHeightPx = with(LocalDensity.current) { maxHeight.toPx() }
         Column(
-            Modifier.fillMaxSize().padding(24.dp),
+            Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Top,
         ) {
             Text(
                 stringResource(R.string.app_name),
@@ -214,7 +214,7 @@ private fun LiveClock() {
         Dates.format(now),
         style = MaterialTheme.typography.displayLarge,
         color = AlertControl,
-        modifier = Modifier.padding(vertical = 16.dp),
+        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
     )
 }
 
@@ -222,7 +222,7 @@ private fun LiveClock() {
 private fun ReminderText(state: AlertUiState, dimmed: Boolean) {
     val alpha by animateFloatAsState(if (dimmed) 0.45f else 1f, label = "reminderAlpha")
     Column(
-        Modifier.fillMaxWidth().alpha(alpha).padding(vertical = 24.dp),
+        Modifier.fillMaxWidth().alpha(alpha).padding(top = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -236,7 +236,7 @@ private fun ReminderText(state: AlertUiState, dimmed: Boolean) {
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             color = AlertControl,
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = 4.dp),
         )
         state.content?.let {
             Text(
@@ -244,7 +244,7 @@ private fun ReminderText(state: AlertUiState, dimmed: Boolean) {
                 style = MaterialTheme.typography.titleLarge,
                 textAlign = TextAlign.Center,
                 color = AlertControl,
-                modifier = Modifier.padding(top = 8.dp),
+                modifier = Modifier.padding(top = 6.dp),
             )
         }
     }

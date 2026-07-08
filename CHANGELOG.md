@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Interval editor count is now a framed «(–) N (+)» control with a typed number field (min 1), and the interval condition uses short invariant unit suffixes (min/hr/d/wk/mo; ru мин/ч/дн./нед/мес) in both the unit dropdown and cards instead of per-number plural strings.
+- Full-screen alert layout tightened — title/time raised with the Content shown in the same block — and the Morning/Day/Evening time-preset buttons made shorter.
 - Interval reminder notifications now carry a "Stop repeating" action that deactivates the reminder; the +10 min action is hidden on minute intervals, and interval cards show the repeat condition ("Every N days") above the next fire (TZ 4.5/4.6).
 - New Interval reminder type — repeats every N minutes/hours/days/weeks/months from a start date/time; own Intervals folder, minute-interval notifications auto-expire after 20s, and DST-aware next-fire math (minutes/hours absolute, days+ wall-clock) (TZ 4).
 - App launcher icon replaced with a clipboard-and-bell design (list + reminder), as an adaptive icon with white background, per-density foreground and a themed monochrome layer; the clipboard shows two list rows and a checked item.
