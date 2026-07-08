@@ -125,6 +125,10 @@
     <string name="theme_indigo">Indigo</string>
     <string name="theme_forest">Forest</string>
     <string name="theme_plum">Plum</string>
+    <string name="theme_amber">Amber</string>
+    <string name="theme_orange">Orange</string>
+    <string name="theme_beige">Beige</string>
+    <string name="theme_olive">Olive</string>
     <string name="settings_language">Language</string>
     <string name="language_system">System default</string>
     <string name="language_english">English</string>

@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Four warm theme presets added — Amber, Orange, Beige, Olive — alongside the existing four; the theme swatches now wrap onto multiple rows, and content colour on the accent adapts to its brightness so text stays legible on light accents (TZ 5/8).
+- Dark theme is now true black (not Material dark grey) with white text and a bright per-preset accent (Teal/Indigo/Forest/Plum) that actually reads on black, since the raw seed colours were too dark (TZ 8).
 - Tags are now monochrome instead of the theme accent colour: tag lines on reminder/note/Today cards are plain black and italic (to stand apart), and the selected tag-filter chip is inverted (black fill, light text) rather than a coloured fill (TZ 8).
 - Light theme now renders all low-emphasis labels, hints and icons in pure black (outline token = black) instead of faded grey; empty priority stars and disabled controls stay pale via outlineVariant, and text on coloured fills keeps its contrasting light colour (TZ 8).
 - Tag-filter cloud sizes tags by frequency rank instead of raw count, so one very frequent tag no longer shrinks all the rest to the smallest size; most-used tags get the largest tiers and equal counts share a size (TZ 4.4).

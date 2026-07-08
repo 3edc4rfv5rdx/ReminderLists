@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -346,9 +347,11 @@ private fun ThemeModeSelector(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
 
 @Composable
 private fun ThemeColorSelector(selected: AppTheme, onSelect: (AppTheme) -> Unit) {
-    Row(
+    // FlowRow so the presets wrap onto a second line — too many now for a single row.
+    FlowRow(
         Modifier.fillMaxWidth().padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         AppTheme.entries.forEach { theme ->
             val isSelected = theme == selected
@@ -457,6 +460,10 @@ private fun themeName(theme: AppTheme): Int = when (theme) {
     AppTheme.INDIGO -> R.string.theme_indigo
     AppTheme.FOREST -> R.string.theme_forest
     AppTheme.PLUM -> R.string.theme_plum
+    AppTheme.AMBER -> R.string.theme_amber
+    AppTheme.ORANGE -> R.string.theme_orange
+    AppTheme.BEIGE -> R.string.theme_beige
+    AppTheme.OLIVE -> R.string.theme_olive
 }
 
 // A switch line with roomy vertical padding (TZ 8: rows must not feel cramped on a phone).

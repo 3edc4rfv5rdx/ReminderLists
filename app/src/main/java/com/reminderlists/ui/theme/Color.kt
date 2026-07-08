@@ -12,8 +12,27 @@ val Indigo = Color(0xFF3F51B5)
 val Forest = Color(0xFF2E7D46)
 val Plum = Color(0xFF6A3E7A)
 
+// Warm presets (TZ 5): light seed (deeper, so light-theme content reads) + bright dark accent.
+val Amber = Color(0xFFA67C00)
+val Orange = Color(0xFFE65100)
+val Beige = Color(0xFF9E8562)
+val Olive = Color(0xFF6E7B2E)
+
 // Pure black for light-scheme text/icons (TZ 8).
 val Black = Color(0xFF000000)
+
+// Dark theme (TZ 8): pure-black background/surfaces, white text, and a bright accent per
+// preset — the raw seed is too dark to read on black, so dark mode uses these vivid tones.
+val White = Color(0xFFFFFFFF)
+val DarkSurface = Color(0xFF1C1C1C) // near-black elevated surface for chips/menus on black
+val TealAccent = Color(0xFF4FD6E8)
+val IndigoAccent = Color(0xFF9FA8FF)
+val ForestAccent = Color(0xFF5CE08A)
+val PlumAccent = Color(0xFFD69BEC)
+val AmberAccent = Color(0xFFFFD54F)
+val OrangeAccent = Color(0xFFFFB74D)
+val BeigeAccent = Color(0xFFE8D3A0)
+val OliveAccent = Color(0xFFC5D65C)
 
 // Semantic snackbar colors (TZ 8): Error / Warning / Success / Info.
 val SnackError = Color(0xFFC62828)
