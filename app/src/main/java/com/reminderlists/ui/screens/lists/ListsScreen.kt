@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenuItem
@@ -43,7 +42,6 @@ import com.reminderlists.data.db.entity.FolderEntity
 import com.reminderlists.data.db.entity.ListEntity
 import com.reminderlists.ui.components.AppDropdownMenu
 import com.reminderlists.ui.components.AppFab
-import com.reminderlists.ui.components.AppSmallFab
 import com.reminderlists.ui.components.FabLevel
 import com.reminderlists.ui.components.RowMenuButton
 import com.reminderlists.ui.components.AppTopBar
@@ -114,6 +112,16 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                         Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.action_menu))
                     }
                     AppDropdownMenu(expanded = topMenuOpen, onDismissRequest = { topMenuOpen = false }) {
+                        // New folder lives in the menu (rare action, no nesting inside a folder).
+                        if (!inFolder) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.fab_new_folder)) },
+                                onClick = {
+                                    topMenuOpen = false
+                                    dialog = ListsDialog.NewFolder
+                                },
+                            )
+                        }
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_dictionary)) },
                             onClick = {
@@ -190,28 +198,16 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
             }
         }
 
-        Column(
+        AppFab(
+            icon = Icons.Filled.Add,
+            contentDescription = stringResource(R.string.fab_new_list),
+            onClick = { dialog = ListsDialog.NewList },
             // Fixed FAB level from the window bottom (TZ 8) — independent of the bottom bar.
-            Modifier
+            modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp)
                 .padding(bottom = FabLevel.barHeight + 16.dp),
-            horizontalAlignment = Alignment.End,
-        ) {
-            if (!inFolder) {
-                AppSmallFab(
-                    icon = Icons.Filled.CreateNewFolder,
-                    contentDescription = stringResource(R.string.fab_new_folder),
-                    onClick = { dialog = ListsDialog.NewFolder },
-                    modifier = Modifier.padding(bottom = 12.dp),
-                )
-            }
-            AppFab(
-                icon = Icons.Filled.Add,
-                contentDescription = stringResource(R.string.fab_new_list),
-                onClick = { dialog = ListsDialog.NewList },
-            )
-        }
+        )
     }
 
     when (val d = dialog) {

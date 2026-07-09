@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -66,23 +65,5 @@ fun AppFab(
                 Icon(icon, contentDescription = contentDescription)
             }
         }
-    }
-}
-
-// Secondary smaller FAB (e.g. "new folder" — TZ 3.9).
-@Composable
-fun AppSmallFab(
-    icon: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    SmallFloatingActionButton(
-        onClick = onClick,
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary,
-        modifier = modifier,
-    ) {
-        Icon(icon, contentDescription = contentDescription)
     }
 }
