@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- First release
+
+## v0.0.20260709+0
 - "New folder" moved from a secondary FAB into the top-bar overflow menu (top item, root only) on both Lists and Notes, leaving a single main FAB.
 - Interval condition on cards now uses fully declined phrases ("Every 2 days", ru «Каждые 2 дня» / «Каждую минуту») via `<plurals>` with a singular-form special case; the editor's unit-picker button declines the noun by the entered count («2 дня» / «5 дней») while the dropdown menu keeps neutral unit names (Minutes/Days…).
 - Full-screen alert postpone buttons laid out in fixed rows (minutes, then hours/day, then a full-width OK) with each amount stacked over its lowercased unit on two centered lines, and the whole "Postpone for" block dropped lower so it doesn't crowd the reminder text.

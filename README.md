@@ -9,7 +9,7 @@ These three related things usually live in separate apps, half of which sync you
 ## Three modules (bottom-bar tabs)
 
 - **Lists** — checklists with folders (one level), per-item photos, an autocomplete dictionary, PIN protection, a large-font mode, sharing and zip backup.
-- **Reminders** — time-triggered entries, sorted automatically into type folders (Once / Daily / Periods / Monthly / Yearly) from the form fields rather than by hand. Tags, priority, full-screen alert with Postpone, repeats. Engine is `AlarmManager` (exact alarms), handling missed fires and timezone/DST changes.
+- **Reminders** — time-triggered entries, sorted automatically into type folders (Once / Daily / Periods / Monthly / Yearly / Intervals) from the form fields rather than by hand. Intervals repeat every N minutes/hours/days/weeks/months from a start moment. Tags, priority, full-screen alert with Postpone, repeats. Engine is `AlarmManager` (exact alarms), handling missed fires and timezone/DST changes.
 - **Notes** — long-lived note cards that never fire; built like Lists, with reminder-style fields and PIN.
 
 ## Tech
