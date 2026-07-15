@@ -4,6 +4,7 @@ import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -52,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -527,21 +530,30 @@ private fun pickerLabel(entry: ListPickerEntry): String =
 @Composable
 private fun LargeFontRow(item: ItemEntity, onToggle: () -> Unit) {
     val amount = TextFormat.formatAmount(item.quantity, item.unit)
+    val firstLineHeight = with(LocalDensity.current) { LargeItemTextStyle.lineHeight.toDp() }
     Row(
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onToggle)
             .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
-        Box(
-            Modifier
-                .size(14.dp)
-                .background(
-                    color = if (item.isDone) MaterialTheme.colorScheme.outlineVariant else MaterialTheme.colorScheme.primary,
-                    shape = CircleShape,
-                ),
-        )
+        // Marker sits on the first text line, not centred on the whole (possibly wrapped) block.
+        Box(Modifier.height(firstLineHeight), contentAlignment = Alignment.Center) {
+            if (item.isDone) {
+                Box(
+                    Modifier
+                        .size(14.dp)
+                        .border(2.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape),
+                )
+            } else {
+                Box(
+                    Modifier
+                        .size(14.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape),
+                )
+            }
+        }
         Text(
             text = if (amount.isEmpty()) item.text else "${item.text} $amount",
             style = LargeItemTextStyle,

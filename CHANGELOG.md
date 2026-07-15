@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Large font mode: item text enlarged to 36sp, the dot marker now sits on the first text line instead of centred on wrapped rows, and done items get a hollow outlined dot (TZ 3.5).
+
 ## v0.3.20260709+151
 - First release
 

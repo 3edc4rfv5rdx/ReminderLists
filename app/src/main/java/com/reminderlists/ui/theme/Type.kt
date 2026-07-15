@@ -36,7 +36,7 @@ fun appTypography(scale: Float = DEFAULT_FONT_SCALE): Typography = Typography().
 }
 
 val LargeItemTextStyle = TextStyle(
-    fontSize = 30.sp,
-    lineHeight = 38.sp,
+    fontSize = 36.sp,
+    lineHeight = 45.sp,
     fontWeight = FontWeight.Medium,
 )
