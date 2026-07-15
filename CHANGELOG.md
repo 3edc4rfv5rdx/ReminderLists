@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Full-screen alert unlock now triggers the moment the circle crosses mid-screen (was: drag 60% and release past it, which often read as a failed attempt).
 - While the full-screen alert is on screen its shade notification is removed (it returns, without the full-screen intent, if the alert is left without an action).
 - Full-screen alert now opens instantly even while the phone is in use: the app asks once at first launch for the "Display over other apps" grant, which lets the alarm launch the alert directly instead of a tap-to-open heads-up.
 - Hardening: list/item creation DAO methods declared as plain inserts instead of REPLACE upserts, closing the same cascade-delete trap fixed for reminders/notes/folders.

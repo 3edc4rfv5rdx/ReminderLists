@@ -289,13 +289,15 @@ private fun ReminderText(state: AlertUiState, dimmed: Boolean) {
 }
 
 // Big black circle sitting ~1/5 from the top: a white lock in its upper half and a large white
-// down-triangle in its lower half. Drag it down to ~4/5 of the screen to unlock, guarding
-// against dismissing the reminder by accident (TZ 4.5 state 1).
+// down-triangle in its lower half. Drag it down past mid-screen to unlock, guarding against
+// dismissing the reminder by accident (TZ 4.5 state 1). Unlock fires the moment the threshold
+// is crossed, mid-drag — requiring a release past the threshold made attempts that stopped a
+// hair short reset to zero and read as "unlock didn't work".
 @Composable
 private fun BoxScope.LockCircle(screenHeightPx: Float, onUnlock: () -> Unit) {
     val circlePx = with(LocalDensity.current) { CIRCLE_SIZE.toPx() }
     val baseY = screenHeightPx * 0.2f - circlePx / 2f
-    val thresholdPx = screenHeightPx * 0.6f
+    val thresholdPx = screenHeightPx * 0.5f
     var drag by remember { mutableStateOf(0f) }
     val offset by animateFloatAsState(drag, label = "lockOffset")
     Box(
@@ -306,8 +308,12 @@ private fun BoxScope.LockCircle(screenHeightPx: Float, onUnlock: () -> Unit) {
             .background(AlertControl, CircleShape)
             .pointerInput(Unit) {
                 detectVerticalDragGestures(
-                    onVerticalDrag = { _, dy -> drag = (drag + dy).coerceIn(0f, thresholdPx) },
-                    onDragEnd = { if (drag >= thresholdPx) onUnlock() else drag = 0f },
+                    onVerticalDrag = { _, dy ->
+                        val before = drag
+                        drag = (drag + dy).coerceIn(0f, thresholdPx)
+                        if (before < thresholdPx && drag >= thresholdPx) onUnlock()
+                    },
+                    onDragEnd = { drag = 0f },
                     onDragCancel = { drag = 0f },
                 )
             },
