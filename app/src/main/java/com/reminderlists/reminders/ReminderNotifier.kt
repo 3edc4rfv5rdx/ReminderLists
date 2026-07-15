@@ -59,8 +59,19 @@ object ReminderNotifier {
     // On-time fire with Full screen alert on / Period (TZ 4.5): a HIGH-channel notification
     // carrying a full-screen intent to FullScreenAlertActivity. The OS launches the activity
     // over the lockscreen; unlocked it lands as heads-up and the activity opens on tap. Ongoing
-    // so it can't be swiped away — the alert screen is dismissed by acting on it.
-    fun notifyFullScreen(context: Context, reminder: ReminderEntity) {
+    // so it can't be swiped away — the alert screen is dismissed by acting on it. While the
+    // alert itself is visible the activity cancels this entry (a shade duplicate) and re-posts
+    // it via notifyAlertPending if it's left without an action.
+    fun notifyFullScreen(context: Context, reminder: ReminderEntity) =
+        notifyAlert(context, reminder, fullScreen = true)
+
+    // Shade fallback when the alert is left without acting (Home / back / screen off): the same
+    // alert-opening entry but without the full-screen intent, so posting it can't relaunch the
+    // alert by itself (an FSI re-post on screen-off would light the screen right back up).
+    fun notifyAlertPending(context: Context, reminder: ReminderEntity) =
+        notifyAlert(context, reminder, fullScreen = false)
+
+    private fun notifyAlert(context: Context, reminder: ReminderEntity, fullScreen: Boolean) {
         val nm = NotificationManagerCompat.from(context)
         if (!nm.areNotificationsEnabled()) return
         val alert = alertIntent(context, reminder.id)
@@ -71,7 +82,7 @@ object ReminderNotifier {
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setOngoing(true)
             .setContentIntent(alert)
-            .setFullScreenIntent(alert, true)
+        if (fullScreen) builder.setFullScreenIntent(alert, true)
         reminder.content?.let { builder.setContentText(it) }
         nm.notify(notifId(reminder.id), builder.build())
     }

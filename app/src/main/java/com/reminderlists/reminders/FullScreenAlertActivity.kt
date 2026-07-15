@@ -74,6 +74,9 @@ import java.time.LocalTime
 // Done/Continue for Period. Any action stops the sound, dismisses the notification and closes.
 class FullScreenAlertActivity : ComponentActivity() {
 
+    private var reminder: ReminderEntity? = null
+    private var acted = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Honour manifest showWhenLocked/turnScreenOn programmatically too, and keep the
@@ -83,7 +86,16 @@ class FullScreenAlertActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         var state by mutableStateOf<AlertUiState?>(null)
-        loadReminder(reminderId(), onLoaded = { state = it }, onMissing = ::finish)
+        loadReminder(
+            reminderId(),
+            onLoaded = { r ->
+                reminder = r
+                state = alertStateOf(r)
+                // The alert itself is on screen — its shade notification is a duplicate.
+                ReminderNotifier.cancel(this, r.id)
+            },
+            onMissing = ::finish,
+        )
 
         setContent {
             ReminderListsTheme {
@@ -100,24 +112,42 @@ class FullScreenAlertActivity : ComponentActivity() {
         }
     }
 
+    // Coming back to the foreground (e.g. the screen was turned off and on again while the
+    // alert stayed up): drop the shade entry re-posted by onStop below.
+    override fun onStart() {
+        super.onStart()
+        if (!acted) reminder?.let { ReminderNotifier.cancel(this, it.id) }
+    }
+
+    // Left without acting (Home, back gesture, screen off): put a shade entry back so the
+    // pending fire stays reachable — notifyAlertPending carries no full-screen intent, so it
+    // can't relaunch the alert (an FSI here would relight the screen the user just turned off).
+    override fun onStop() {
+        super.onStop()
+        if (!acted && !isChangingConfigurations) {
+            reminder?.let { ReminderNotifier.notifyAlertPending(this, it) }
+        }
+    }
+
     private fun reminderId(): Long = intent.getLongExtra(ReminderScheduler.EXTRA_REMINDER_ID, -1L)
 
     private fun db() = AppDatabase.get(this)
 
-    private fun loadReminder(id: Long, onLoaded: (AlertUiState) -> Unit, onMissing: () -> Unit) {
+    private fun loadReminder(id: Long, onLoaded: (ReminderEntity) -> Unit, onMissing: () -> Unit) {
         if (id <= 0) {
             onMissing()
             return
         }
         lifecycleScope.launch {
-            val reminder = withContext(Dispatchers.IO) { db().remindersDao().get(id) }
-            if (reminder == null) onMissing() else onLoaded(alertStateOf(reminder))
+            val loaded = withContext(Dispatchers.IO) { db().remindersDao().get(id) }
+            if (loaded == null) onMissing() else onLoaded(loaded)
         }
     }
 
     // Run a reminder action off the main thread, then tear down the fire: stop the looping
     // sound, dismiss the notification and close the alert (TZ 4.5).
     private fun act(block: suspend () -> Unit) {
+        acted = true
         lifecycleScope.launch {
             withContext(Dispatchers.IO) { block() }
             SoundService.stop(this@FullScreenAlertActivity)
