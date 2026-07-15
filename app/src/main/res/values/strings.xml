@@ -272,6 +272,8 @@
     <string name="day_fr">Fr</string>
     <string name="day_sa">Sa</string>
     <string name="day_su">Su</string>
+    <!-- Seven one-letter day markers Mon..Sun for the compact card row "mtwt-ss" (TZ 4.6) -->
+    <string name="weekdays_compact">mtwtfss</string>
     <string name="delete_reminder_title">Delete reminder</string>
     <string name="action_pick_date">Pick date</string>
     <string name="action_pick_time">Pick time</string>

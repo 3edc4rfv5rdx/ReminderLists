@@ -15,9 +15,13 @@ object Weekdays {
     fun toggleRange(mask: Int, range: Int): Int =
         if (mask and range == range) mask and range.inv() else mask or range
 
-    // Compact card form "mtwt-ss": active day = letter, inactive = dash (TZ 4.6).
+    // Compact card form "mtwt-ss": active day = letter, inactive = dash (TZ 4.6). The seven
+    // Mon..Sun markers come from R.string.weekdays_compact (localized); a malformed resource
+    // falls back to the English letters.
     private const val LETTERS = "mtwtfss"
 
-    fun compact(mask: Int): String =
-        LETTERS.mapIndexed { i, c -> if (has(mask, i)) c else '-' }.joinToString("")
+    fun compact(mask: Int, letters: String): String {
+        val marks = if (letters.length == 7) letters else LETTERS
+        return marks.mapIndexed { i, c -> if (has(mask, i)) c else '-' }.joinToString("")
+    }
 }

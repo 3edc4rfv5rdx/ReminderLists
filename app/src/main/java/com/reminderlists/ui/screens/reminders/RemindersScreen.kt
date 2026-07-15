@@ -330,7 +330,7 @@ private fun ReminderCard(
                 if (folder == ReminderFolder.DAILY || folder == ReminderFolder.PERIODS) {
                     reminder.weekdaysMask?.let { mask ->
                         Text(
-                            text = Weekdays.compact(mask),
+                            text = Weekdays.compact(mask, stringResource(R.string.weekdays_compact)),
                             style = MaterialTheme.typography.bodyMedium,
                             fontFamily = FontFamily.Monospace,
                         )

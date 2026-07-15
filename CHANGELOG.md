@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Compact weekday row on Daily/Period cards ("mtwt-ss") now uses localized day letters (ru/uk) instead of hardcoded Latin ones.
 - Notification channel names moved from hardcoded literals to string resources (kept in English in all locales).
 - Fixed: when a second reminder fires while a sound is still playing, the old sound is now stopped and released instead of leaking, and its stale timeout no longer cuts the new sound short.
 - Fixed: backup manifest now records the real Room schema version (was stuck at 1), so restore's "backup from a newer app" check works.

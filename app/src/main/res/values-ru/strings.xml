@@ -281,6 +281,7 @@
     <string name="day_fr">Пт</string>
     <string name="day_sa">Сб</string>
     <string name="day_su">Вс</string>
+    <string name="weekdays_compact">пвсчпсв</string>
     <string name="delete_reminder_title">Удалить напоминание</string>
     <string name="action_pick_date">Выбрать дату</string>
     <string name="action_pick_time">Выбрать время</string>
