@@ -82,7 +82,7 @@ class ListsRepository(private val db: AppDatabase, context: Context) {
 
     suspend fun createList(folderId: Long?, name: String, comment: String?) {
         val now = System.currentTimeMillis()
-        dao.upsertList(
+        dao.insertList(
             ListEntity(
                 folderId = folderId,
                 name = name,
@@ -148,7 +148,7 @@ class ListsRepository(private val db: AppDatabase, context: Context) {
 
     suspend fun addItem(listId: Long, text: String, quantity: String?, unit: String?): Long =
         db.withTransaction {
-            dao.upsertItem(
+            dao.insertItem(
                 ItemEntity(
                     listId = listId,
                     text = text,
@@ -205,7 +205,7 @@ class ListsRepository(private val db: AppDatabase, context: Context) {
             for (item in items) {
                 val position = if (item.isDone) donePos++ else activePos++
                 if (copy) {
-                    val newId = dao.upsertItem(
+                    val newId = dao.insertItem(
                         item.copy(id = 0, listId = targetListId, position = position, createdAt = System.currentTimeMillis()),
                     )
                     for (photo in dao.getItemPhotos(item.id)) {

@@ -3,7 +3,6 @@ package com.reminderlists.data.db.dao
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.reminderlists.data.db.entity.FolderEntity
@@ -89,8 +88,9 @@ interface ListsDao {
     )
     fun observeListPickerEntries(): Flow<List<ListPickerEntry>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertList(list: ListEntity): Long
+    // Plain insert — a REPLACE on an existing id would cascade-delete the list's items.
+    @Insert
+    suspend fun insertList(list: ListEntity): Long
 
     @Update
     suspend fun updateList(list: ListEntity)
@@ -113,8 +113,9 @@ interface ListsDao {
     @Query("SELECT COALESCE(MAX(position) + 1, 0) FROM items WHERE listId = :listId AND isDone = 1")
     suspend fun nextDonePosition(listId: Long): Int
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertItem(item: ItemEntity): Long
+    // Plain insert — a REPLACE on an existing id would cascade-delete the item's photos.
+    @Insert
+    suspend fun insertItem(item: ItemEntity): Long
 
     @Update
     suspend fun updateItem(item: ItemEntity)

@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Hardening: list/item creation DAO methods declared as plain inserts instead of REPLACE upserts, closing the same cascade-delete trap fixed for reminders/notes/folders.
 - Docs: welcome screen (TZ 4.8) is cancelled — CLAUDE.md no longer claims a WelcomeDialog exists.
 - Sound preview in the sound field prepares asynchronously, so a large sound file no longer freezes the UI on tap.
 - Fixed a stale comment: sound duration range is 0..90 (Limits.MAX_SOUND_DURATION), not 0..180.
