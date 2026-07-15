@@ -64,6 +64,7 @@ import com.reminderlists.ui.components.EditTextDialog
 import com.reminderlists.ui.components.EmptyState
 import com.reminderlists.ui.components.FabLevel
 import com.reminderlists.ui.components.FilterIndicatorBadge
+import com.reminderlists.ui.components.FolderDeleteMode
 import com.reminderlists.ui.components.FolderPickerDialog
 import com.reminderlists.ui.components.FolderRow
 import com.reminderlists.ui.components.NameCommentDialog
@@ -325,8 +326,10 @@ fun NotesScreen(navController: NavController, contentPadding: PaddingValues) {
 
         is NotesDialog.DeleteFolder -> DeleteFolderDialog(
             folderName = d.folder.name,
-            onConfirm = { deleteContents ->
-                vm.deleteFolder(d.folder, deleteContents)
+            // Notes have no delete protection (TZ 3.2a is Lists-only), so the dialog keeps
+            // its two options and DELETE_UNLOCKED never appears here.
+            onConfirm = { mode ->
+                vm.deleteFolder(d.folder, deleteNotes = mode != FolderDeleteMode.KEEP_ALL)
                 dialog = null
             },
             onDismiss = { dialog = null },

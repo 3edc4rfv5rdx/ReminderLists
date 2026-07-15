@@ -1,5 +1,6 @@
 package com.reminderlists.data.db.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -34,6 +35,9 @@ data class ListEntity(
     val comment: String? = null,
     val pinEnabled: Boolean = false,
     val pinCode: String? = null, // null = use Default PIN (TZ 3.6)
+    // Delete protection (TZ 3.2a): the list and its items can only be deleted with the
+    // Default PIN. Default declared so the ALTER-added column matches the entity.
+    @ColumnInfo(defaultValue = "0") val deleteLocked: Boolean = false,
     val createdAt: Long,
     val updatedAt: Long,
 )

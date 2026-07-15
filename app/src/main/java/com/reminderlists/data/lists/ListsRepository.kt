@@ -44,10 +44,23 @@ class ListsRepository(private val db: AppDatabase, context: Context) {
     }
 
     // Delete folder; lists inside are either deleted or moved to root (FK SET_NULL) — TZ 3.1.
-    suspend fun deleteFolder(folder: FolderEntity, deleteLists: Boolean) {
-        val photoNames = if (deleteLists) dao.photoNamesForFolder(folder.id) else emptyList()
+    // keepLocked spares the delete-protected lists (TZ 3.2a): they are moved out to root
+    // before the folder goes, so the FK never cascades them away.
+    suspend fun deleteFolder(folder: FolderEntity, deleteLists: Boolean, keepLocked: Boolean) {
+        val photoNames = when {
+            !deleteLists -> emptyList()
+            keepLocked -> dao.photoNamesForUnlockedInFolder(folder.id)
+            else -> dao.photoNamesForFolder(folder.id)
+        }
         db.withTransaction {
-            if (deleteLists) dao.deleteListsInFolder(folder.id)
+            if (deleteLists) {
+                if (keepLocked) {
+                    dao.unfileLockedListsInFolder(folder.id)
+                    dao.deleteUnlockedListsInFolder(folder.id)
+                } else {
+                    dao.deleteListsInFolder(folder.id)
+                }
+            }
             dao.deleteFolder(folder)
         }
         PhotoManager.deleteAll(appContext, photoNames)
@@ -62,6 +75,8 @@ class ListsRepository(private val db: AppDatabase, context: Context) {
     fun observeListItemCounts(): Flow<List<ListItemCounts>> = dao.observeListItemCounts()
 
     fun observeFolderListCounts(): Flow<List<FolderListCount>> = dao.observeFolderListCounts()
+
+    fun observeFolderLockedCounts(): Flow<List<FolderListCount>> = dao.observeFolderLockedCounts()
 
     fun observeListPickerEntries(): Flow<List<ListPickerEntry>> = dao.observeListPickerEntries()
 
@@ -106,6 +121,12 @@ class ListsRepository(private val db: AppDatabase, context: Context) {
                 updatedAt = System.currentTimeMillis(),
             ),
         )
+    }
+
+    // Delete protection (TZ 3.2a): independent of the PIN gate above — this one only guards
+    // deletion, and the gate that lifts it is always the Default PIN.
+    suspend fun setListDeleteLock(list: ListEntity, locked: Boolean) {
+        dao.updateList(list.copy(deleteLocked = locked, updatedAt = System.currentTimeMillis()))
     }
 
     suspend fun moveList(list: ListEntity, folderId: Long?) {

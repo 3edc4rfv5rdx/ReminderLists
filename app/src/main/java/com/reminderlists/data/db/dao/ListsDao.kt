@@ -53,11 +53,27 @@ interface ListsDao {
     @Query("DELETE FROM lists WHERE folderId = :folderId")
     suspend fun deleteListsInFolder(folderId: Long)
 
+    // Deleting a folder's contents while its delete-protected lists survive (TZ 3.2a):
+    // the unprotected ones go, the protected ones are moved out to root.
+    @Query("DELETE FROM lists WHERE folderId = :folderId AND deleteLocked = 0")
+    suspend fun deleteUnlockedListsInFolder(folderId: Long)
+
+    @Query("UPDATE lists SET folderId = NULL WHERE folderId = :folderId AND deleteLocked = 1")
+    suspend fun unfileLockedListsInFolder(folderId: Long)
+
     @Query("SELECT listId, SUM(isDone) AS done, COUNT(*) AS total FROM items GROUP BY listId")
     fun observeListItemCounts(): Flow<List<ListItemCounts>>
 
     @Query("SELECT folderId, COUNT(*) AS total FROM lists WHERE folderId IS NOT NULL GROUP BY folderId")
     fun observeFolderListCounts(): Flow<List<FolderListCount>>
+
+    // Delete-protected lists per folder — the folder delete dialog offers a third option
+    // only when the folder holds any (TZ 3.2a).
+    @Query(
+        "SELECT folderId, COUNT(*) AS total FROM lists " +
+            "WHERE folderId IS NOT NULL AND deleteLocked = 1 GROUP BY folderId",
+    )
+    fun observeFolderLockedCounts(): Flow<List<FolderListCount>>
 
     // All lists for the "move items" picker, root first (NULL folder sorts first in ASC),
     // then by folder (TZ 3.3).
@@ -149,6 +165,12 @@ interface ListsDao {
             "JOIN lists l ON i.listId = l.id WHERE l.folderId = :folderId",
     )
     suspend fun photoNamesForFolder(folderId: Long): List<String>
+
+    @Query(
+        "SELECT p.filePath FROM item_photos p JOIN items i ON p.itemId = i.id " +
+            "JOIN lists l ON i.listId = l.id WHERE l.folderId = :folderId AND l.deleteLocked = 0",
+    )
+    suspend fun photoNamesForUnlockedInFolder(folderId: Long): List<String>
 
     @Query("SELECT filePath FROM item_photos")
     suspend fun allPhotoNames(): List<String>

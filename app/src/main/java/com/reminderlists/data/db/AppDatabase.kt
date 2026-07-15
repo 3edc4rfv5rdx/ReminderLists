@@ -54,7 +54,7 @@ import com.reminderlists.data.db.entity.TagEntity
         // Settings (6.3)
         SettingEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -73,6 +73,13 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE reminders ADD COLUMN intervalCount INTEGER")
                 db.execSQL("ALTER TABLE reminders ADD COLUMN intervalUnit INTEGER")
+            }
+        }
+
+        // v3: delete protection for lists (TZ 3.2a / 6.1) — one column on lists.
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE lists ADD COLUMN deleteLocked INTEGER NOT NULL DEFAULT 0")
             }
         }
 
@@ -99,7 +106,7 @@ abstract class AppDatabase : RoomDatabase() {
         private fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, DB_NAME)
                 // Foreign keys enforced (ON DELETE CASCADE / SET NULL, see entities).
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
     }
 }

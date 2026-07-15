@@ -47,6 +47,17 @@ class ListDetailViewModel(
     val list: StateFlow<ListEntity?> =
         repo.observeList(listId).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    // Default PIN from Settings (TZ 3.6 / 5): in a delete-protected list it also gates deleting
+    // items and "Delete checked" (TZ 3.2a). Eager — nothing renders it, the gate just reads it.
+    private val defaultPin: StateFlow<String?> =
+        settingsDao.observe(SettingsKeys.DEFAULT_PIN)
+            .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    fun defaultPinMatches(entered: String): Boolean {
+        val expected = defaultPin.value
+        return !expected.isNullOrEmpty() && entered == expected
+    }
+
     // Formatted dictionary texts — drives the "to dictionary" button visibility (TZ 3.3 p.4).
     val dictionaryTexts: StateFlow<Set<String>> =
         dictRepo.observeAll()

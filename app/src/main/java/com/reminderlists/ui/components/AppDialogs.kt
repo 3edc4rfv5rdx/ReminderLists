@@ -17,6 +17,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.reminderlists.R
@@ -130,14 +131,20 @@ fun ConfirmDialog(
     )
 }
 
-// Folder delete confirmation with the contents choice (TZ 3.1): move contents to root or delete them.
+// What happens to a folder's contents when the folder is deleted (TZ 3.1 / 3.2a).
+enum class FolderDeleteMode { KEEP_ALL, DELETE_UNLOCKED, DELETE_ALL }
+
+// Folder delete confirmation with the contents choice (TZ 3.1): move contents to root or delete
+// them. lockedCount > 0 (delete-protected lists inside, TZ 3.2a) adds the middle option that
+// spares them; wiping them too (DELETE_ALL) is left to the caller to gate with the PIN.
 @Composable
 fun DeleteFolderDialog(
     folderName: String,
-    onConfirm: (deleteContents: Boolean) -> Unit,
+    onConfirm: (FolderDeleteMode) -> Unit,
     onDismiss: () -> Unit,
+    lockedCount: Int = 0,
 ) {
-    var deleteContents by rememberSaveable { mutableStateOf(false) }
+    var mode by rememberSaveable { mutableStateOf(FolderDeleteMode.KEEP_ALL) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.delete_folder_title)) },
@@ -146,20 +153,39 @@ fun DeleteFolderDialog(
                 Text(folderName)
                 RadioRow(
                     text = stringResource(R.string.delete_folder_keep_lists),
-                    selected = !deleteContents,
-                    onClick = { deleteContents = false },
+                    selected = mode == FolderDeleteMode.KEEP_ALL,
+                    onClick = { mode = FolderDeleteMode.KEEP_ALL },
                 )
+                if (lockedCount > 0) {
+                    RadioRow(
+                        text = pluralStringResource(
+                            R.plurals.delete_folder_keep_protected,
+                            lockedCount,
+                            lockedCount,
+                        ),
+                        selected = mode == FolderDeleteMode.DELETE_UNLOCKED,
+                        onClick = { mode = FolderDeleteMode.DELETE_UNLOCKED },
+                    )
+                }
                 RadioRow(
-                    text = stringResource(R.string.delete_folder_delete_lists),
-                    selected = deleteContents,
-                    onClick = { deleteContents = true },
+                    text = if (lockedCount > 0) {
+                        pluralStringResource(
+                            R.plurals.delete_folder_delete_protected,
+                            lockedCount,
+                            lockedCount,
+                        )
+                    } else {
+                        stringResource(R.string.delete_folder_delete_lists)
+                    },
+                    selected = mode == FolderDeleteMode.DELETE_ALL,
+                    onClick = { mode = FolderDeleteMode.DELETE_ALL },
                 )
             }
         },
         confirmButton = {
             DialogConfirmButton(
                 text = stringResource(R.string.action_delete),
-                onClick = { onConfirm(deleteContents) },
+                onClick = { onConfirm(mode) },
                 destructive = true,
             )
         },

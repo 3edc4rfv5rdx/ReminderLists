@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Lists can be made undeletable from the row menu ("Prevent deletion"): the list, its items, "Delete checked" and wiping it along with its folder all then require the Default PIN, which is also needed to lift the protection (TZ 3.2a).
+- List/note PIN menu items renamed "Lock with PIN" / "Remove PIN" so they no longer read as a variant of the new "Prevent deletion" item (TZ 8).
 - Item editor's Name field now expands with the text up to 4 lines (then scrolls) instead of being clipped to a single line, while line breaks stay out of the value (Done key, pasted breaks collapse to spaces) (TZ 3.3).
 - Large font mode: item text enlarged to 36sp, the dot marker now sits on the first text line instead of centred on wrapped rows, and done items get a hollow outlined dot (TZ 3.5).
 

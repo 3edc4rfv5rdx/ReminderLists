@@ -8,6 +8,7 @@ import com.reminderlists.data.db.entity.FolderEntity
 import com.reminderlists.data.db.entity.ListEntity
 import com.reminderlists.data.lists.ListsRepository
 import com.reminderlists.ui.appViewModelFactory
+import com.reminderlists.ui.components.FolderDeleteMode
 import com.reminderlists.util.SettingsKeys
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,6 +59,12 @@ class ListsViewModel(
             .map { counts -> counts.associate { it.folderId to it.total } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
+    // folderId -> delete-protected lists count; drives the folder delete dialog options (TZ 3.2a).
+    val folderLockedCounts: StateFlow<Map<Long, Int>> =
+        repo.observeFolderLockedCounts()
+            .map { counts -> counts.associate { it.folderId to it.total } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
     fun openFolder(folder: FolderEntity?) {
         currentFolderId.value = folder?.id
     }
@@ -74,8 +81,14 @@ class ListsViewModel(
         viewModelScope.launch { repo.updateFolderComment(folder, comment) }
     }
 
-    fun deleteFolder(folder: FolderEntity, deleteLists: Boolean) {
-        viewModelScope.launch { repo.deleteFolder(folder, deleteLists) }
+    fun deleteFolder(folder: FolderEntity, mode: FolderDeleteMode) {
+        viewModelScope.launch {
+            repo.deleteFolder(
+                folder,
+                deleteLists = mode != FolderDeleteMode.KEEP_ALL,
+                keepLocked = mode == FolderDeleteMode.DELETE_UNLOCKED,
+            )
+        }
     }
 
     fun createList(name: String, comment: String?) {
@@ -103,6 +116,19 @@ class ListsViewModel(
 
     fun setProtection(list: ListEntity, enabled: Boolean, customPin: String?) {
         viewModelScope.launch { repo.setListProtection(list, enabled, customPin) }
+    }
+
+    // Delete protection (TZ 3.2a). Both lifting it and deleting a protected list are checked
+    // against the Default PIN only — a list's own PIN must not open its delete lock.
+    fun defaultPinMatches(entered: String): Boolean {
+        val expected = defaultPin.value
+        return !expected.isNullOrEmpty() && entered == expected
+    }
+
+    fun hasDefaultPin(): Boolean = !defaultPin.value.isNullOrEmpty()
+
+    fun setDeleteLock(list: ListEntity, locked: Boolean) {
+        viewModelScope.launch { repo.setListDeleteLock(list, locked) }
     }
 
     companion object {

@@ -79,6 +79,7 @@ import com.reminderlists.ui.components.DragReorderState
 import com.reminderlists.ui.components.FabLevel
 import com.reminderlists.ui.components.EmptyState
 import com.reminderlists.ui.components.PhotoViewerDialog
+import com.reminderlists.ui.components.PinDialog
 import com.reminderlists.ui.components.SwipeActionsRow
 import com.reminderlists.ui.components.rememberDragReorderState
 import com.reminderlists.ui.navigation.Routes
@@ -327,31 +328,65 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
         )
     }
 
+    // Inside a delete-protected list every deletion is confirmed with the Default PIN in the
+    // same dialog (TZ 3.2a); an ordinary list just confirms.
+    val deleteLocked = list?.deleteLocked == true
+
     pendingDelete?.let { item ->
-        ConfirmDialog(
-            title = stringResource(R.string.delete_item_title),
-            text = item.text,
-            confirmLabel = stringResource(R.string.action_delete),
-            onConfirm = {
-                vm.deleteItem(item)
-                pendingDelete = null
-            },
-            onDismiss = { pendingDelete = null },
-        )
+        if (deleteLocked) {
+            PinDialog(
+                title = stringResource(R.string.delete_item_title),
+                message = stringResource(R.string.delete_item_locked_message, item.text),
+                confirmLabel = stringResource(R.string.action_delete),
+                destructive = true,
+                verify = vm::defaultPinMatches,
+                onSuccess = {
+                    vm.deleteItem(item)
+                    pendingDelete = null
+                },
+                onDismiss = { pendingDelete = null },
+            )
+        } else {
+            ConfirmDialog(
+                title = stringResource(R.string.delete_item_title),
+                text = item.text,
+                confirmLabel = stringResource(R.string.action_delete),
+                onConfirm = {
+                    vm.deleteItem(item)
+                    pendingDelete = null
+                },
+                onDismiss = { pendingDelete = null },
+            )
+        }
     }
 
     // "Delete checked" removes every done item at once, so confirm first (TZ 8).
     if (confirmDeleteChecked) {
-        ConfirmDialog(
-            title = stringResource(R.string.menu_delete_checked),
-            text = stringResource(R.string.delete_checked_message),
-            confirmLabel = stringResource(R.string.action_delete),
-            onConfirm = {
-                vm.deleteChecked()
-                confirmDeleteChecked = false
-            },
-            onDismiss = { confirmDeleteChecked = false },
-        )
+        if (deleteLocked) {
+            PinDialog(
+                title = stringResource(R.string.menu_delete_checked),
+                message = stringResource(R.string.delete_checked_locked_message),
+                confirmLabel = stringResource(R.string.action_delete),
+                destructive = true,
+                verify = vm::defaultPinMatches,
+                onSuccess = {
+                    vm.deleteChecked()
+                    confirmDeleteChecked = false
+                },
+                onDismiss = { confirmDeleteChecked = false },
+            )
+        } else {
+            ConfirmDialog(
+                title = stringResource(R.string.menu_delete_checked),
+                text = stringResource(R.string.delete_checked_message),
+                confirmLabel = stringResource(R.string.action_delete),
+                onConfirm = {
+                    vm.deleteChecked()
+                    confirmDeleteChecked = false
+                },
+                onDismiss = { confirmDeleteChecked = false },
+            )
+        }
     }
 
     // Fullscreen photo viewer for an item (TZ 3.3 p.3): view, add more, delete.

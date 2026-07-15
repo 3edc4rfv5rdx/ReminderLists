@@ -58,11 +58,11 @@
     <string name="action_edit">Edit</string>
     <string name="action_edit_comment">Edit comment</string>
     <string name="action_move_to_folder">To folder</string>
-    <string name="action_protect">Protect</string>
+    <string name="action_protect">Lock with PIN</string>
     <string name="pin_label">PIN</string>
     <string name="pin_repeat">Repeat PIN</string>
     <string name="pin_mismatch">PINs do not match</string>
-    <string name="action_unprotect">Unprotect</string>
+    <string name="action_unprotect">Remove PIN</string>
     <string name="pin_wrong">Wrong PIN</string>
     <string name="pin_empty_default">Leave empty to use the Default PIN</string>
     <string name="pin_no_default">Set the Default PIN in Settings first</string>
@@ -73,6 +73,25 @@
     <string name="delete_folder_keep_lists">Move contents to root</string>
     <string name="delete_folder_delete_lists">Delete contents inside</string>
     <string name="delete_list_title">Delete list</string>
+
+    <!-- Delete protection (TZ 3.2a) -->
+    <string name="action_lock_delete">Prevent deletion</string>
+    <string name="action_allow_delete">Allow deletion</string>
+    <string name="delete_list_locked_message">Deletion is disabled for %1$s — enter the Default PIN to confirm</string>
+    <string name="delete_item_locked_message">%1$s — deletion is disabled for this list, enter the Default PIN to confirm</string>
+    <string name="delete_checked_locked_message">Deletion is disabled for this list — enter the Default PIN to delete all done items</string>
+    <plurals name="delete_folder_keep_protected">
+        <item quantity="one">Delete contents, move %d undeletable list to root</item>
+        <item quantity="other">Delete contents, move %d undeletable lists to root</item>
+    </plurals>
+    <plurals name="delete_folder_delete_protected">
+        <item quantity="one">Delete contents including %d undeletable list</item>
+        <item quantity="other">Delete contents including %d undeletable lists</item>
+    </plurals>
+    <plurals name="delete_folder_locked_message">
+        <item quantity="one">%d undeletable list will be deleted too — enter the Default PIN to confirm</item>
+        <item quantity="other">%d undeletable lists will be deleted too — enter the Default PIN to confirm</item>
+    </plurals>
     <string name="empty_items">No items yet</string>
 
     <!-- Items (TZ 3.3) -->

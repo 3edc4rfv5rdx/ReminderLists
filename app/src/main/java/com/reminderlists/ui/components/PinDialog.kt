@@ -89,12 +89,17 @@ fun PinSetupDialog(
 
 // Single reusable PIN gate dialog (TZ 3.6 / 4A). UI gate only — DB is not encrypted.
 // The caller supplies the check; a wrong PIN shows an error and clears the field.
+// message + confirmLabel/destructive turn the gate into a confirmation as well: deleting a
+// delete-protected list asks what and confirms with the PIN in one dialog (TZ 3.2a).
 @Composable
 fun PinDialog(
     title: String,
     verify: (String) -> Boolean,
     onSuccess: () -> Unit,
     onDismiss: () -> Unit,
+    message: String? = null,
+    confirmLabel: String? = null,
+    destructive: Boolean = false,
 ) {
     var pin by remember { mutableStateOf("") }
     var wrong by remember { mutableStateOf(false) }
@@ -102,22 +107,26 @@ fun PinDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            PinTextField(
-                value = pin,
-                onValueChange = {
-                    pin = it
-                    wrong = false
-                },
-                label = stringResource(R.string.pin_label),
-                isError = wrong,
-                supportingText = if (wrong) stringResource(R.string.pin_wrong) else null,
-                autoFocus = true,
-            )
+            Column {
+                if (message != null) Text(message)
+                PinTextField(
+                    value = pin,
+                    onValueChange = {
+                        pin = it
+                        wrong = false
+                    },
+                    label = stringResource(R.string.pin_label),
+                    isError = wrong,
+                    supportingText = if (wrong) stringResource(R.string.pin_wrong) else null,
+                    autoFocus = true,
+                )
+            }
         },
         confirmButton = {
             DialogConfirmButton(
-                text = stringResource(R.string.action_ok),
+                text = confirmLabel ?: stringResource(R.string.action_ok),
                 enabled = pin.isNotEmpty(),
+                destructive = destructive,
                 onClick = {
                     if (verify(pin)) {
                         onSuccess()

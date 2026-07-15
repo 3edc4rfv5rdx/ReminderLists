@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -50,7 +51,9 @@ import com.reminderlists.ui.components.ConfirmDialog
 import com.reminderlists.ui.components.DeleteFolderDialog
 import com.reminderlists.ui.components.EditTextDialog
 import com.reminderlists.ui.components.EmptyState
+import com.reminderlists.ui.components.FolderDeleteMode
 import com.reminderlists.ui.components.FolderRow
+import com.reminderlists.ui.components.LocalSnackController
 import com.reminderlists.ui.components.SwipeActionsRow
 import com.reminderlists.ui.components.FolderPickerDialog
 import com.reminderlists.ui.components.NameCommentDialog
@@ -71,6 +74,10 @@ private sealed interface ListsDialog {
     data class MoveList(val list: ListEntity) : ListsDialog
     data class ProtectList(val list: ListEntity) : ListsDialog
     data class DeleteList(val list: ListEntity) : ListsDialog
+    // Delete protection (TZ 3.2a): lifting it and wiping a folder's protected lists both
+    // ask for the Default PIN, so each gets its own slot.
+    data class UnlockList(val list: ListEntity) : ListsDialog
+    data class DeleteFolderLocked(val folder: FolderEntity) : ListsDialog
 }
 
 // Lists tab (TZ 3.1 / 3.2): folders + lists in root, lists inside an opened folder.
@@ -82,8 +89,12 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
     val currentFolder by vm.currentFolder.collectAsState()
     val itemCounts by vm.itemCounts.collectAsState()
     val folderCounts by vm.folderCounts.collectAsState()
+    val folderLockedCounts by vm.folderLockedCounts.collectAsState()
     // Collected here so the flow is live whenever the PIN gate checks it (TZ 3.6).
     val defaultPin by vm.defaultPin.collectAsState()
+    // Turning delete protection on is refused without a Default PIN to lift it with (TZ 3.2a).
+    val snackController = LocalSnackController.current
+    val noDefaultPinMessage = stringResource(R.string.pin_no_default)
 
     var dialog by remember { mutableStateOf<ListsDialog?>(null) }
     var topMenuOpen by remember { mutableStateOf(false) }
@@ -186,6 +197,15 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                                     dialog = ListsDialog.ProtectList(list)
                                 }
                             },
+                            // Delete protection (TZ 3.2a): switching it on is free but needs a
+                            // Default PIN to exist; switching it off asks for that PIN.
+                            onDeleteLock = {
+                                when {
+                                    list.deleteLocked -> dialog = ListsDialog.UnlockList(list)
+                                    vm.hasDefaultPin() -> vm.setDeleteLock(list, locked = true)
+                                    else -> snackController?.warning(noDefaultPinMessage)
+                                }
+                            },
                             onDelete = { gated(list) { dialog = ListsDialog.DeleteList(list) } },
                         )
                     }
@@ -261,10 +281,34 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
             onDismiss = { dialog = null },
         )
 
-        is ListsDialog.DeleteFolder -> DeleteFolderDialog(
-            folderName = d.folder.name,
-            onConfirm = { deleteContents ->
-                vm.deleteFolder(d.folder, deleteContents)
+        is ListsDialog.DeleteFolder -> {
+            val lockedCount = folderLockedCounts[d.folder.id] ?: 0
+            DeleteFolderDialog(
+                folderName = d.folder.name,
+                lockedCount = lockedCount,
+                onConfirm = { mode ->
+                    // Wiping delete-protected lists along with the folder needs the PIN (TZ 3.2a).
+                    if (mode == FolderDeleteMode.DELETE_ALL && lockedCount > 0) {
+                        dialog = ListsDialog.DeleteFolderLocked(d.folder)
+                    } else {
+                        vm.deleteFolder(d.folder, mode)
+                        dialog = null
+                    }
+                },
+                onDismiss = { dialog = null },
+            )
+        }
+
+        is ListsDialog.DeleteFolderLocked -> PinDialog(
+            title = stringResource(R.string.delete_folder_title),
+            message = (folderLockedCounts[d.folder.id] ?: 0).let { locked ->
+                pluralStringResource(R.plurals.delete_folder_locked_message, locked, locked)
+            },
+            confirmLabel = stringResource(R.string.action_delete),
+            destructive = true,
+            verify = vm::defaultPinMatches,
+            onSuccess = {
+                vm.deleteFolder(d.folder, FolderDeleteMode.DELETE_ALL)
                 dialog = null
             },
             onDismiss = { dialog = null },
@@ -308,12 +352,39 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
             )
         }
 
-        is ListsDialog.DeleteList -> ConfirmDialog(
-            title = stringResource(R.string.delete_list_title),
-            text = d.list.name,
-            confirmLabel = stringResource(R.string.action_delete),
-            onConfirm = {
-                vm.deleteList(d.list)
+        // A delete-protected list confirms and takes the Default PIN in one dialog (TZ 3.2a).
+        is ListsDialog.DeleteList -> if (d.list.deleteLocked) {
+            PinDialog(
+                title = stringResource(R.string.delete_list_title),
+                message = stringResource(R.string.delete_list_locked_message, d.list.name),
+                confirmLabel = stringResource(R.string.action_delete),
+                destructive = true,
+                verify = vm::defaultPinMatches,
+                onSuccess = {
+                    vm.deleteList(d.list)
+                    dialog = null
+                },
+                onDismiss = { dialog = null },
+            )
+        } else {
+            ConfirmDialog(
+                title = stringResource(R.string.delete_list_title),
+                text = d.list.name,
+                confirmLabel = stringResource(R.string.action_delete),
+                onConfirm = {
+                    vm.deleteList(d.list)
+                    dialog = null
+                },
+                onDismiss = { dialog = null },
+            )
+        }
+
+        is ListsDialog.UnlockList -> PinDialog(
+            title = stringResource(R.string.action_allow_delete),
+            message = d.list.name,
+            verify = vm::defaultPinMatches,
+            onSuccess = {
+                vm.setDeleteLock(d.list, locked = false)
                 dialog = null
             },
             onDismiss = { dialog = null },
@@ -347,6 +418,7 @@ private fun ListRow(
     onEdit: () -> Unit,
     onMove: () -> Unit,
     onProtect: () -> Unit,
+    onDeleteLock: () -> Unit,
     onDelete: () -> Unit,
 ) {
     SwipeActionsRow(onEdit = onEdit, onDelete = onDelete) {
@@ -372,7 +444,16 @@ private fun ListRow(
                         )
                     }
                     RowMenuButton { dismiss ->
-                        ListMenuItems(dismiss, list.pinEnabled, onEdit, onMove, onProtect, onDelete)
+                        ListMenuItems(
+                            dismiss = dismiss,
+                            isProtected = list.pinEnabled,
+                            isDeleteLocked = list.deleteLocked,
+                            onEdit = onEdit,
+                            onMove = onMove,
+                            onProtect = onProtect,
+                            onDeleteLock = onDeleteLock,
+                            onDelete = onDelete,
+                        )
                     }
                 }
             },
@@ -385,15 +466,21 @@ private fun ListRow(
 private fun ListMenuItems(
     dismiss: () -> Unit,
     isProtected: Boolean,
+    isDeleteLocked: Boolean,
     onEdit: () -> Unit,
     onMove: () -> Unit,
     onProtect: () -> Unit,
+    onDeleteLock: () -> Unit,
     onDelete: () -> Unit,
 ) {
     MenuItem(R.string.action_edit) { dismiss(); onEdit() }
     MenuItem(R.string.action_move_to_folder) { dismiss(); onMove() }
     // Protect / Unprotect depending on the current state (TZ 3.6).
     MenuItem(if (isProtected) R.string.action_unprotect else R.string.action_protect) { dismiss(); onProtect() }
+    // Delete protection — separate from the PIN gate above (TZ 3.2a).
+    MenuItem(
+        if (isDeleteLocked) R.string.action_allow_delete else R.string.action_lock_delete,
+    ) { dismiss(); onDeleteLock() }
     MenuItem(R.string.action_delete) { dismiss(); onDelete() }
 }
 

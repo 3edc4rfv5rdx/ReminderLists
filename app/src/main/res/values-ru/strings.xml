@@ -52,8 +52,8 @@
     <string name="action_edit">Изменить</string>
     <string name="action_edit_comment">Изменить комментарий</string>
     <string name="action_move_to_folder">В папку</string>
-    <string name="action_protect">Защитить</string>
-    <string name="action_unprotect">Снять защиту</string>
+    <string name="action_protect">Закрыть PIN-ом</string>
+    <string name="action_unprotect">Снять PIN</string>
     <string name="pin_label">PIN</string>
     <string name="pin_repeat">Повторите PIN</string>
     <string name="pin_mismatch">PIN-коды не совпадают</string>
@@ -67,6 +67,30 @@
     <string name="delete_folder_keep_lists">Переместить списки в корень</string>
     <string name="delete_folder_delete_lists">Удалить списки внутри</string>
     <string name="delete_list_title">Удалить список</string>
+
+    <string name="action_lock_delete">Запретить удаление</string>
+    <string name="action_allow_delete">Разрешить удаление</string>
+    <string name="delete_list_locked_message">Удаление списка %1$s запрещено — введите общий PIN для подтверждения</string>
+    <string name="delete_item_locked_message">%1$s — в этом списке удаление запрещено, введите общий PIN для подтверждения</string>
+    <string name="delete_checked_locked_message">В этом списке удаление запрещено — введите общий PIN, чтобы удалить все готовые элементы</string>
+    <plurals name="delete_folder_keep_protected">
+        <item quantity="one">Удалить содержимое, %d нестираемый список перенести в корень</item>
+        <item quantity="few">Удалить содержимое, %d нестираемых списка перенести в корень</item>
+        <item quantity="many">Удалить содержимое, %d нестираемых списков перенести в корень</item>
+        <item quantity="other">Удалить содержимое, %d нестираемых списка перенести в корень</item>
+    </plurals>
+    <plurals name="delete_folder_delete_protected">
+        <item quantity="one">Удалить содержимое вместе с %d нестираемым списком</item>
+        <item quantity="few">Удалить содержимое вместе с %d нестираемыми списками</item>
+        <item quantity="many">Удалить содержимое вместе с %d нестираемыми списками</item>
+        <item quantity="other">Удалить содержимое вместе с %d нестираемыми списками</item>
+    </plurals>
+    <plurals name="delete_folder_locked_message">
+        <item quantity="one">Будет удалён и %d нестираемый список — введите общий PIN для подтверждения</item>
+        <item quantity="few">Будут удалены и %d нестираемых списка — введите общий PIN для подтверждения</item>
+        <item quantity="many">Будут удалены и %d нестираемых списков — введите общий PIN для подтверждения</item>
+        <item quantity="other">Будут удалены и %d нестираемых списка — введите общий PIN для подтверждения</item>
+    </plurals>
     <string name="empty_items">Пока нет элементов</string>
 
     <string name="field_quantity">Количество</string>
