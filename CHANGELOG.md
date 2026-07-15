@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+## v0.3.20260715+161
 - Docs: audit findings file ADD/tofix1.md added (all 14 confirmed items fixed); todo items marked done.
 - Docs: TZ 4.5 (full-screen alert) marked done; TZ 4.10 sound-service notification note updated to the deferred behavior.
 - The sound service's "Reminder sound playing" entry is deferred: it only appears if the sound outlives ~10 s, so typical fires show a single notification.
