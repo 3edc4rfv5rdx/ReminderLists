@@ -5,7 +5,6 @@ import androidx.room.Delete
 import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.Junction
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Relation
 import androidx.room.Transaction
@@ -76,8 +75,10 @@ interface RemindersDao {
     )
     suspend fun autoRemovableBefore(dayStart: Long): List<ReminderEntity>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsert(reminder: ReminderEntity): Long
+    // Plain insert + update, never INSERT OR REPLACE: REPLACE deletes the existing row first,
+    // and the FK CASCADE would wipe the reminder's photos, events, times and tags.
+    @Insert
+    suspend fun insert(reminder: ReminderEntity): Long
 
     @Update
     suspend fun update(reminder: ReminderEntity)

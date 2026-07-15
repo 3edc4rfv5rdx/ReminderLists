@@ -33,7 +33,13 @@ class RemindersRepository(private val db: AppDatabase, context: Context) {
     // (TZ 4.2), then recompute next_fire_at and arm the alarm (TZ 4.10). Returns the id.
     suspend fun save(reminder: ReminderEntity, dailyTimes: List<String>, tags: List<String>): Long {
         val id = db.withTransaction {
-            val id = dao.upsert(reminder)
+            // Insert vs update branch — a REPLACE-upsert would cascade-delete photos/events.
+            val id = if (reminder.id == 0L) {
+                dao.insert(reminder)
+            } else {
+                dao.update(reminder)
+                reminder.id
+            }
             dao.deleteTimes(id)
             dailyTimes.forEach { dao.insertTime(ReminderTimeEntity(reminderId = id, time = it)) }
             tagsDao.clearReminderTags(id)
