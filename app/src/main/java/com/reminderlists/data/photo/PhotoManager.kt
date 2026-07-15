@@ -87,7 +87,16 @@ object PhotoManager {
             fileName
         } catch (_: Exception) {
             null
+        } finally {
+            discardCameraCapture(context, source)
         }
+    }
+
+    // Camera captures are one-shot temp files in cache/camera — drop the source once the import
+    // ran (success or not). Gallery/document uris resolve to no file there, so this is a no-op.
+    private fun discardCameraCapture(context: Context, source: Uri) {
+        val name = source.lastPathSegment ?: return
+        File(File(context.cacheDir, "camera"), name).delete()
     }
 
     // Duplicate a stored photo under a new name (item copy, TZ 3.3). Returns the copy name.

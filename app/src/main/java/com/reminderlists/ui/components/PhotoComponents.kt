@@ -88,7 +88,12 @@ fun AddPhotoButton(
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         val path = cameraTempPath
         cameraTempPath = null
-        if (success && path != null) onPicked(PhotoManager.uriFor(context, File(path)))
+        if (success && path != null) {
+            // The capture temp file itself is dropped by importPhoto after the import.
+            onPicked(PhotoManager.uriFor(context, File(path)))
+        } else {
+            path?.let { File(it).delete() } // cancelled capture — drop the unused temp file
+        }
     }
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let(onPicked)
