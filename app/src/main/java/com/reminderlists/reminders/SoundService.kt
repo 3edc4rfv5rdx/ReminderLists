@@ -1,7 +1,6 @@
 package com.reminderlists.reminders
 
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -133,18 +132,17 @@ class SoundService : Service() {
             nm.currentInterruptionFilter != NotificationManager.INTERRUPTION_FILTER_ALL
     }
 
+    // Housekeeping notification required by startForeground. Deferred so it only surfaces if
+    // the sound outlives the ~10 s system hold-back — for typical durations it never appears
+    // and the reminder's own notification/alert is the single shade entry. Deferral demands no
+    // action buttons; sound Stop lives on the reminder notification / alert screen (TZ 4.10).
     private fun buildNotification() =
         NotificationCompat.Builder(this, NotificationChannels.SERVICE)
             .setSmallIcon(R.drawable.ic_stat_reminder)
             .setContentTitle(getString(R.string.notif_sound_playing))
             .setOngoing(true)
-            .addAction(0, getString(R.string.notif_sound_stop), stopIntent())
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_DEFERRED)
             .build()
-
-    private fun stopIntent(): PendingIntent {
-        val intent = Intent(this, SoundService::class.java).setAction(ACTION_STOP)
-        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-    }
 
     override fun onDestroy() {
         timeout?.cancel()
