@@ -53,6 +53,14 @@ class SoundService : Service() {
     }
 
     private suspend fun begin(soundUri: String?, loop: Boolean) {
+        // A second reminder can fire while the previous sound still plays (same-minute stagger,
+        // TZ 4.10): drop the old player and timeout so the first sound doesn't keep looping
+        // unreleased and its stale stopSelf() doesn't cut the new sound short.
+        timeout?.cancel()
+        timeout = null
+        player?.release()
+        player = null
+
         val settings = AppDatabase.get(this).settingsDao()
         val level = settings.get(SettingsKeys.DEFAULT_SOUND_LEVEL)?.toIntOrNull()
             ?: SettingsKeys.DEFAULT_SOUND_LEVEL_VALUE
