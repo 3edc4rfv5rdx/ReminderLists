@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Fixed: backup manifest now records the real Room schema version (was stuck at 1), so restore's "backup from a newer app" check works.
 - Fixed: renaming a list/note folder or editing its comment no longer moves its contents to root (REPLACE upsert triggered FK SET NULL).
 - Fixed: editing a note no longer wipes its attached photos (same REPLACE upsert cascade as reminders).
 - Fixed: editing a reminder no longer wipes its attached photos and firing history (REPLACE upsert cascaded child-row deletes).

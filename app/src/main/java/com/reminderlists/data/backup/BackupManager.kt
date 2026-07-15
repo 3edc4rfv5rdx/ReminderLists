@@ -28,7 +28,6 @@ object BackupManager {
 
     private const val DB_ENTRY = "reminderlists.db"
     private const val MANIFEST = "manifest.json"
-    private const val CURRENT_DB_VERSION = 1
 
     class RestoreException(message: String) : Exception(message)
 
@@ -92,7 +91,7 @@ object BackupManager {
 
     private fun manifestJson() = JSONObject().apply {
         put("app", "ReminderLists")
-        put("db_version", CURRENT_DB_VERSION)
+        put("db_version", AppDatabase.DB_VERSION)
     }
 
     // --- Restore -----------------------------------------------------------------------
@@ -133,7 +132,7 @@ object BackupManager {
             .getOrDefault(-1)
         if (version <= 0) throw RestoreException("Backup manifest is invalid")
         // A newer schema than this app can read cannot be downgraded (TZ 3.8).
-        if (version > CURRENT_DB_VERSION) throw RestoreException("Backup is from a newer app version")
+        if (version > AppDatabase.DB_VERSION) throw RestoreException("Backup is from a newer app version")
     }
 
     private fun validateDb(db: File) {

@@ -54,7 +54,7 @@ import com.reminderlists.data.db.entity.TagEntity
         // Settings (6.3)
         SettingEntity::class,
     ],
-    version = 3,
+    version = AppDatabase.DB_VERSION,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -66,6 +66,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun settingsDao(): SettingsDao
 
     companion object {
+        // Single source of the schema version — the @Database annotation above and the
+        // backup manifest/restore validation (BackupManager) must never drift apart.
+        const val DB_VERSION = 3
+
         private const val DB_NAME = "reminderlists.db"
 
         // v2: Interval reminder type (TZ 4.2 f‴ / 6.2) — two nullable columns on reminders.
