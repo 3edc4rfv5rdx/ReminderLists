@@ -86,11 +86,14 @@ fun SoundField(
         stopPreview()
         val uri = effectiveUri(choice) ?: return
         try {
+            // prepareAsync keeps a large user file from blocking the UI thread (same pattern
+            // as SoundService); release() in stopPreview is legal in any player state.
             player = MediaPlayer().apply {
                 setDataSource(context, uri)
                 setOnCompletionListener { stopPreview() }
-                prepare()
-                start()
+                setOnErrorListener { _, _, _ -> stopPreview(); true }
+                setOnPreparedListener { start() }
+                prepareAsync()
             }
             playing = true
         } catch (_: Exception) {
