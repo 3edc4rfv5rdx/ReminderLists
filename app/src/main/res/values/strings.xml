@@ -290,6 +290,11 @@
     <string name="error_once_past">Date or time is in the past</string>
     <string name="error_interval_fields">Set start date, time and interval</string>
 
+    <!-- Notification channel names, shown in system settings (TZ 4.10). Kept in English in
+         all locales by the user's choice. -->
+    <string name="notif_channel_reminders">Reminders</string>
+    <string name="notif_channel_service">Service</string>
+
     <!-- Missed reminder notifications (TZ 4.10) -->
     <string name="notif_missed_single">Missed reminder</string>
     <string name="notif_missed_summary_title">Missed reminders</string>

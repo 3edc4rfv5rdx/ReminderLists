@@ -299,6 +299,10 @@
     <string name="error_once_past">Дата или время в прошлом</string>
     <string name="error_interval_fields">Укажите дату начала, время и интервал</string>
 
+    <!-- Notification channel names stay in English (user's choice) -->
+    <string name="notif_channel_reminders">Reminders</string>
+    <string name="notif_channel_service">Service</string>
+
     <!-- Missed reminder notifications (TZ 4.10) -->
     <string name="notif_missed_single">Пропущенное напоминание</string>
     <string name="notif_missed_summary_title">Пропущенные напоминания</string>

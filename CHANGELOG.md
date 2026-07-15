@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Notification channel names moved from hardcoded literals to string resources (kept in English in all locales).
 - Fixed: when a second reminder fires while a sound is still playing, the old sound is now stopped and released instead of leaking, and its stale timeout no longer cuts the new sound short.
 - Fixed: backup manifest now records the real Room schema version (was stuck at 1), so restore's "backup from a newer app" check works.
 - Fixed: renaming a list/note folder or editing its comment no longer moves its contents to root (REPLACE upsert triggered FK SET NULL).
