@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Docs: TZ 4.5 (full-screen alert) marked done; TZ 4.10 sound-service notification note updated to the deferred behavior.
 - The sound service's "Reminder sound playing" entry is deferred: it only appears if the sound outlives ~10 s, so typical fires show a single notification.
 - Full-screen alert unlock now triggers the moment the circle crosses mid-screen (was: drag 60% and release past it, which often read as a failed attempt).
 - While the full-screen alert is on screen its shade notification is removed (it returns, without the full-screen intent, if the alert is left without an action).
