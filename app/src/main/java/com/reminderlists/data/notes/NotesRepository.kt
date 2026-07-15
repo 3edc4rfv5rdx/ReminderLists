@@ -66,7 +66,13 @@ class NotesRepository(private val db: AppDatabase, context: Context) {
     // Save the whole form in one transaction: entity + normalized tags (TZ 4A.2 / 4.2 п. 3).
     // Returns the note id (new notes get their photos attached right after).
     suspend fun save(note: NoteEntity, tags: List<String>): Long = db.withTransaction {
-        val id = dao.upsert(note)
+        // Insert vs update branch — a REPLACE-upsert would cascade-delete photos.
+        val id = if (note.id == 0L) {
+            dao.insert(note)
+        } else {
+            dao.update(note)
+            note.id
+        }
         tagsDao.clearNoteTags(id)
         for (name in tags) {
             val tagId = tagsDao.insertTag(TagEntity(name = name)).takeIf { it > 0 }

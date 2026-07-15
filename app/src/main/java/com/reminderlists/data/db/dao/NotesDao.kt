@@ -71,8 +71,10 @@ interface NotesDao {
     @Query("SELECT * FROM notes WHERE id = :id")
     suspend fun get(id: Long): NoteEntity?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsert(note: NoteEntity): Long
+    // Plain insert + update, never INSERT OR REPLACE: REPLACE deletes the existing row first,
+    // and the FK CASCADE would wipe the note's photos and tags.
+    @Insert
+    suspend fun insert(note: NoteEntity): Long
 
     @Update
     suspend fun update(note: NoteEntity)
