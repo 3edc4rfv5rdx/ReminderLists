@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Imported sound file names are sanitized (path separators and control chars stripped) so a hostile provider name cannot escape the sounds directory.
 - Fixed: camera capture temp files are now deleted after import (and on cancelled capture) instead of piling up in the cache.
 - Settings sound duration/level sliders now persist once on release instead of writing to the DB on every drag tick.
 - Fixed: tapping Save in an editor before the edited record finished loading no longer creates a duplicate (reminder, note and item editors).

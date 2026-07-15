@@ -41,10 +41,11 @@ object SoundStore {
     suspend fun importSound(context: Context, source: Uri): String? = withContext(Dispatchers.IO) {
         try {
             val resolver = context.contentResolver
-            val displayName = resolver.query(source, null, null, null, null)?.use { cursor ->
+            val rawName = resolver.query(source, null, null, null, null)?.use { cursor ->
                 val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                 if (index >= 0 && cursor.moveToFirst()) cursor.getString(index) else null
-            } ?: "sound_${System.currentTimeMillis()}"
+            }
+            val displayName = sanitizeFileName(rawName) ?: "sound_${System.currentTimeMillis()}"
             var target = fileFor(context, displayName)
             if (target.exists()) {
                 target = fileFor(context, "${System.currentTimeMillis()}_$displayName")
@@ -57,4 +58,13 @@ object SoundStore {
             null
         }
     }
+
+    // DISPLAY_NAME comes from an arbitrary content provider — keep only a safe base name so it
+    // can't escape sounds/ ("../", separators) or carry control chars; null when nothing usable.
+    private fun sanitizeFileName(name: String?): String? = name
+        ?.substringAfterLast('/')
+        ?.substringAfterLast('\\')
+        ?.filter { it.code >= 32 }
+        ?.trim()
+        ?.takeUnless { it.isEmpty() || it == "." || it == ".." }
 }
