@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Fixed: tapping Save in an editor before the edited record finished loading no longer creates a duplicate (reminder, note and item editors).
 - Compact weekday row on Daily/Period cards ("mtwt-ss") now uses localized day letters (ru/uk) instead of hardcoded Latin ones.
 - Notification channel names moved from hardcoded literals to string resources (kept in English in all locales).
 - Fixed: when a second reminder fires while a sound is still playing, the old sound is now stopped and released instead of leaking, and its stale timeout no longer cuts the new sound short.

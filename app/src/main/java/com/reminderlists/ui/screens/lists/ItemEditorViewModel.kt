@@ -104,6 +104,8 @@ class ItemEditorViewModel(
     }
 
     fun save(onSaved: () -> Unit) {
+        // Save before the edit target finished loading would insert a duplicate — ignore the tap.
+        if (isEdit && existing == null) return
         viewModelScope.launch {
             val item = existing
             val targetId = if (item == null) {

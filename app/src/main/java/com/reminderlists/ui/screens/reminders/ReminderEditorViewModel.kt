@@ -230,6 +230,8 @@ class ReminderEditorViewModel(
     }
 
     fun save(onSaved: () -> Unit) {
+        // Save before the edit target finished loading would insert a duplicate — ignore the tap.
+        if (isEdit && existing == null) return
         val error = validate()
         if (error != null) {
             // A past date/time isn't an input error — it's a warning (orange), like the card's

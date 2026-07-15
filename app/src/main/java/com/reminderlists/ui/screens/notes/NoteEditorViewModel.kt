@@ -100,6 +100,8 @@ class NoteEditorViewModel(
     }
 
     fun save(onSaved: () -> Unit) {
+        // Save before the edit target finished loading would insert a duplicate — ignore the tap.
+        if (isEdit && existing == null) return
         if (title.isBlank()) {
             snack = SnackEvent.error(appContext.getString(R.string.error_title_required))
             return
