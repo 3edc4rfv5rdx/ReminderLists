@@ -140,7 +140,6 @@ fun ListsScreen(navController: NavController, contentPadding: PaddingValues) {
                                 navController.navigate(Routes.DICTIONARY) { launchSingleTop = true }
                             },
                         )
-                        // TODO menu item Backup/Restore (TZ 3.8) once that feature exists.
                     }
                 },
             )
