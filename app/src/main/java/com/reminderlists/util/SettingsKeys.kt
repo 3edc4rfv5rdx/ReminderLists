@@ -20,6 +20,6 @@ object SettingsKeys {
     const val DEFAULT_MORNING = "09:30"
     const val DEFAULT_DAY = "12:30"
     const val DEFAULT_EVENING = "18:30"
-    const val DEFAULT_SOUND_DURATION = 10 // seconds, range 0..180
+    const val DEFAULT_SOUND_DURATION = 10 // seconds, range 0..Limits.MAX_SOUND_DURATION
     const val DEFAULT_SOUND_LEVEL_VALUE = 50 // range 0..100
 }

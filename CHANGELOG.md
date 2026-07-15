@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Fixed a stale comment: sound duration range is 0..90 (Limits.MAX_SOUND_DURATION), not 0..180.
 - Removed a stale TODO about a Lists-menu Backup/Restore item — the feature lives in Settings.
 - Imported sound file names are sanitized (path separators and control chars stripped) so a hostile provider name cannot escape the sounds directory.
 - Fixed: camera capture temp files are now deleted after import (and on cancelled capture) instead of piling up in the cache.
