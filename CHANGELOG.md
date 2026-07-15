@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Docs: welcome screen (TZ 4.8) is cancelled — CLAUDE.md no longer claims a WelcomeDialog exists.
 - Sound preview in the sound field prepares asynchronously, so a large sound file no longer freezes the UI on tap.
 - Fixed a stale comment: sound duration range is 0..90 (Limits.MAX_SOUND_DURATION), not 0..180.
 - Removed a stale TODO about a Lists-menu Backup/Restore item — the feature lives in Settings.
