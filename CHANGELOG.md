@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Item editor's Name field now expands with the text up to 4 lines (then scrolls) instead of being clipped to a single line, while line breaks stay out of the value (Done key, pasted breaks collapse to spaces) (TZ 3.3).
 - Large font mode: item text enlarged to 36sp, the dot marker now sits on the first text line instead of centred on wrapped rows, and done items get a hollow outlined dot (TZ 3.5).
 
 ## v0.3.20260709+151

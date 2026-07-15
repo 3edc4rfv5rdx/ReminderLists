@@ -70,6 +70,10 @@ fun ItemEditorScreen(navController: NavController, listId: Long, itemId: Long) {
                 onValueChange = vm::onNameChange,
                 label = stringResource(R.string.field_name),
                 maxLength = Limits.ITEM_TEXT,
+                // Grows with the text up to 4 lines, then scrolls — long item names stay readable.
+                singleLine = false,
+                maxLines = 4,
+                allowNewlines = false,
                 autoFocus = true,
             )
             // Dictionary autocomplete drop-down (TZ 3.4): tap substitutes the text.
