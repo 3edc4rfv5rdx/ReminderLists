@@ -29,7 +29,7 @@ class NotesRepository(private val db: AppDatabase, context: Context) {
     fun observeFolderNoteCounts(): Flow<List<FolderNoteCount>> = dao.observeFolderNoteCounts()
 
     suspend fun createFolder(name: String, comment: String?) {
-        dao.upsertFolder(
+        dao.insertFolder(
             NoteFolderEntity(
                 name = name,
                 comment = comment?.takeIf { it.isNotBlank() },
@@ -39,11 +39,11 @@ class NotesRepository(private val db: AppDatabase, context: Context) {
     }
 
     suspend fun renameFolder(folder: NoteFolderEntity, name: String) {
-        dao.upsertFolder(folder.copy(name = name))
+        dao.updateFolder(folder.copy(name = name))
     }
 
     suspend fun updateFolderComment(folder: NoteFolderEntity, comment: String?) {
-        dao.upsertFolder(folder.copy(comment = comment?.takeIf { it.isNotBlank() }))
+        dao.updateFolder(folder.copy(comment = comment?.takeIf { it.isNotBlank() }))
     }
 
     // Delete folder; notes inside are either deleted or moved to root (FK SET_NULL) — TZ 4A.1.

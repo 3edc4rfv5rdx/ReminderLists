@@ -5,7 +5,6 @@ import androidx.room.Delete
 import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.Junction
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Relation
 import androidx.room.Transaction
@@ -45,8 +44,13 @@ interface NotesDao {
     @Query("SELECT * FROM note_folders ORDER BY name COLLATE NOCASE")
     fun observeFolders(): Flow<List<NoteFolderEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertFolder(folder: NoteFolderEntity): Long
+    // Plain insert + update, never INSERT OR REPLACE: REPLACE deletes the existing row first,
+    // and the FK SET NULL would kick every note in the folder out to root.
+    @Insert
+    suspend fun insertFolder(folder: NoteFolderEntity): Long
+
+    @Update
+    suspend fun updateFolder(folder: NoteFolderEntity)
 
     @Delete
     suspend fun deleteFolder(folder: NoteFolderEntity)

@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Fixed: renaming a list/note folder or editing its comment no longer moves its contents to root (REPLACE upsert triggered FK SET NULL).
 - Fixed: editing a note no longer wipes its attached photos (same REPLACE upsert cascade as reminders).
 - Fixed: editing a reminder no longer wipes its attached photos and firing history (REPLACE upsert cascaded child-row deletes).
 - Lists can be made undeletable from the row menu ("Prevent deletion"): the list, its items, "Delete checked" and wiping it along with its folder all then require the Default PIN, which is also needed to lift the protection (TZ 3.2a).

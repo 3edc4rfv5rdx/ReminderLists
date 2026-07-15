@@ -31,8 +31,13 @@ interface ListsDao {
     @Query("SELECT * FROM folders ORDER BY name COLLATE NOCASE")
     fun observeFolders(): Flow<List<FolderEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertFolder(folder: FolderEntity): Long
+    // Plain insert + update, never INSERT OR REPLACE: REPLACE deletes the existing row first,
+    // and the FK SET NULL would kick every list in the folder out to root.
+    @Insert
+    suspend fun insertFolder(folder: FolderEntity): Long
+
+    @Update
+    suspend fun updateFolder(folder: FolderEntity)
 
     @Delete
     suspend fun deleteFolder(folder: FolderEntity)

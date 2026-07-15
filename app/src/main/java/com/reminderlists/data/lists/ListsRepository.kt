@@ -26,7 +26,7 @@ class ListsRepository(private val db: AppDatabase, context: Context) {
     fun observeFolders(): Flow<List<FolderEntity>> = dao.observeFolders()
 
     suspend fun createFolder(name: String, comment: String?) {
-        dao.upsertFolder(
+        dao.insertFolder(
             FolderEntity(
                 name = name,
                 comment = comment?.takeIf { it.isNotBlank() },
@@ -36,11 +36,11 @@ class ListsRepository(private val db: AppDatabase, context: Context) {
     }
 
     suspend fun renameFolder(folder: FolderEntity, name: String) {
-        dao.upsertFolder(folder.copy(name = name))
+        dao.updateFolder(folder.copy(name = name))
     }
 
     suspend fun updateFolderComment(folder: FolderEntity, comment: String?) {
-        dao.upsertFolder(folder.copy(comment = comment?.takeIf { it.isNotBlank() }))
+        dao.updateFolder(folder.copy(comment = comment?.takeIf { it.isNotBlank() }))
     }
 
     // Delete folder; lists inside are either deleted or moved to root (FK SET_NULL) — TZ 3.1.
