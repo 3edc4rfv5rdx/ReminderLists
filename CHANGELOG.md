@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Settings sound duration/level sliders now persist once on release instead of writing to the DB on every drag tick.
 - Fixed: tapping Save in an editor before the edited record finished loading no longer creates a duplicate (reminder, note and item editors).
 - Compact weekday row on Daily/Period cards ("mtwt-ss") now uses localized day letters (ru/uk) instead of hardcoded Latin ones.
 - Notification channel names moved from hardcoded literals to string resources (kept in English in all locales).

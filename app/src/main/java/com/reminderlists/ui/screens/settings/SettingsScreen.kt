@@ -196,20 +196,25 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
                 value = defaultSoundUri,
                 onPick = { vm.setDefaultSound(it) },
             )
+            // Like the font-scale slider: drag updates a local value, persist once on release.
+            var sliderDuration by remember(soundDuration) { mutableStateOf(soundDuration.toFloat()) }
             Text(
-                "${stringResource(R.string.settings_sound_duration)}: ${soundDuration}s",
+                "${stringResource(R.string.settings_sound_duration)}: ${sliderDuration.toInt()}s",
                 Modifier.padding(top = 8.dp),
             )
             Slider(
-                value = soundDuration.toFloat(),
-                onValueChange = { vm.setSoundDuration(it.toInt()) },
+                value = sliderDuration,
+                onValueChange = { sliderDuration = it },
+                onValueChangeFinished = { vm.setSoundDuration(sliderDuration.toInt()) },
                 valueRange = 0f..Limits.MAX_SOUND_DURATION.toFloat(),
                 steps = 17, // snap every 5 s (0..90)
             )
-            Text("${stringResource(R.string.settings_sound_level)}: $soundLevel")
+            var sliderLevel by remember(soundLevel) { mutableStateOf(soundLevel.toFloat()) }
+            Text("${stringResource(R.string.settings_sound_level)}: ${sliderLevel.toInt()}")
             Slider(
-                value = soundLevel.toFloat(),
-                onValueChange = { vm.setSoundLevel(it.toInt()) },
+                value = sliderLevel,
+                onValueChange = { sliderLevel = it },
+                onValueChangeFinished = { vm.setSoundLevel(sliderLevel.toInt()) },
                 valueRange = 0f..Limits.MAX_SOUND_LEVEL.toFloat(),
                 steps = 19, // snap every 5 (0..100)
             )
