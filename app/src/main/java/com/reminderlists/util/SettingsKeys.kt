@@ -12,6 +12,9 @@ object SettingsKeys {
     const val TIME_PRESET_MORNING = "time_preset_morning"
     const val TIME_PRESET_DAY = "time_preset_day"
     const val TIME_PRESET_EVENING = "time_preset_evening"
+    // "1" once the first-launch overlay-permission dialog was shown — never ask again (TZ 4.5).
+    const val OVERLAY_PROMPT_SHOWN = "overlay_prompt_shown"
+
     const val DEFAULT_SOUND_URI = "default_sound_uri"
     const val DEFAULT_SOUND_DURATION_SEC = "default_sound_duration_sec"
     const val DEFAULT_SOUND_LEVEL = "default_sound_level"

@@ -316,6 +316,10 @@
     <string name="notif_perm_open_settings">Open settings</string>
     <string name="notif_perm_not_now">Not now</string>
 
+    <!-- Overlay permission onboarding for instant full-screen alerts (TZ 4.5) -->
+    <string name="overlay_perm_title">Full screen alerts</string>
+    <string name="overlay_perm_rationale">To open a full screen alert instantly even while the phone is in use, allow the app to display over other apps</string>
+
     <!-- Full screen alert (TZ 4.5) -->
     <string name="alert_reminder_label">Reminder</string>
     <string name="alert_postpone_title">Postpone for</string>

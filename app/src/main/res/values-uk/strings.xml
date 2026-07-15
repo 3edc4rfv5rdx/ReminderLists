@@ -323,6 +323,10 @@
     <string name="notif_perm_open_settings">Відкрити налаштування</string>
     <string name="notif_perm_not_now">Не зараз</string>
 
+    <!-- Overlay permission onboarding for instant full-screen alerts (TZ 4.5) -->
+    <string name="overlay_perm_title">Повноекранні нагадування</string>
+    <string name="overlay_perm_rationale">Щоб повноекранне нагадування розкривалося одразу, навіть коли телефон використовується, дозвольте застосунку показ поверх інших застосунків</string>
+
     <!-- Full screen alert (TZ 4.5) -->
     <string name="alert_reminder_label">Нагадування</string>
     <string name="alert_postpone_title">Відкласти на</string>

@@ -40,9 +40,9 @@ class AlarmReceiver : BroadcastReceiver() {
                     // Done/Continue buttons live only on that screen); otherwise a plain
                     // heads-up notification.
                     if (reminder.fullScreenAlert || RepeatType.of(reminder.repeatType) == RepeatType.PERIOD) {
-                        // Grab the screen immediately (works unlocked too, in the alarm's
-                        // background-start window) and post the full-screen-intent notification
-                        // as the lockscreen fallback / shade presence.
+                        // Grab the screen immediately (works unlocked too, once the overlay
+                        // grant is held) and post the full-screen-intent notification as the
+                        // lockscreen fallback / shade presence.
                         ReminderNotifier.notifyFullScreen(context, reminder)
                         FullScreenAlertActivity.start(context, reminderId)
                     } else {

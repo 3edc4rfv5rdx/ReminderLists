@@ -129,8 +129,10 @@ class FullScreenAlertActivity : ComponentActivity() {
     companion object {
         // Launched straight from AlarmReceiver so the alert grabs the whole screen at once, even
         // when the device is unlocked (the notification's full-screen intent alone only takes
-        // over on the lockscreen). The setAlarmClock fire grants the background-activity-start
-        // window; singleInstance dedupes against the full-screen-intent launch (TZ 4.5).
+        // over on the lockscreen). This background activity start is only allowed while the
+        // "Display over other apps" grant is held (asked on first launch) — without it the
+        // system silently drops the launch and the heads-up notification is all that shows;
+        // singleInstance dedupes against the full-screen-intent launch (TZ 4.5).
         fun start(context: Context, reminderId: Long) {
             val intent = Intent(context, FullScreenAlertActivity::class.java)
                 .putExtra(ReminderScheduler.EXTRA_REMINDER_ID, reminderId)

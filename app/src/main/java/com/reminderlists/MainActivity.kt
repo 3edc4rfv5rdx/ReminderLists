@@ -3,6 +3,7 @@ package com.reminderlists
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
@@ -18,9 +19,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import com.reminderlists.data.db.AppDatabase
+import com.reminderlists.data.db.entity.SettingEntity
 import com.reminderlists.data.reminders.RemindersRepository
 import com.reminderlists.ui.navigation.AppRoot
 import com.reminderlists.ui.screens.permission.NotificationPermissionDialog
+import com.reminderlists.ui.screens.permission.OverlayPermissionDialog
 import com.reminderlists.ui.theme.AppTheme
 import com.reminderlists.ui.theme.DEFAULT_FONT_SCALE
 import com.reminderlists.ui.theme.ReminderListsTheme
@@ -35,6 +38,11 @@ class MainActivity : ComponentActivity() {
     // without the permission reminders (full-screen included) never show. NONE hidden,
     // RATIONALE explains and asks, BLOCKED points to settings after a permanent denial.
     private var notifPrompt by mutableStateOf(NotifPrompt.NONE)
+
+    // Overlay-grant onboarding (TZ 4.5): without "Display over other apps" the full-screen
+    // alert can't launch from the alarm receiver while another app is in front. Asked once,
+    // on first launch; the answer is remembered forever (OVERLAY_PROMPT_SHOWN).
+    private var overlayPrompt by mutableStateOf(false)
 
     // On a denial that can still be re-asked, back off (the dialog returns next launch); a
     // denial that no longer prompts is permanent, so switch to the settings variant.
@@ -52,6 +60,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         if (!notificationsGranted()) notifPrompt = NotifPrompt.RATIONALE
+        if (!Settings.canDrawOverlays(this)) {
+            lifecycleScope.launch {
+                val dao = AppDatabase.get(this@MainActivity).settingsDao()
+                overlayPrompt = dao.get(SettingsKeys.OVERLAY_PROMPT_SHOWN) != "1"
+            }
+        }
         setContent {
             // Theme color preset + Light/Dark/System mode come from settings (TZ 5); observing
             // them here re-themes the whole app the moment either changes.
@@ -78,6 +92,20 @@ class MainActivity : ComponentActivity() {
                         },
                         onDismiss = { notifPrompt = NotifPrompt.NONE },
                     )
+                } else if (overlayPrompt) {
+                    // Queued behind the notifications dialog; either answer settles it for good.
+                    OverlayPermissionDialog(
+                        onConfirm = {
+                            settleOverlayPrompt()
+                            startActivity(
+                                Intent(
+                                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                    Uri.parse("package:$packageName"),
+                                ),
+                            )
+                        },
+                        onDismiss = ::settleOverlayPrompt,
+                    )
                 }
             }
         }
@@ -89,6 +117,15 @@ class MainActivity : ComponentActivity() {
         // a reminder finished on an earlier day is removed as soon as the app is opened.
         lifecycleScope.launch {
             RemindersRepository(AppDatabase.get(this@MainActivity), this@MainActivity).sweepAutoRemoved()
+        }
+    }
+
+    // Close the overlay dialog and never ask again — the grant is a one-time setup (TZ 4.5).
+    private fun settleOverlayPrompt() {
+        overlayPrompt = false
+        lifecycleScope.launch {
+            AppDatabase.get(this@MainActivity).settingsDao()
+                .put(SettingEntity(SettingsKeys.OVERLAY_PROMPT_SHOWN, "1"))
         }
     }
 
