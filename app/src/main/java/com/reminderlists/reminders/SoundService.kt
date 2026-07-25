@@ -156,7 +156,7 @@ class SoundService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     companion object {
-        private const val SERVICE_NOTIF_ID = -2
+        private const val SERVICE_NOTIF_ID = NotificationIds.SOUND_SERVICE
         private const val ACTION_STOP = "com.reminderlists.action.STOP_SOUND"
         private const val EXTRA_SOUND_URI = "sound_uri"
         private const val EXTRA_LOOP = "loop"

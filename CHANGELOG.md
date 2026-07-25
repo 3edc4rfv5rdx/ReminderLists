@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Fixed: a timer's notification was overwritten by the sound service's own entry (both used id -2), so it never popped up and vanished with the sound; non-row notification ids now live in one place.
+- Full-screen alert reached by a second fire while it is already open now redraws for the new fire and re-locks, instead of showing the previous reminder (missing onNewIntent under singleInstance).
 - New Timer mode in the reminder form: a "+N min/hours" countdown that fires once and is stored nowhere — no card, no database row.
 ## v0.3.20260715+161
 - Docs: audit findings file ADD/tofix1.md added (all 14 confirmed items fixed); todo items marked done.

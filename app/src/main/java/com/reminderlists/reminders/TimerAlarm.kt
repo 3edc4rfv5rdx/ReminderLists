@@ -14,8 +14,9 @@ import com.reminderlists.util.Logger
 // without a single query. One timer at a time: a new start replaces the armed one (same id).
 object TimerAlarm {
     // Fixed negative id, never colliding with a real reminder row (ids are > 0). Doubles as the
-    // notification id and the PendingIntent request code, the way reminder ids do.
-    const val TIMER_ID = -2L
+    // notification id and the PendingIntent request code, the way reminder ids do — hence it
+    // comes from NotificationIds, where the whole negative range is allocated.
+    const val TIMER_ID = NotificationIds.TIMER.toLong()
 
     private const val EXTRA_TIMER = "timer"
     private const val EXTRA_TITLE = "timer_title"

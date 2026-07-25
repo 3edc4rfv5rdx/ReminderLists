@@ -3,6 +3,7 @@ package com.reminderlists.reminders
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -61,6 +62,7 @@ import com.reminderlists.ui.theme.AlertControl
 import com.reminderlists.ui.theme.AlertOnControl
 import com.reminderlists.ui.theme.ReminderListsTheme
 import com.reminderlists.util.Dates
+import com.reminderlists.util.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -79,6 +81,7 @@ class FullScreenAlertActivity : ComponentActivity() {
     // Set when this fire is a countdown timer (TZ 4.2 c′): the alert then has no row behind it —
     // it renders from the intent payload and Postpone re-arms the timer instead of a reminder.
     private var timer: TimerAlarm.Spec? = null
+    private var state by mutableStateOf<AlertUiState?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,26 +91,7 @@ class FullScreenAlertActivity : ComponentActivity() {
         setTurnScreenOn(true)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        var state by mutableStateOf<AlertUiState?>(null)
-        timer = TimerAlarm.specFrom(intent)
-        val spec = timer
-        if (spec != null) {
-            val r = spec.asReminder()
-            reminder = r
-            state = alertStateOf(r)
-            ReminderNotifier.cancel(this, r.id)
-        } else {
-            loadReminder(
-                reminderId(),
-                onLoaded = { r ->
-                    reminder = r
-                    state = alertStateOf(r)
-                    // The alert itself is on screen — its shade notification is a duplicate.
-                    ReminderNotifier.cancel(this, r.id)
-                },
-                onMissing = ::finish,
-            )
-        }
+        applyIntent(intent)
 
         setContent {
             ReminderListsTheme {
@@ -115,6 +99,7 @@ class FullScreenAlertActivity : ComponentActivity() {
                     FullScreenAlert(
                         state = s,
                         onPostpone = { millis ->
+                            val spec = timer
                             act {
                                 if (spec != null) {
                                     TimerAlarm.start(this, spec, System.currentTimeMillis() + millis)
@@ -124,12 +109,47 @@ class FullScreenAlertActivity : ComponentActivity() {
                             }
                         },
                         // A timer leaves no trace to acknowledge — OK just tears the alert down.
-                        onOk = { act { if (spec == null) ReminderScheduler.confirmOk(db(), s.id) } },
+                        onOk = { act { if (timer == null) ReminderScheduler.confirmOk(db(), s.id) } },
                         onDone = { act { ReminderScheduler.periodDone(this, db(), s.id) } },
                         onContinue = { act { ReminderScheduler.periodContinue(db(), s.id) } },
                     )
                 }
             }
+        }
+    }
+
+    // singleInstance means a second fire arriving while this alert is alive (typically left in
+    // the background without acting) is delivered here instead of a fresh activity — without
+    // this the screen would keep showing the previous reminder and its stale payload.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        acted = false
+        applyIntent(intent)
+    }
+
+    // Build the alert state for whichever fire this intent carries: a timer renders straight
+    // from its payload, a reminder is loaded by id.
+    private fun applyIntent(intent: Intent) {
+        val spec = TimerAlarm.specFrom(intent)
+        timer = spec
+        state = null
+        if (spec != null) {
+            val r = spec.asReminder()
+            reminder = r
+            state = alertStateOf(r)
+            ReminderNotifier.cancel(this, r.id)
+        } else {
+            loadReminder(
+                intent.getLongExtra(ReminderScheduler.EXTRA_REMINDER_ID, -1L),
+                onLoaded = { r ->
+                    reminder = r
+                    state = alertStateOf(r)
+                    // The alert itself is on screen — its shade notification is a duplicate.
+                    ReminderNotifier.cancel(this, r.id)
+                },
+                onMissing = ::finish,
+            )
         }
     }
 
@@ -185,18 +205,35 @@ class FullScreenAlertActivity : ComponentActivity() {
         // system silently drops the launch and the heads-up notification is all that shows;
         // singleInstance dedupes against the full-screen-intent launch (TZ 4.5).
         fun start(context: Context, reminderId: Long) {
-            val intent = Intent(context, FullScreenAlertActivity::class.java)
-                .putExtra(ReminderScheduler.EXTRA_REMINDER_ID, reminderId)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
+            launch(
+                context,
+                Intent(context, FullScreenAlertActivity::class.java)
+                    .putExtra(ReminderScheduler.EXTRA_REMINDER_ID, reminderId),
+                "reminder $reminderId",
+            )
         }
 
         // Same launch for a countdown fire, with the payload instead of a row id (TZ 4.2 c′).
         fun startTimer(context: Context, spec: TimerAlarm.Spec) {
-            val intent = spec.putInto(Intent(context, FullScreenAlertActivity::class.java))
-                .putExtra(ReminderScheduler.EXTRA_REMINDER_ID, TimerAlarm.TIMER_ID)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
+            launch(
+                context,
+                spec.putInto(Intent(context, FullScreenAlertActivity::class.java))
+                    .putExtra(ReminderScheduler.EXTRA_REMINDER_ID, TimerAlarm.TIMER_ID),
+                "timer",
+            )
+        }
+
+        // The overlay grant is what makes this background start legal; without it the system
+        // drops the launch silently and only the heads-up notification shows. Logged (TZ 8
+        // local logging) so "the alert didn't open" can be told apart from "it was blocked".
+        private fun launch(context: Context, intent: Intent, what: String) {
+            val overlay = Settings.canDrawOverlays(context)
+            Logger.i("Full-screen alert start for $what, overlay grant=$overlay")
+            try {
+                context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            } catch (e: Exception) {
+                Logger.e("Full-screen alert start refused for $what", e)
+            }
         }
     }
 }
@@ -207,6 +244,9 @@ private data class AlertUiState(
     val title: String,
     val content: String?,
     val variant: AlertVariant,
+    // Distinguishes two fires of the same reminder, so a fire arriving at an already-unlocked
+    // alert re-locks it instead of silently reusing the unlocked screen.
+    val firedAt: Long,
 )
 
 private enum class AlertVariant { ONCE, DAILY, MONTHLY_YEARLY, PERIOD, INTERVAL }
@@ -222,6 +262,7 @@ private fun alertStateOf(r: ReminderEntity): AlertUiState =
             RepeatType.INTERVAL -> AlertVariant.INTERVAL
             RepeatType.ONE_TIME -> if (r.monthlyRepeat || r.yearlyRepeat) AlertVariant.MONTHLY_YEARLY else AlertVariant.ONCE
         },
+        firedAt = System.currentTimeMillis(),
     )
 
 @Composable
@@ -232,7 +273,8 @@ private fun FullScreenAlert(
     onDone: () -> Unit,
     onContinue: () -> Unit,
 ) {
-    var unlocked by remember { mutableStateOf(false) }
+    // Keyed on the fire: a new one arriving at this alert starts locked again.
+    var unlocked by remember(state) { mutableStateOf(false) }
     val context = LocalContext.current
     BoxWithConstraints(Modifier.fillMaxSize().background(AlertBackground)) {
         val screenHeightPx = with(LocalDensity.current) { maxHeight.toPx() }

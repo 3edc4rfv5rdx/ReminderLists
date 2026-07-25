@@ -19,7 +19,7 @@ object ReminderNotifier {
     // Below this many missed reminders show them individually, otherwise collapse to one
     // summary — few are expected in practice (TZ 4.10).
     private const val MISSED_SUMMARY_THRESHOLD = 5
-    private const val MISSED_SUMMARY_ID = -1
+    private const val MISSED_SUMMARY_ID = NotificationIds.MISSED_SUMMARY
 
     // On-time fire without full-screen (TZ 4.5): a plain heads-up notification on the HIGH
     // channel. The screen is woken separately by AlarmReceiver; SoundService drives the sound.
