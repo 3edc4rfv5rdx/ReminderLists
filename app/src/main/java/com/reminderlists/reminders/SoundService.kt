@@ -14,6 +14,7 @@ import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.VibratorManager
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.reminderlists.R
 import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.sound.SoundStore
@@ -33,23 +34,61 @@ class SoundService : Service() {
     private val scope = CoroutineScope(Dispatchers.Main)
     private var player: MediaPlayer? = null
     private var timeout: Job? = null
+    // Id of the notification this service holds up, and whether it belongs to the fire (keep it
+    // in the shade when the sound ends) or is the housekeeping fallback (drop it).
+    private var fireId = SERVICE_NOTIF_ID
+    private var ownsFireNotification = false
+    // The fire whose notification is currently held up as the foreground one.
+    private var held: FirePayload? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
-            stopSelf()
+            finish()
             return START_NOT_STICKY
         }
         Logger.i("SoundService start")
+        // The fire's own notification is the service's foreground notification (TZ 4.10): one
+        // shade entry for the whole fire, and no "sound is playing" service entry surfacing on
+        // the 10 s deferral boundary. Without a payload (nothing to show) fall back to the
+        // deferred housekeeping one, which startForeground still requires.
+        val payload = intent?.let { FirePayload.from(it) }
+        val previous = held
+        held = payload
+        fireId = payload?.notificationId ?: SERVICE_NOTIF_ID
+        ownsFireNotification = payload != null
         startForeground(
-            SERVICE_NOTIF_ID,
-            buildNotification(),
+            fireId,
+            payload?.let { notificationFor(it) } ?: buildNotification(),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK,
         )
-        val soundUri = intent?.getStringExtra(EXTRA_SOUND_URI)
-        val loop = intent?.getBooleanExtra(EXTRA_LOOP, true) ?: true
-        scope.launch { begin(soundUri, loop) }
+        // A second reminder can fire while this sound still plays (same-minute stagger, TZ 4.10).
+        // Taking over the foreground slot drops the previous fire's entry, so put it back as an
+        // ordinary notification — that fire is still unacknowledged.
+        if (previous != null && previous.notificationId != fireId) {
+            NotificationManagerCompat.from(this).notify(previous.notificationId, notificationFor(previous))
+        }
+        scope.launch { begin(payload?.soundUri, payload?.loopSound ?: true) }
         return START_NOT_STICKY
     }
+
+    // Stop playing and shut down, leaving the fire's notification in the shade: the sound is
+    // over but the reminder is still unacknowledged (TZ 4.5 — Stop only silences). Detaching
+    // has to happen while the service is still alive; doing it from onDestroy is too late and
+    // the entry goes away with the service.
+    private fun finish() {
+        stopForeground(if (ownsFireNotification) STOP_FOREGROUND_DETACH else STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    // Full-screen fires keep the alert-style entry, plain ones the fired entry with its action
+    // buttons. The alert variant is built without the full-screen intent: it was already posted
+    // by AlarmReceiver, and re-posting one here could throw the alert back onto the screen.
+    private fun notificationFor(payload: FirePayload) =
+        if (payload.fullScreenAlert) {
+            ReminderNotifier.buildAlert(this, payload, fullScreen = false)
+        } else {
+            ReminderNotifier.buildFired(this, payload)
+        }
 
     private suspend fun begin(soundUri: String?, loop: Boolean) {
         // A second reminder can fire while the previous sound still plays (same-minute stagger,
@@ -81,10 +120,10 @@ class SoundService : Service() {
         if (duration > 0) {
             timeout = scope.launch {
                 delay(duration * 1000L)
-                stopSelf()
+                finish()
             }
         } else if (player == null) {
-            stopSelf()
+            finish()
         }
     }
 
@@ -107,7 +146,7 @@ class SoundService : Service() {
                 isLooping = loop
                 val volume = level / 100f
                 setVolume(volume, volume)
-                setOnCompletionListener { if (!loop) stopSelf() }
+                setOnCompletionListener { if (!loop) finish() }
                 setOnPreparedListener { start() }
                 prepareAsync()
             }
@@ -149,6 +188,8 @@ class SoundService : Service() {
         player?.release()
         player = null
         getSystemService(VibratorManager::class.java).defaultVibrator.cancel()
+        // Detaching lives in finish(), which runs while the service is still up; here it would
+        // be too late to keep the entry. This only catches a shutdown from outside (system kill).
         Logger.i("SoundService stop")
         super.onDestroy()
     }
@@ -158,16 +199,12 @@ class SoundService : Service() {
     companion object {
         private const val SERVICE_NOTIF_ID = NotificationIds.SOUND_SERVICE
         private const val ACTION_STOP = "com.reminderlists.action.STOP_SOUND"
-        private const val EXTRA_SOUND_URI = "sound_uri"
-        private const val EXTRA_LOOP = "loop"
 
         // Started from AlarmReceiver on a fire; the exact-alarm broadcast grants the
-        // background FGS-start exemption (TZ 4.10).
-        fun start(context: Context, soundUri: String?, loop: Boolean) {
-            val intent = Intent(context, SoundService::class.java)
-                .putExtra(EXTRA_SOUND_URI, soundUri)
-                .putExtra(EXTRA_LOOP, loop)
-            context.startForegroundService(intent)
+        // background FGS-start exemption (TZ 4.10). The fire's payload travels along so the
+        // service can adopt the fire's own notification as its foreground one.
+        fun start(context: Context, payload: FirePayload) {
+            context.startForegroundService(payload.putInto(Intent(context, SoundService::class.java)))
         }
 
         // Stop the looping sound early — the user reacted on the full-screen alert or the

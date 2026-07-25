@@ -18,7 +18,7 @@ class ReminderActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         // Countdown timer (TZ 4.2 c′): no row behind it, so +10 min re-arms the alarm straight
         // from the carried payload and Stop just silences the sound.
-        TimerAlarm.specFrom(intent)?.let { spec ->
+        FirePayload.from(intent)?.takeIf { it.isTimer }?.let { spec ->
             when (intent.action) {
                 ACTION_STOP -> SoundService.stop(context)
                 ACTION_POSTPONE -> {
@@ -78,10 +78,10 @@ class ReminderActionReceiver : BroadcastReceiver() {
         private const val ACTION_DISMISS = "com.reminderlists.action.STOP_REPEATING"
         private const val POSTPONE_MS = 10 * 60_000L
 
-        fun postponeIntent(context: Context, reminderId: Long, timer: TimerAlarm.Spec? = null): PendingIntent =
+        fun postponeIntent(context: Context, reminderId: Long, timer: FirePayload? = null): PendingIntent =
             pendingIntent(context, reminderId, ACTION_POSTPONE, timer)
 
-        fun stopIntent(context: Context, reminderId: Long, timer: TimerAlarm.Spec? = null): PendingIntent =
+        fun stopIntent(context: Context, reminderId: Long, timer: FirePayload? = null): PendingIntent =
             pendingIntent(context, reminderId, ACTION_STOP, timer)
 
         fun dismissIntent(context: Context, reminderId: Long): PendingIntent =
@@ -93,7 +93,7 @@ class ReminderActionReceiver : BroadcastReceiver() {
             context: Context,
             reminderId: Long,
             action: String,
-            timer: TimerAlarm.Spec? = null,
+            timer: FirePayload? = null,
         ): PendingIntent {
             val intent = Intent(context, ReminderActionReceiver::class.java)
                 .setAction(action)

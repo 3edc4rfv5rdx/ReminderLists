@@ -22,7 +22,7 @@ class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         // A countdown timer carries its whole payload in the intent and owns no row: present it
         // and stop — nothing to record, retire or re-arm (TZ 4.2 c′).
-        TimerAlarm.specFrom(intent)?.let { spec -> fireTimer(context, spec); return }
+        FirePayload.from(intent)?.takeIf { it.isTimer }?.let { payload -> fireTimer(context, payload); return }
 
         val reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_REMINDER_ID, -1L)
         if (reminderId <= 0) return
@@ -43,16 +43,22 @@ class AlarmReceiver : BroadcastReceiver() {
                     // Full-screen alert (TZ 4.5) when opted in, or always for Period (its
                     // Done/Continue buttons live only on that screen); otherwise a plain
                     // heads-up notification.
-                    if (reminder.fullScreenAlert || RepeatType.of(reminder.repeatType) == RepeatType.PERIOD) {
+                    // Period forces the alert on (its Done/Continue buttons live only there),
+                    // so the payload carries that decision to the sound service too.
+                    val payload = FirePayload.of(reminder).copy(
+                        fullScreenAlert = reminder.fullScreenAlert ||
+                            RepeatType.of(reminder.repeatType) == RepeatType.PERIOD,
+                    )
+                    if (payload.fullScreenAlert) {
                         // Grab the screen immediately (works unlocked too, once the overlay
                         // grant is held) and post the full-screen-intent notification as the
                         // lockscreen fallback / shade presence.
-                        ReminderNotifier.notifyFullScreen(context, reminder)
+                        ReminderNotifier.notifyFullScreen(context, payload)
                         FullScreenAlertActivity.start(context, reminderId)
                     } else {
-                        ReminderNotifier.notifyFired(context, reminder)
+                        ReminderNotifier.notifyFired(context, payload)
                     }
-                    SoundService.start(context, reminder.soundUri, reminder.loopSound)
+                    SoundService.start(context, payload)
                     // A plain Once has nothing left to fire — drop Active so the card shows
                     // it as done (Monthly/Yearly roll over, Daily/Period keep firing).
                     if (reminder.isOneShotOnce()) {
@@ -70,21 +76,20 @@ class AlarmReceiver : BroadcastReceiver() {
     // Timer fire (TZ 4.2 c′): same presentation as a reminder — screen wake, full-screen alert or
     // heads-up notification, looping sound — built from the intent's transient reminder. The only
     // database touch is reading the global silence toggle (TZ 5), and nothing is written.
-    private fun fireTimer(context: Context, spec: TimerAlarm.Spec) {
+    private fun fireTimer(context: Context, payload: FirePayload) {
         Logger.i("AlarmReceiver fired for timer")
         val result = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 if (!ReminderScheduler.remindersEnabled(AppDatabase.get(context))) return@launch
                 wakeScreen(context)
-                val reminder = spec.asReminder()
-                if (spec.fullScreenAlert) {
-                    ReminderNotifier.notifyFullScreen(context, reminder, spec)
-                    FullScreenAlertActivity.startTimer(context, spec)
+                if (payload.fullScreenAlert) {
+                    ReminderNotifier.notifyFullScreen(context, payload)
+                    FullScreenAlertActivity.startTimer(context, payload)
                 } else {
-                    ReminderNotifier.notifyFired(context, reminder, spec)
+                    ReminderNotifier.notifyFired(context, payload)
                 }
-                SoundService.start(context, spec.soundUri, spec.loopSound)
+                SoundService.start(context, payload)
             } finally {
                 result.finish()
             }

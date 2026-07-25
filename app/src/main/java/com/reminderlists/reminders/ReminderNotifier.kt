@@ -1,5 +1,6 @@
 package com.reminderlists.reminders
 
+import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -22,12 +23,20 @@ object ReminderNotifier {
     private const val MISSED_SUMMARY_ID = NotificationIds.MISSED_SUMMARY
 
     // On-time fire without full-screen (TZ 4.5): a plain heads-up notification on the HIGH
-    // channel. The screen is woken separately by AlarmReceiver; SoundService drives the sound.
-    // timer != null marks a countdown fire (TZ 4.2 c′): the same notification, but its action
-    // buttons re-arm the alarm from the carried payload instead of touching a row.
-    fun notifyFired(context: Context, reminder: ReminderEntity, timer: TimerAlarm.Spec? = null) {
+    // channel. The screen is woken separately by AlarmReceiver; SoundService drives the sound
+    // and re-posts this very notification as its foreground one, so no service entry of its
+    // own ever shows up (TZ 4.10).
+    fun notifyFired(context: Context, payload: FirePayload) {
         val nm = NotificationManagerCompat.from(context)
         if (!nm.areNotificationsEnabled()) return
+        nm.notify(payload.notificationId, buildFired(context, payload))
+    }
+
+    // The fired notification itself, so SoundService can hand the same object to
+    // startForeground instead of inventing a second, service-looking entry (TZ 4.10 / 8).
+    fun buildFired(context: Context, payload: FirePayload): Notification {
+        val reminder = payload.asReminder()
+        val timer = payload.takeIf { it.isTimer }
         val minuteInterval = isMinuteInterval(reminder)
         val isInterval = RepeatType.of(reminder.repeatType) == RepeatType.INTERVAL
         val builder = NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
@@ -51,7 +60,7 @@ object ReminderNotifier {
         // Minute-interval reminders fire often — auto-expire a stale one from the shade after
         // 20s so it doesn't linger until the next fire replaces it (TZ 4.10).
         if (minuteInterval) builder.setTimeoutAfter(20_000)
-        nm.notify(notifId(reminder.id), builder.build())
+        return builder.build()
     }
 
     private fun isMinuteInterval(reminder: ReminderEntity): Boolean =
@@ -64,34 +73,37 @@ object ReminderNotifier {
     // so it can't be swiped away — the alert screen is dismissed by acting on it. While the
     // alert itself is visible the activity cancels this entry (a shade duplicate) and re-posts
     // it via notifyAlertPending if it's left without an action.
-    fun notifyFullScreen(context: Context, reminder: ReminderEntity, timer: TimerAlarm.Spec? = null) =
-        notifyAlert(context, reminder, fullScreen = true, timer = timer)
+    fun notifyFullScreen(context: Context, payload: FirePayload) {
+        val nm = NotificationManagerCompat.from(context)
+        if (!nm.areNotificationsEnabled()) return
+        nm.notify(payload.notificationId, buildAlert(context, payload, fullScreen = true))
+    }
 
     // Shade fallback when the alert is left without acting (Home / back / screen off): the same
     // alert-opening entry but without the full-screen intent, so posting it can't relaunch the
     // alert by itself (an FSI re-post on screen-off would light the screen right back up).
-    fun notifyAlertPending(context: Context, reminder: ReminderEntity, timer: TimerAlarm.Spec? = null) =
-        notifyAlert(context, reminder, fullScreen = false, timer = timer)
-
-    private fun notifyAlert(
-        context: Context,
-        reminder: ReminderEntity,
-        fullScreen: Boolean,
-        timer: TimerAlarm.Spec? = null,
-    ) {
+    fun notifyAlertPending(context: Context, payload: FirePayload) {
         val nm = NotificationManagerCompat.from(context)
         if (!nm.areNotificationsEnabled()) return
-        val alert = alertIntent(context, reminder.id, timer)
+        nm.notify(payload.notificationId, buildAlert(context, payload, fullScreen = false))
+    }
+
+    // fullScreen = false is also what SoundService hands to startForeground: the alert entry
+    // without the full-screen intent, so re-posting it as the service notification can never
+    // relaunch the alert (TZ 4.5 / 4.10).
+    fun buildAlert(context: Context, payload: FirePayload, fullScreen: Boolean): Notification {
+        val timer = payload.takeIf { it.isTimer }
+        val alert = alertIntent(context, payload.id, timer)
         val builder = NotificationCompat.Builder(context, NotificationChannels.REMINDERS)
             .setSmallIcon(R.drawable.ic_stat_reminder)
-            .setContentTitle(reminder.title)
+            .setContentTitle(payload.title)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setOngoing(true)
             .setContentIntent(alert)
         if (fullScreen) builder.setFullScreenIntent(alert, true)
-        reminder.content?.let { builder.setContentText(it) }
-        nm.notify(notifId(reminder.id), builder.build())
+        payload.content?.let { builder.setContentText(it) }
+        return builder.build()
     }
 
     // Dismiss the fired reminder's notification once the user acted on the alert (TZ 4.5).
@@ -99,7 +111,7 @@ object ReminderNotifier {
         NotificationManagerCompat.from(context).cancel(notifId(reminderId))
     }
 
-    private fun alertIntent(context: Context, reminderId: Long, timer: TimerAlarm.Spec? = null): PendingIntent {
+    private fun alertIntent(context: Context, reminderId: Long, timer: FirePayload? = null): PendingIntent {
         val intent = Intent(context, FullScreenAlertActivity::class.java)
             .putExtra(ReminderScheduler.EXTRA_REMINDER_ID, reminderId)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

@@ -285,7 +285,7 @@ class ReminderEditorViewModel(
             val fireAt = timerFireAt() ?: return
             TimerAlarm.start(
                 appContext,
-                TimerAlarm.Spec(
+                TimerAlarm.payload(
                     title = title.trim(),
                     content = content.trim().takeIf { it.isNotEmpty() },
                     fullScreenAlert = fullScreenAlert,

@@ -80,7 +80,7 @@ class FullScreenAlertActivity : ComponentActivity() {
     private var acted = false
     // Set when this fire is a countdown timer (TZ 4.2 c′): the alert then has no row behind it —
     // it renders from the intent payload and Postpone re-arms the timer instead of a reminder.
-    private var timer: TimerAlarm.Spec? = null
+    private var timer: FirePayload? = null
     private var state by mutableStateOf<AlertUiState?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -131,30 +131,44 @@ class FullScreenAlertActivity : ComponentActivity() {
     // Build the alert state for whichever fire this intent carries: a timer renders straight
     // from its payload, a reminder is loaded by id.
     private fun applyIntent(intent: Intent) {
-        val spec = TimerAlarm.specFrom(intent)
+        val spec = FirePayload.from(intent)?.takeIf { it.isTimer }
         timer = spec
-        state = null
+        // Only a real new fire (launched by AlarmReceiver) re-locks the circle. Re-entering the
+        // same alert — tapping its notification after leaving it — keeps the state the user
+        // left it in, instead of locking an alert they had already unlocked.
+        val fresh = intent.getBooleanExtra(EXTRA_FRESH_FIRE, false)
+        // Kept, not cleared: dropping it to null would take the alert out of composition and
+        // reset the unlocked circle even when the very same fire is re-opened.
+        val previous = state
+        // The shade entry is not cancelled here: while the sound plays it is the sound
+        // service's foreground notification and would come straight back (TZ 4.10). It is
+        // hidden behind the alert anyway, and goes away when the circle is unlocked — which is
+        // also when the sound stops — or when an action closes the alert.
         if (spec != null) {
             val r = spec.asReminder()
             reminder = r
-            state = alertStateOf(r)
-            ReminderNotifier.cancel(this, r.id)
+            state = alertStateOf(r, fireKey(r.id, fresh, previous))
         } else {
             loadReminder(
                 intent.getLongExtra(ReminderScheduler.EXTRA_REMINDER_ID, -1L),
                 onLoaded = { r ->
                     reminder = r
-                    state = alertStateOf(r)
-                    // The alert itself is on screen — its shade notification is a duplicate.
-                    ReminderNotifier.cancel(this, r.id)
+                    state = alertStateOf(r, fireKey(r.id, fresh, previous))
                 },
                 onMissing = ::finish,
             )
         }
     }
 
+    // The value the unlocked/locked state is keyed on: a new one means "lock again". Carried
+    // over from the previous state when the same alert is merely re-opened.
+    private fun fireKey(id: Long, fresh: Boolean, previous: AlertUiState?): Long =
+        if (!fresh && previous != null && previous.id == id) previous.firedAt
+        else System.currentTimeMillis()
+
     // Coming back to the foreground (e.g. the screen was turned off and on again while the
-    // alert stayed up): drop the shade entry re-posted by onStop below.
+    // alert stayed up): drop the shade entry re-posted by onStop below. Only meaningful once
+    // the sound service has released the notification; while it holds it, it stays.
     override fun onStart() {
         super.onStart()
         if (!acted) reminder?.let { ReminderNotifier.cancel(this, it.id) }
@@ -166,7 +180,7 @@ class FullScreenAlertActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         if (!acted && !isChangingConfigurations) {
-            reminder?.let { ReminderNotifier.notifyAlertPending(this, it, timer) }
+            reminder?.let { ReminderNotifier.notifyAlertPending(this, timer ?: FirePayload.of(it)) }
         }
     }
 
@@ -198,6 +212,9 @@ class FullScreenAlertActivity : ComponentActivity() {
     }
 
     companion object {
+        // Set only on launches coming from a fire, never on the notification's own intent.
+        private const val EXTRA_FRESH_FIRE = "fresh_fire"
+
         // Launched straight from AlarmReceiver so the alert grabs the whole screen at once, even
         // when the device is unlocked (the notification's full-screen intent alone only takes
         // over on the lockscreen). This background activity start is only allowed while the
@@ -214,7 +231,7 @@ class FullScreenAlertActivity : ComponentActivity() {
         }
 
         // Same launch for a countdown fire, with the payload instead of a row id (TZ 4.2 c′).
-        fun startTimer(context: Context, spec: TimerAlarm.Spec) {
+        fun startTimer(context: Context, spec: FirePayload) {
             launch(
                 context,
                 spec.putInto(Intent(context, FullScreenAlertActivity::class.java))
@@ -230,7 +247,11 @@ class FullScreenAlertActivity : ComponentActivity() {
             val overlay = Settings.canDrawOverlays(context)
             Logger.i("Full-screen alert start for $what, overlay grant=$overlay")
             try {
-                context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                // Marks this as an actual fire, unlike the notification's own intent: only a
+                // fire re-locks an alert the user has already unlocked (TZ 4.5).
+                context.startActivity(
+                    intent.putExtra(EXTRA_FRESH_FIRE, true).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                )
             } catch (e: Exception) {
                 Logger.e("Full-screen alert start refused for $what", e)
             }
@@ -251,7 +272,7 @@ private data class AlertUiState(
 
 private enum class AlertVariant { ONCE, DAILY, MONTHLY_YEARLY, PERIOD, INTERVAL }
 
-private fun alertStateOf(r: ReminderEntity): AlertUiState =
+private fun alertStateOf(r: ReminderEntity, firedAt: Long): AlertUiState =
     AlertUiState(
         id = r.id,
         title = r.title,
@@ -262,7 +283,7 @@ private fun alertStateOf(r: ReminderEntity): AlertUiState =
             RepeatType.INTERVAL -> AlertVariant.INTERVAL
             RepeatType.ONE_TIME -> if (r.monthlyRepeat || r.yearlyRepeat) AlertVariant.MONTHLY_YEARLY else AlertVariant.ONCE
         },
-        firedAt = System.currentTimeMillis(),
+        firedAt = firedAt,
     )
 
 @Composable
@@ -304,6 +325,9 @@ private fun FullScreenAlert(
                 onUnlock = {
                     unlocked = true
                     SoundService.stop(context)
+                    // The sound service just released the fire's notification; clear it so the
+                    // shade isn't left with an entry for an alert the user is already acting on.
+                    ReminderNotifier.cancel(context, state.id)
                 },
             )
         }
