@@ -33,6 +33,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,6 +46,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.reminderlists.R
 import com.reminderlists.data.photo.PhotoManager
+import com.reminderlists.data.reminders.IntervalUnit
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.data.reminders.RepeatType
 import com.reminderlists.ui.components.LocalSnackController
@@ -55,6 +57,8 @@ import com.reminderlists.ui.components.IntervalField
 import com.reminderlists.ui.components.PhotoStrip
 import com.reminderlists.ui.components.PhotoViewerDialog
 import com.reminderlists.ui.components.PriorityEditor
+import com.reminderlists.ui.components.QuickPickRow
+import com.reminderlists.ui.components.SnackEvent
 import com.reminderlists.ui.components.SoundField
 import com.reminderlists.ui.components.TagsField
 import com.reminderlists.ui.components.TimeField
@@ -63,6 +67,7 @@ import com.reminderlists.ui.components.TimePresetRow
 import com.reminderlists.ui.components.WeekdayPicker
 import com.reminderlists.util.Dates
 import com.reminderlists.util.Limits
+import kotlinx.coroutines.delay
 
 // Reminder add/edit form (TZ 4.2): common top fields, then type-dependent firing fields.
 // Any record here is a firing reminder; no-fire records are the Notes module (TZ 4A).
@@ -84,6 +89,11 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
     var dailyPickerOpen by remember { mutableStateOf(false) }
     var editingTime by remember { mutableStateOf<String?>(null) }
 
+    // Prefilled Title for a timer and its start confirmation — resolved here, since neither the
+    // ViewModel nor the click handler can read resources (TZ 4.2 c′).
+    val timerTitle = stringResource(R.string.repeat_timer)
+    val timerStartedLabel = stringResource(R.string.timer_started)
+
     val presetPairs = listOf(
         stringResource(R.string.preset_morning) to presets.morning,
         stringResource(R.string.preset_day) to presets.day,
@@ -97,7 +107,19 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
                 onBack = { navController.popBackStack() },
                 actions = {
                     // Validation runs inside save (TZ 4.2): errors surface via the snackbar.
-                    IconButton(onClick = { vm.save { navController.popBackStack() } }) {
+                    // A timer leaves no card behind, so its confirmation is the snack itself.
+                    IconButton(
+                        onClick = {
+                            vm.save { timerFireAt ->
+                                timerFireAt?.let {
+                                    snackController?.show(
+                                        SnackEvent.success("$timerStartedLabel: ${Dates.format(it.toLocalTime())}"),
+                                    )
+                                }
+                                navController.popBackStack()
+                            }
+                        },
+                    ) {
                         Icon(Icons.Filled.Save, contentDescription = stringResource(R.string.action_save))
                     }
                 },
@@ -127,42 +149,51 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
                     maxLength = Limits.CONTENT,
                     singleLine = false,
                 )
-                // 3: Tags with the «#» dictionary picker (TZ 4.2 п. 3).
-                TagsField(
-                    value = vm.tags,
-                    onValueChange = { vm.tags = it },
-                    allTags = allTags,
-                )
-                // 4: Photos — shared photo module (TZ 4.2 п. 4 / TZ 8).
-                val photoFiles = vm.photos.map { PhotoManager.fileFor(context, it.fileName) }
-                PhotoStrip(
-                    files = photoFiles,
-                    canAdd = vm.photos.size < Limits.MAX_PHOTOS,
-                    onPicked = vm::addPhoto,
-                    onOpen = { index -> viewerIndex = index },
-                )
-                // 6: Priority «(–) ★ ★ ★ (+)» (TZ 4.2 п. 6). Date lives inside the
-                // One time block below the radio group (TZ 4.2 п. 5).
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.field_priority), Modifier.weight(1f))
-                    PriorityEditor(priority = vm.priority, onPriorityChange = { vm.priority = it })
-                }
+                // Tags, photos, priority and Active are stored fields — a timer stores nothing,
+                // so they're hidden rather than silently dropped on Save (TZ 4.2 c′).
+                if (!vm.timerMode) {
+                    // 3: Tags with the «#» dictionary picker (TZ 4.2 п. 3).
+                    TagsField(
+                        value = vm.tags,
+                        onValueChange = { vm.tags = it },
+                        allTags = allTags,
+                    )
+                    // 4: Photos — shared photo module (TZ 4.2 п. 4 / TZ 8).
+                    val photoFiles = vm.photos.map { PhotoManager.fileFor(context, it.fileName) }
+                    PhotoStrip(
+                        files = photoFiles,
+                        canAdd = vm.photos.size < Limits.MAX_PHOTOS,
+                        onPicked = vm::addPhoto,
+                        onOpen = { index -> viewerIndex = index },
+                    )
+                    // 6: Priority «(–) ★ ★ ★ (+)» (TZ 4.2 п. 6). Date lives inside the
+                    // One time block below the radio group (TZ 4.2 п. 5).
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.field_priority), Modifier.weight(1f))
+                        PriorityEditor(priority = vm.priority, onPriorityChange = { vm.priority = it })
+                    }
 
-                // 7a: Active (Full screen alert moved down next to Loop sound, TZ 4.2).
-                CheckboxRow(
-                    label = stringResource(R.string.field_active),
-                    checked = vm.active,
-                    onCheckedChange = { vm.active = it },
-                )
+                    // 7a: Active (Full screen alert moved down next to Loop sound, TZ 4.2).
+                    CheckboxRow(
+                        label = stringResource(R.string.field_active),
+                        checked = vm.active,
+                        onCheckedChange = { vm.active = it },
+                    )
+                }
 
                 // 7c: repeat type radio group — one option per line so translated labels
                 // of any length fit (TZ 4.2 c).
                 Column(Modifier.fillMaxWidth()) {
-                    RepeatTypeOption(R.string.repeat_one_time, vm.repeatType == RepeatType.ONE_TIME) {
+                    RepeatTypeOption(R.string.repeat_one_time, vm.repeatType == RepeatType.ONE_TIME && !vm.timerMode) {
                         vm.setType(RepeatType.ONE_TIME)
+                    }
+                    // Timer is an input mode, not a stored type (TZ 4.2 c′): it fires once at
+                    // «now + N» and leaves no record behind.
+                    RepeatTypeOption(R.string.repeat_timer, vm.timerMode) {
+                        vm.setTimerMode(timerTitle)
                     }
                     RepeatTypeOption(R.string.repeat_daily, vm.repeatType == RepeatType.DAILY) {
                         vm.setType(RepeatType.DAILY)
@@ -175,7 +206,9 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
                     }
                 }
 
-                when (vm.repeatType) {
+                if (vm.timerMode) {
+                    TimerBlock(vm)
+                } else when (vm.repeatType) {
                     // 5, d–h: Date + Time + presets, Monthly/Yearly (mutually exclusive),
                     // Auto-remove.
                     RepeatType.ONE_TIME -> {
@@ -341,6 +374,63 @@ fun ReminderEditorScreen(navController: NavController, reminderId: Long, folder:
         )
     }
 }
+
+// Timer fields (TZ 4.2 c′): the shared interval stepper labelled «After» with a minutes/hours
+// unit list, a row of duration presets, and a live preview of the moment Save would fire at.
+@Composable
+private fun TimerBlock(vm: ReminderEditorViewModel) {
+    IntervalField(
+        count = vm.timerCount,
+        onCountChange = { vm.timerCount = it },
+        unit = vm.timerUnit,
+        onUnitChange = { vm.timerUnit = it },
+        labelRes = R.string.field_timer_after,
+        units = TIMER_UNITS,
+    )
+    QuickPickRow(
+        labels = TIMER_PRESETS.map { (count, unit) ->
+            stringResource(
+                if (unit == IntervalUnit.HOURS) R.string.timer_preset_hours else R.string.timer_preset_minutes,
+                count,
+            )
+        },
+        onPick = { index ->
+            val (count, unit) = TIMER_PRESETS[index]
+            vm.timerCount = count.toString()
+            vm.timerUnit = unit
+        },
+    )
+    // Re-read the clock every second so the preview stays honest while the form is open —
+    // the countdown starts at Save, not at entry.
+    var tick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+            tick++
+        }
+    }
+    val fireAt = remember(vm.timerCount, vm.timerUnit, tick) { vm.timerFireAt() }
+    if (fireAt != null) {
+        val moment = "${Dates.format(fireAt.toLocalDate())} ${Dates.format(fireAt.toLocalTime())}"
+        Text(
+            "${stringResource(R.string.timer_fires_at)}: $moment",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+}
+
+// Only short units make sense for a countdown — days and up are the Once/Interval types.
+private val TIMER_UNITS = listOf(IntervalUnit.MINUTES, IntervalUnit.HOURS)
+
+// Quick durations, in the order shown (TZ 4.2 c′). Picking one replaces the entered value.
+// Labels use tight suffixes («+10м», «+1ч») so all five buttons fit on one line.
+private val TIMER_PRESETS = listOf(
+    10 to IntervalUnit.MINUTES,
+    20 to IntervalUnit.MINUTES,
+    30 to IntervalUnit.MINUTES,
+    1 to IntervalUnit.HOURS,
+    2 to IntervalUnit.HOURS,
+)
 
 // Compact 36dp touch targets: the form stacks many checkbox/radio rows (user rule).
 @Composable

@@ -20,6 +20,10 @@ import kotlinx.coroutines.launch
 // forward via the recompute; a fired auto-remove Once is swept the next day (TZ 4.2 h, at app start).
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        // A countdown timer carries its whole payload in the intent and owns no row: present it
+        // and stop — nothing to record, retire or re-arm (TZ 4.2 c′).
+        TimerAlarm.specFrom(intent)?.let { spec -> fireTimer(context, spec); return }
+
         val reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_REMINDER_ID, -1L)
         if (reminderId <= 0) return
         Logger.i("AlarmReceiver fired for reminder $reminderId")
@@ -57,6 +61,30 @@ class AlarmReceiver : BroadcastReceiver() {
                     }
                 }
                 ReminderScheduler.reschedule(context, db, reminderId)
+            } finally {
+                result.finish()
+            }
+        }
+    }
+
+    // Timer fire (TZ 4.2 c′): same presentation as a reminder — screen wake, full-screen alert or
+    // heads-up notification, looping sound — built from the intent's transient reminder. The only
+    // database touch is reading the global silence toggle (TZ 5), and nothing is written.
+    private fun fireTimer(context: Context, spec: TimerAlarm.Spec) {
+        Logger.i("AlarmReceiver fired for timer")
+        val result = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                if (!ReminderScheduler.remindersEnabled(AppDatabase.get(context))) return@launch
+                wakeScreen(context)
+                val reminder = spec.asReminder()
+                if (spec.fullScreenAlert) {
+                    ReminderNotifier.notifyFullScreen(context, reminder, spec)
+                    FullScreenAlertActivity.startTimer(context, spec)
+                } else {
+                    ReminderNotifier.notifyFired(context, reminder, spec)
+                }
+                SoundService.start(context, spec.soundUri, spec.loopSound)
             } finally {
                 result.finish()
             }

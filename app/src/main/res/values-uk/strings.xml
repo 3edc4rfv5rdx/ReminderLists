@@ -184,6 +184,12 @@
     <string name="repeat_daily">Щодня</string>
     <string name="repeat_period">Період</string>
     <string name="repeat_interval">Інтервал</string>
+    <string name="repeat_timer">Таймер</string>
+    <string name="field_timer_after">Через</string>
+    <string name="timer_fires_at">Спрацює</string>
+    <string name="timer_started">Таймер запущено до</string>
+    <string name="timer_preset_minutes">+%dхв</string>
+    <string name="timer_preset_hours">+%dгод</string>
     <string name="field_interval_every">Кожні</string>
     <string name="interval_decrease">Зменшити</string>
     <string name="interval_increase">Збільшити</string>
@@ -299,6 +305,7 @@
     <string name="error_period_mixed">Для «З» і «До» використовуйте або числа днів, або дати</string>
     <string name="error_once_past">Дата або час у минулому</string>
     <string name="error_interval_fields">Вкажіть дату початку, час та інтервал</string>
+    <string name="error_timer_fields">Вкажіть тривалість таймера</string>
 
     <!-- Notification channel names stay in English (user's choice) -->
     <string name="notif_channel_reminders">Reminders</string>

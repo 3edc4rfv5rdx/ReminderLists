@@ -20,6 +20,7 @@ import com.reminderlists.data.reminders.IntervalUnit
 import com.reminderlists.data.reminders.ReminderFolder
 import com.reminderlists.data.reminders.RemindersRepository
 import com.reminderlists.data.reminders.RepeatType
+import com.reminderlists.reminders.TimerAlarm
 import com.reminderlists.ui.appViewModelFactory
 import com.reminderlists.ui.components.SnackEvent
 import com.reminderlists.util.Dates
@@ -29,6 +30,8 @@ import com.reminderlists.util.TextFormat
 import com.reminderlists.util.Weekdays
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -78,6 +81,14 @@ class ReminderEditorViewModel(
         },
     )
         private set
+
+    // Countdown timer (TZ 4.2 c′): a form-only mode, never a stored repeat type. Save arms a
+    // bare alarm at «now + N» through TimerAlarm — nothing is written to the database, so an
+    // existing reminder can never open in this mode.
+    var timerMode by mutableStateOf(false)
+        private set
+    var timerCount by mutableStateOf("5")
+    var timerUnit by mutableStateOf(IntervalUnit.MINUTES)
 
     // Last full-screen choice made outside Period, restored when leaving Period (which forces
     // it on). New PERIODS default: user hasn't chosen, so off.
@@ -166,10 +177,21 @@ class ReminderEditorViewModel(
     }
 
     fun setType(type: RepeatType) {
+        timerMode = false
         repeatType = type
         // Period only fires through the full-screen alert — forced on (TZ 4.2 b); leaving
         // Period restores the user's own choice instead of leaving it stuck on.
         fullScreenAlert = if (type == RepeatType.PERIOD) true else userFullScreen
+    }
+
+    // Timer sits on the One time row of the radio group: same fire-once semantics, only the
+    // moment is entered as a duration. defaultTitle prefills an empty Title so a quick timer
+    // needs no typing at all (TZ 4.2 c′).
+    fun setTimerMode(defaultTitle: String) {
+        timerMode = true
+        repeatType = RepeatType.ONE_TIME
+        fullScreenAlert = userFullScreen
+        if (title.isBlank()) title = defaultTitle
     }
 
     fun setFullScreen(value: Boolean) {
@@ -229,7 +251,19 @@ class ReminderEditorViewModel(
         }
     }
 
-    fun save(onSaved: () -> Unit) {
+    // The moment a timer started now would fire at, or null when N is missing/invalid. Seconds
+    // are rounded up to the next whole minute so the countdown never fires early (TZ 4.2 c′).
+    fun timerFireAt(): LocalDateTime? {
+        val count = timerCount.trim().toIntOrNull()?.takeIf { it >= 1 } ?: return null
+        val minutes = if (timerUnit == IntervalUnit.HOURS) count * 60L else count.toLong()
+        val now = LocalDateTime.now()
+        val base = if (now.second > 0 || now.nano > 0) now.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1) else now
+        return base.plusMinutes(minutes)
+    }
+
+    // onSaved(timerFireAt): non-null when Save armed a countdown (at that moment) instead of
+    // storing a reminder — the caller confirms it with a snack, since no card will appear.
+    fun save(onSaved: (LocalDateTime?) -> Unit) {
         // Save before the edit target finished loading would insert a duplicate — ignore the tap.
         if (isEdit && existing == null) return
         val error = validate()
@@ -242,6 +276,25 @@ class ReminderEditorViewModel(
             } else {
                 SnackEvent.error(message)
             }
+            return
+        }
+
+        // Timer: arm the alarm and leave — no row, no photos, no tags, nothing to clean up
+        // later (TZ 4.2 c′). Whatever the countdown needs travels inside the PendingIntent.
+        if (timerMode) {
+            val fireAt = timerFireAt() ?: return
+            TimerAlarm.start(
+                appContext,
+                TimerAlarm.Spec(
+                    title = title.trim(),
+                    content = content.trim().takeIf { it.isNotEmpty() },
+                    fullScreenAlert = fullScreenAlert,
+                    loopSound = loopSound,
+                    soundUri = soundUri,
+                ),
+                fireAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            )
+            onSaved(fireAt)
             return
         }
 
@@ -286,13 +339,16 @@ class ReminderEditorViewModel(
             )
             photos.filter { it.entity == null }.forEach { repo.addPhoto(id, it.fileName) }
             saved = true
-            onSaved()
+            onSaved(null)
         }
     }
 
     // Save validation (TZ 4.2): returns the error string res, or null when the form is valid.
     private fun validate(): Int? = when {
         title.isBlank() -> R.string.error_title_required
+
+        // Timer replaces the One time date/time checks — only the duration matters (TZ 4.2 c′).
+        timerMode -> if (timerFireAt() == null) R.string.error_timer_fields else null
 
         repeatType == RepeatType.ONE_TIME &&
             (Dates.parseDate(date) == null || Dates.parseTime(time) == null) ->

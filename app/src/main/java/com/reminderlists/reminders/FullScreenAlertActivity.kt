@@ -76,6 +76,9 @@ class FullScreenAlertActivity : ComponentActivity() {
 
     private var reminder: ReminderEntity? = null
     private var acted = false
+    // Set when this fire is a countdown timer (TZ 4.2 c′): the alert then has no row behind it —
+    // it renders from the intent payload and Postpone re-arms the timer instead of a reminder.
+    private var timer: TimerAlarm.Spec? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,24 +89,42 @@ class FullScreenAlertActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         var state by mutableStateOf<AlertUiState?>(null)
-        loadReminder(
-            reminderId(),
-            onLoaded = { r ->
-                reminder = r
-                state = alertStateOf(r)
-                // The alert itself is on screen — its shade notification is a duplicate.
-                ReminderNotifier.cancel(this, r.id)
-            },
-            onMissing = ::finish,
-        )
+        timer = TimerAlarm.specFrom(intent)
+        val spec = timer
+        if (spec != null) {
+            val r = spec.asReminder()
+            reminder = r
+            state = alertStateOf(r)
+            ReminderNotifier.cancel(this, r.id)
+        } else {
+            loadReminder(
+                reminderId(),
+                onLoaded = { r ->
+                    reminder = r
+                    state = alertStateOf(r)
+                    // The alert itself is on screen — its shade notification is a duplicate.
+                    ReminderNotifier.cancel(this, r.id)
+                },
+                onMissing = ::finish,
+            )
+        }
 
         setContent {
             ReminderListsTheme {
                 state?.let { s ->
                     FullScreenAlert(
                         state = s,
-                        onPostpone = { millis -> act { ReminderScheduler.postpone(this, db(), s.id, System.currentTimeMillis() + millis) } },
-                        onOk = { act { ReminderScheduler.confirmOk(db(), s.id) } },
+                        onPostpone = { millis ->
+                            act {
+                                if (spec != null) {
+                                    TimerAlarm.start(this, spec, System.currentTimeMillis() + millis)
+                                } else {
+                                    ReminderScheduler.postpone(this, db(), s.id, System.currentTimeMillis() + millis)
+                                }
+                            }
+                        },
+                        // A timer leaves no trace to acknowledge — OK just tears the alert down.
+                        onOk = { act { if (spec == null) ReminderScheduler.confirmOk(db(), s.id) } },
                         onDone = { act { ReminderScheduler.periodDone(this, db(), s.id) } },
                         onContinue = { act { ReminderScheduler.periodContinue(db(), s.id) } },
                     )
@@ -125,7 +146,7 @@ class FullScreenAlertActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         if (!acted && !isChangingConfigurations) {
-            reminder?.let { ReminderNotifier.notifyAlertPending(this, it) }
+            reminder?.let { ReminderNotifier.notifyAlertPending(this, it, timer) }
         }
     }
 
@@ -166,6 +187,14 @@ class FullScreenAlertActivity : ComponentActivity() {
         fun start(context: Context, reminderId: Long) {
             val intent = Intent(context, FullScreenAlertActivity::class.java)
                 .putExtra(ReminderScheduler.EXTRA_REMINDER_ID, reminderId)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        }
+
+        // Same launch for a countdown fire, with the payload instead of a row id (TZ 4.2 c′).
+        fun startTimer(context: Context, spec: TimerAlarm.Spec) {
+            val intent = spec.putInto(Intent(context, FullScreenAlertActivity::class.java))
+                .putExtra(ReminderScheduler.EXTRA_REMINDER_ID, TimerAlarm.TIMER_ID)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
         }

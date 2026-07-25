@@ -194,7 +194,8 @@ fun TimePickerDialog(
 
 // Interval repeat field «(–) | NNNN | (+)  [unit ▾]» (TZ 4.2 f‴): a framed segmented stepper —
 // minus / typed number / plus — with a floating «Every» label cut into its top border, plus a
-// separate unit dropdown. The single reusable interval control for the app (TZ 8).
+// separate unit dropdown. The single reusable interval control for the app (TZ 8): Timer reuses
+// it with its own label and a shorter unit list (TZ 4.2 c′).
 @Composable
 fun IntervalField(
     count: String,
@@ -202,6 +203,8 @@ fun IntervalField(
     unit: IntervalUnit,
     onUnitChange: (IntervalUnit) -> Unit,
     modifier: Modifier = Modifier,
+    labelRes: Int = R.string.field_interval_every,
+    units: List<IntervalUnit> = IntervalUnit.entries,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     // The number is typed directly (e.g. 58) or nudged with the buttons; min 1 (TZ 4.2 f‴).
@@ -244,7 +247,7 @@ fun IntervalField(
                 }
             }
             Text(
-                stringResource(R.string.field_interval_every),
+                stringResource(labelRes),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
@@ -263,7 +266,7 @@ fun IntervalField(
                 Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
             }
             AppDropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                IntervalUnit.entries.forEach { entry ->
+                units.forEach { entry ->
                     DropdownMenuItem(
                         text = { Text(stringResource(intervalUnitLabel(entry))) },
                         onClick = { onUnitChange(entry); menuOpen = false },
@@ -317,6 +320,36 @@ private fun intervalEveryPlural(unit: IntervalUnit): Int = when (unit) {
 fun intervalSummary(count: Int, unit: IntervalUnit): String =
     if (count <= 1) stringResource(intervalEveryOne(unit))
     else pluralStringResource(intervalEveryPlural(unit), count, count)
+
+// Row of equal-width quick-pick buttons, one label each — the Timer duration presets
+// «+5 / +15 / …» (TZ 4.2 c′). Picking one replaces the value, it does not add to it.
+@Composable
+fun QuickPickRow(
+    labels: List<String>,
+    onPick: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = modifier.fillMaxWidth()) {
+        labels.forEachIndexed { index, label ->
+            OutlinedButton(
+                onClick = { onPick(index) },
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                modifier = Modifier.weight(1f),
+            ) {
+                // One centred line: without this the label wraps into two lines inside the
+                // narrow equal-width button.
+                Text(
+                    label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    softWrap = false,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
 
 // Quick presets Morning / Day / Evening (TZ 4.2 п. e): the preset time is shown inside
 // the button as a second line; values come from Settings (TZ 5 → Time presets).

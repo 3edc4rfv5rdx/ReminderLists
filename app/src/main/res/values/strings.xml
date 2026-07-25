@@ -191,6 +191,13 @@
     <string name="repeat_daily">Daily</string>
     <string name="repeat_period">Period</string>
     <string name="repeat_interval">Interval</string>
+    <!-- Countdown timer: an input mode of One time, nothing is stored (TZ 4.2 c′). -->
+    <string name="repeat_timer">Timer</string>
+    <string name="field_timer_after">After</string>
+    <string name="timer_fires_at">Fires at</string>
+    <string name="timer_started">Timer started until</string>
+    <string name="timer_preset_minutes">+%dm</string>
+    <string name="timer_preset_hours">+%dh</string>
     <string name="field_interval_every">Every</string>
     <string name="interval_decrease">Decrease</string>
     <string name="interval_increase">Increase</string>
@@ -291,6 +298,7 @@
     <string name="error_period_mixed">Use day numbers or dates for both From and To</string>
     <string name="error_once_past">Date or time is in the past</string>
     <string name="error_interval_fields">Set start date, time and interval</string>
+    <string name="error_timer_fields">Set the timer duration</string>
 
     <!-- Notification channel names, shown in system settings (TZ 4.10). Kept in English in
          all locales by the user's choice. -->

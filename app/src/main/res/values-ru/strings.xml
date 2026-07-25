@@ -184,6 +184,12 @@
     <string name="repeat_daily">Ежедневно</string>
     <string name="repeat_period">Период</string>
     <string name="repeat_interval">Интервал</string>
+    <string name="repeat_timer">Таймер</string>
+    <string name="field_timer_after">Через</string>
+    <string name="timer_fires_at">Сработает</string>
+    <string name="timer_started">Таймер запущен до</string>
+    <string name="timer_preset_minutes">+%dм</string>
+    <string name="timer_preset_hours">+%dч</string>
     <string name="field_interval_every">Каждые</string>
     <string name="interval_decrease">Уменьшить</string>
     <string name="interval_increase">Увеличить</string>
@@ -299,6 +305,7 @@
     <string name="error_period_mixed">Для «С» и «По» используйте либо числа дней, либо даты</string>
     <string name="error_once_past">Дата или время в прошлом</string>
     <string name="error_interval_fields">Укажите дату начала, время и интервал</string>
+    <string name="error_timer_fields">Укажите длительность таймера</string>
 
     <!-- Notification channel names stay in English (user's choice) -->
     <string name="notif_channel_reminders">Reminders</string>

@@ -16,6 +16,21 @@ import kotlinx.coroutines.launch
 class ReminderActionReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        // Countdown timer (TZ 4.2 c′): no row behind it, so +10 min re-arms the alarm straight
+        // from the carried payload and Stop just silences the sound.
+        TimerAlarm.specFrom(intent)?.let { spec ->
+            when (intent.action) {
+                ACTION_STOP -> SoundService.stop(context)
+                ACTION_POSTPONE -> {
+                    Logger.i("Notification +10 min for timer")
+                    TimerAlarm.start(context, spec, System.currentTimeMillis() + POSTPONE_MS)
+                    SoundService.stop(context)
+                    ReminderNotifier.cancel(context, TimerAlarm.TIMER_ID)
+                }
+            }
+            return
+        }
+
         val reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_REMINDER_ID, -1L)
         if (reminderId <= 0) return
         when (intent.action) {
@@ -63,21 +78,27 @@ class ReminderActionReceiver : BroadcastReceiver() {
         private const val ACTION_DISMISS = "com.reminderlists.action.STOP_REPEATING"
         private const val POSTPONE_MS = 10 * 60_000L
 
-        fun postponeIntent(context: Context, reminderId: Long): PendingIntent =
-            pendingIntent(context, reminderId, ACTION_POSTPONE)
+        fun postponeIntent(context: Context, reminderId: Long, timer: TimerAlarm.Spec? = null): PendingIntent =
+            pendingIntent(context, reminderId, ACTION_POSTPONE, timer)
 
-        fun stopIntent(context: Context, reminderId: Long): PendingIntent =
-            pendingIntent(context, reminderId, ACTION_STOP)
+        fun stopIntent(context: Context, reminderId: Long, timer: TimerAlarm.Spec? = null): PendingIntent =
+            pendingIntent(context, reminderId, ACTION_STOP, timer)
 
         fun dismissIntent(context: Context, reminderId: Long): PendingIntent =
             pendingIntent(context, reminderId, ACTION_DISMISS)
 
         // Request code keyed by id; the distinct action keeps postpone and stop separate for the
         // same reminder.
-        private fun pendingIntent(context: Context, reminderId: Long, action: String): PendingIntent {
+        private fun pendingIntent(
+            context: Context,
+            reminderId: Long,
+            action: String,
+            timer: TimerAlarm.Spec? = null,
+        ): PendingIntent {
             val intent = Intent(context, ReminderActionReceiver::class.java)
                 .setAction(action)
                 .putExtra(ReminderScheduler.EXTRA_REMINDER_ID, reminderId)
+            timer?.putInto(intent)
             return PendingIntent.getBroadcast(
                 context,
                 reminderId.toInt(),
