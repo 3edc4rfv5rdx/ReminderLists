@@ -47,18 +47,22 @@ class SoundService : Service() {
             return START_NOT_STICKY
         }
         Logger.i("SoundService start")
-        // The fire's own notification is the service's foreground notification (TZ 4.10): one
-        // shade entry for the whole fire, and no "sound is playing" service entry surfacing on
-        // the 10 s deferral boundary. Without a payload (nothing to show) fall back to the
-        // deferred housekeeping one, which startForeground still requires.
+        // A plain fire's own notification is the service's foreground notification (TZ 4.10):
+        // one shade entry for the whole fire, and no "sound is playing" service entry surfacing
+        // on the 10 s deferral boundary. A full-screen fire keeps the deferred housekeeping one
+        // instead — its alert is already on screen, and re-posting the alert entry here would
+        // pop a notification over it. Same fallback when there is no payload at all.
         val payload = intent?.let { FirePayload.from(it) }
+        // Only a plain fire hands its notification over; the sound settings come from the
+        // payload either way.
+        val shown = payload?.takeIf { !it.fullScreenAlert }
         val previous = held
-        held = payload
-        fireId = payload?.notificationId ?: SERVICE_NOTIF_ID
-        ownsFireNotification = payload != null
+        held = shown
+        fireId = shown?.notificationId ?: SERVICE_NOTIF_ID
+        ownsFireNotification = shown != null
         startForeground(
             fireId,
-            payload?.let { notificationFor(it) } ?: buildNotification(),
+            shown?.let { notificationFor(it) } ?: buildNotification(),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK,
         )
         // A second reminder can fire while this sound still plays (same-minute stagger, TZ 4.10).
@@ -80,15 +84,8 @@ class SoundService : Service() {
         stopSelf()
     }
 
-    // Full-screen fires keep the alert-style entry, plain ones the fired entry with its action
-    // buttons. The alert variant is built without the full-screen intent: it was already posted
-    // by AlarmReceiver, and re-posting one here could throw the alert back onto the screen.
-    private fun notificationFor(payload: FirePayload) =
-        if (payload.fullScreenAlert) {
-            ReminderNotifier.buildAlert(this, payload, fullScreen = false)
-        } else {
-            ReminderNotifier.buildFired(this, payload)
-        }
+    // The fire's own heads-up notification, actions and all (TZ 4.5).
+    private fun notificationFor(payload: FirePayload) = ReminderNotifier.buildFired(this, payload)
 
     private suspend fun begin(soundUri: String?, loop: Boolean) {
         // A second reminder can fire while the previous sound still plays (same-minute stagger,

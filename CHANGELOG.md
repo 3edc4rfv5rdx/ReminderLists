@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- A full-screen alert no longer gets a notification popping up over it: the sound service keeps its own deferred entry for those fires instead of re-posting the alert's one.
 - The sound service no longer shows a "Reminder sound playing" entry of its own: it holds up the fire's own notification instead, so a fire is one shade entry that stays until you act on it.
 - Re-opening a full-screen alert from its notification keeps it unlocked; only a new fire locks the circle again.
 - Fixed: a timer's notification was overwritten by the sound service's own entry (both used id -2), so it never popped up and vanished with the sound; non-row notification ids now live in one place.
