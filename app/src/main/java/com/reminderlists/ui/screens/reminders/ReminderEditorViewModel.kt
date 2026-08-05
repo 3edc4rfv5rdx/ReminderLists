@@ -321,6 +321,9 @@ class ReminderEditorViewModel(
             // (one-shot range), TZ 4.2 e″/f″.
             periodFrom = periodFrom.trim().takeIf { period },
             periodTo = periodTo.trim().takeIf { period },
+            // A window closed by Done stays closed across edits (TZ 4.5); a skip left behind by
+            // a type change is dropped with the rest of the Period fields.
+            periodSkipUntil = base?.periodSkipUntil.takeIf { period },
             intervalCount = intervalCount.trim().toIntOrNull().takeIf { interval },
             intervalUnit = intervalUnit.value.takeIf { interval },
             weekdaysMask = weekdaysMask.takeIf { repeatType == RepeatType.DAILY || period },

@@ -215,6 +215,53 @@ class NextFireCalculatorTest {
         assertEquals(at("2026-08-05", "10:00"), compute(r, now = at("2026-07-11", "08:00")))
     }
 
+    // Period Done (TZ 4.5): the rest of the closed window is skipped, Active is untouched.
+
+    @Test
+    fun periodWindowEndIsLastDayOfCurrentWindow() {
+        val r = period("5", "11", "10:00", Weekdays.ALL)
+        val end = NextFireCalculator.periodWindowEnd(r, at("2026-07-06", "10:01"), zone)
+        assertEquals(at("2026-07-12", "00:00") - 1, end)
+    }
+
+    @Test
+    fun periodWindowEndSpansMonthBoundary() {
+        // 28→3: pressed on the 29th, the window still runs to the 3rd of the next month.
+        val r = period("28", "3", "10:00", Weekdays.ALL)
+        val end = NextFireCalculator.periodWindowEnd(r, at("2026-07-29", "10:01"), zone)
+        assertEquals(at("2026-08-04", "00:00") - 1, end)
+    }
+
+    @Test
+    fun periodWindowEndNullOutsideWindow() {
+        val r = period("5", "11", "10:00", Weekdays.ALL)
+        assertNull(NextFireCalculator.periodWindowEnd(r, at("2026-07-20", "10:00"), zone))
+    }
+
+    @Test
+    fun periodDoneSkipsRestOfWindowAndResumesNextMonth() {
+        val r = period("5", "11", "10:00", Weekdays.ALL)
+        val done = at("2026-07-06", "10:01")
+        val closed = r.copy(periodSkipUntil = NextFireCalculator.periodWindowEnd(r, done, zone))
+        // The 7th..11th are skipped; the next window's first day fires as usual.
+        assertEquals(at("2026-08-05", "10:00"), compute(closed, now = done))
+    }
+
+    @Test
+    fun periodDoneOnDatedRangeLeavesNothingToFire() {
+        val r = period("2026-07-10", "2026-07-20", "10:00", Weekdays.ALL)
+        val done = at("2026-07-12", "10:01")
+        val closed = r.copy(periodSkipUntil = NextFireCalculator.periodWindowEnd(r, done, zone))
+        assertNull(compute(closed, now = done))
+    }
+
+    @Test
+    fun periodSkipInThePastDoesNotAffectFiring() {
+        val r = period("5", "11", "10:00", Weekdays.ALL)
+            .copy(periodSkipUntil = at("2026-06-12", "00:00") - 1)
+        assertEquals(at("2026-07-06", "10:00"), compute(r, now = at("2026-07-06", "09:00")))
+    }
+
     // DST (TZ 4.10): java.time defaults — nonexistent spring-forward time shifts forward.
 
     @Test

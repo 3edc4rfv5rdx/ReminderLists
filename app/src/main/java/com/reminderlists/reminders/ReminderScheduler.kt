@@ -152,14 +152,17 @@ object ReminderScheduler {
         )
     }
 
-    // Period Done (TZ 4.5): close the period — stop firing. Clears Active, which recomputes
-    // next_fire_at to null and cancels the occurrence armed at fire.
+    // Period Done (TZ 4.5): close the current window — skip whatever is left of it. Active is
+    // deliberately left on, so a recurring day-window comes back by itself in the next month and
+    // nothing has to be switched on by hand; a dated range simply runs out of occurrences.
     suspend fun periodDone(context: Context, db: AppDatabase, reminderId: Long) {
         val dao = db.remindersDao()
         val reminder = dao.get(reminderId) ?: return
-        dao.update(reminder.copy(active = false, updatedAt = System.currentTimeMillis()))
+        val now = System.currentTimeMillis()
+        val skipUntil = NextFireCalculator.periodWindowEnd(reminder, now) ?: reminder.periodSkipUntil
+        dao.update(reminder.copy(periodSkipUntil = skipUntil, updatedAt = now))
         dao.insertEvent(
-            ReminderEventEntity(reminderId = reminderId, action = ACTION_DONE, createdAt = System.currentTimeMillis()),
+            ReminderEventEntity(reminderId = reminderId, action = ACTION_DONE, createdAt = now),
         )
         reschedule(context, db, reminderId)
     }

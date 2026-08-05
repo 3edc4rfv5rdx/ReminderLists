@@ -34,6 +34,9 @@ data class ReminderEntity(
     // Period
     val periodFrom: String? = null,
     val periodTo: String? = null,
+    // Period Done (TZ 4.5): the window closed by hand — nothing fires up to this moment, so the
+    // rest of the current window is skipped while Active stays on and the next window picks up.
+    val periodSkipUntil: Long? = null,
 
     // Interval (start = date + time above). count >= 1, unit per IntervalUnit (0..4).
     val intervalCount: Int? = null,

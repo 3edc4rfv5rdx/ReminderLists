@@ -58,19 +58,22 @@ object NextFireCalculator {
                 val time = Dates.parseTime(reminder.time.orEmpty()) ?: return null
                 val mask = reminder.weekdaysMask ?: Weekdays.NONE
                 if (mask == Weekdays.NONE) return null
+                // Done on the alert skips the rest of that window (TZ 4.5): search from the skip
+                // moment instead of now, so the next fire lands in the following window.
+                val from = maxOf(now, reminder.periodSkipUntil ?: now)
                 val fromRaw = reminder.periodFrom.orEmpty()
                 val toRaw = reminder.periodTo.orEmpty()
                 val fromDate = Dates.parseDate(fromRaw)
                 val toDate = Dates.parseDate(toRaw)
                 if (fromDate != null && toDate != null) {
                     // Concrete one-shot range (dates).
-                    val start = maxOf(fromDate, localDate(now, zone))
-                    nextWeekdaySlot(start, toDate, listOf(time), mask, now, zone)
+                    val start = maxOf(fromDate, localDate(from, zone))
+                    nextWeekdaySlot(start, toDate, listOf(time), mask, from, zone)
                 } else {
                     // Recurring monthly day-window (bare day numbers).
                     val fromDay = Dates.parseDay(fromRaw) ?: return null
                     val toDay = Dates.parseDay(toRaw) ?: return null
-                    nextMonthlyWindowSlot(fromDay, toDay, time, mask, now, zone)
+                    nextMonthlyWindowSlot(fromDay, toDay, time, mask, from, zone)
                 }
             }
 
@@ -80,6 +83,45 @@ object NextFireCalculator {
                 nextInterval(start, count, IntervalUnit.of(reminder.intervalUnit), now, zone)
             }
         }
+    }
+
+    /**
+     * Last millisecond of the Period window that [now] falls in — what Done stores as
+     * periodSkipUntil to close the current window without touching Active (TZ 4.5).
+     * Null when the reminder isn't a Period, its fields are unusable, or now is outside
+     * the window (nothing to close).
+     */
+    fun periodWindowEnd(
+        reminder: ReminderEntity,
+        now: Long,
+        zone: ZoneId = ZoneId.systemDefault(),
+    ): Long? {
+        if (RepeatType.of(reminder.repeatType) != RepeatType.PERIOD) return null
+        val today = localDate(now, zone)
+        val fromRaw = reminder.periodFrom.orEmpty()
+        val toRaw = reminder.periodTo.orEmpty()
+        val fromDate = Dates.parseDate(fromRaw)
+        val toDate = Dates.parseDate(toRaw)
+        val lastDay = if (fromDate != null && toDate != null) {
+            // Concrete range: the window is the range itself.
+            toDate.takeIf { !today.isBefore(fromDate) && !today.isAfter(toDate) }
+        } else {
+            val fromDay = Dates.parseDay(fromRaw) ?: return null
+            val toDay = Dates.parseDay(toRaw) ?: return null
+            if (!inMonthlyWindow(today, fromDay, toDay)) return null
+            // Walk to the window's last day. A window covering the whole month would never
+            // leave it, so a day repeating the window's first day ends the walk too.
+            var day = today
+            var guard = 0
+            while (guard++ < 31) {
+                val next = day.plusDays(1)
+                if (!inMonthlyWindow(next, fromDay, toDay)) break
+                if (next.dayOfMonth == minOf(fromDay, next.lengthOfMonth())) break
+                day = next
+            }
+            day
+        } ?: return null
+        return toMillis(lastDay.plusDays(1), LocalTime.MIDNIGHT, zone) - 1
     }
 
     /**
@@ -115,6 +157,10 @@ object NextFireCalculator {
                 val time = Dates.parseTime(reminder.time.orEmpty()) ?: return emptyList()
                 val mask = reminder.weekdaysMask ?: Weekdays.NONE
                 if (!weekdayOn(mask)) return emptyList()
+                // A window closed by Done has nothing left to fire in it (TZ 4.5): skipUntil is
+                // the last moment of that window, so any day up to it is done with.
+                val skipDay = reminder.periodSkipUntil?.let { localDate(it, ZoneId.systemDefault()) }
+                if (skipDay != null && !today.isAfter(skipDay)) return emptyList()
                 val fromRaw = reminder.periodFrom.orEmpty()
                 val toRaw = reminder.periodTo.orEmpty()
                 val fromDate = Dates.parseDate(fromRaw)

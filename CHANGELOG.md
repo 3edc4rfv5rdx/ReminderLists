@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Done on a period alert no longer switches Active off: it closes the current window, and a recurring day-window comes back on its own next month.
+- Periods are sorted by the window start and time again, not by the next fire, so ticking Active no longer reshuffles the cards under your finger.
 - Settings: the Light/Dark/System buttons no longer wrap onto a second line — the selected one drops its check icon.
 - A full-screen alert no longer gets a notification popping up over it: the sound service keeps its own deferred entry for those fires instead of re-posting the alert's one.
 - The sound service no longer shows a "Reminder sound playing" entry of its own: it holds up the fire's own notification instead, so a fire is one shade entry that stays until you act on it.

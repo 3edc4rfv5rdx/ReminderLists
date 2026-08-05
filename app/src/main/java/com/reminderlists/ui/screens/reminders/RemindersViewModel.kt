@@ -19,6 +19,7 @@ import com.reminderlists.data.reminders.RemindersRepository
 import com.reminderlists.reminders.NextFireCalculator
 import com.reminderlists.ui.appViewModelFactory
 import com.reminderlists.ui.components.SnackEvent
+import com.reminderlists.util.Dates
 import com.reminderlists.util.SettingsKeys
 import java.time.LocalDate
 import java.time.LocalTime
@@ -147,14 +148,24 @@ class RemindersViewModel(
         ReminderFolder.DAILY ->
             list.sortedBy { detail -> detail.times.minOfOrNull { it.time }.orEmpty() }
 
-        // From may be a bare day (recurring window) or a date, so sort by the computed next
-        // fire (like Monthly/Yearly), inactive/ended ones (null) last.
+        // By the window start shown on the card, then the fire time. Deliberately not by
+        // next_fire_at: that changes with the Active flag, so every checkbox tap would
+        // reshuffle the list under the user's finger.
         ReminderFolder.PERIODS ->
-            list.sortedWith(compareBy(nullsLast()) { it.reminder.nextFireAt })
+            list.sortedWith(compareBy({ periodStartKey(it.reminder.periodFrom) }, { it.reminder.time.orEmpty() }))
 
         // Interval has no calendar anchor to sort on — order by the next computed fire.
         ReminderFolder.INTERVALS ->
             list.sortedWith(compareBy(nullsLast()) { it.reminder.nextFireAt })
+    }
+
+    // Sortable form of a Period's From (TZ 4.2 e″/f″): a bare day number (recurring monthly
+    // window) or a concrete date. Day numbers are zero-padded so 5 precedes 12, and the kind
+    // prefix keeps recurring windows ahead of dated ranges instead of interleaving them.
+    private fun periodStartKey(from: String?): String {
+        val raw = from.orEmpty().trim()
+        Dates.parseDay(raw)?.let { return "0-" + it.toString().padStart(2, '0') }
+        return if (Dates.parseDate(raw) != null) "1-$raw" else "2-$raw"
     }
 
     companion object {

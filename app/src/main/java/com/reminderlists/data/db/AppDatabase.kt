@@ -68,7 +68,7 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         // Single source of the schema version — the @Database annotation above and the
         // backup manifest/restore validation (BackupManager) must never drift apart.
-        const val DB_VERSION = 3
+        const val DB_VERSION = 4
 
         private const val DB_NAME = "reminderlists.db"
 
@@ -84,6 +84,14 @@ abstract class AppDatabase : RoomDatabase() {
         private val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE lists ADD COLUMN deleteLocked INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        // v4: Period Done skips the rest of the current window instead of clearing Active
+        // (TZ 4.5 / 6.2) — one nullable column on reminders.
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE reminders ADD COLUMN periodSkipUntil INTEGER")
             }
         }
 
@@ -110,7 +118,7 @@ abstract class AppDatabase : RoomDatabase() {
         private fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, DB_NAME)
                 // Foreign keys enforced (ON DELETE CASCADE / SET NULL, see entities).
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
     }
 }
