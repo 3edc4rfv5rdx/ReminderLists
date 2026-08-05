@@ -353,8 +353,10 @@ private fun ThemeModeSelector(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
                 selected = mode == m,
                 onClick = { onSelect(m) },
                 shape = SegmentedButtonDefaults.itemShape(index, modes.size),
+                // No check icon: it eats the width and wraps the label onto a second line.
+                icon = {},
             ) {
-                Text(stringResource(labels.getValue(m)))
+                Text(stringResource(labels.getValue(m)), maxLines = 1)
             }
         }
     }
