@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Build: the Gradle build cache is on, the daemon gets 4 GB, and Gradle no longer downloads JDKs of its own — a clean release build now reuses most of its tasks.
 - Build: release builds no longer run lint themselves — 05-Lint.sh covers it on demand.
 - Dependencies: Compose BOM, navigation, activity-compose, coroutines, exifinterface and splashscreen moved to their current releases.
 - Lint cleanup (33 findings): notifications post through one place that checks the grant, the missed-reminders summary is a real plural in every locale, and nothing of the app can be pulled off the device by cloud backup or device transfer.
