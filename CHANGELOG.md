@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Dev: 05-Lint.sh and 06-Test.sh added — lint findings and unit tests as a plain text summary, both always re-run so a stale report can't be printed as current.
 - Done on a period alert no longer switches Active off: it closes the current window, and a recurring day-window comes back on its own next month.
 - Periods are sorted by the window start and time again, not by the next fire, so ticking Active no longer reshuffles the cards under your finger.
 - Settings: the Light/Dark/System buttons no longer wrap onto a second line — the selected one drops its check icon.
