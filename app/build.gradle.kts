@@ -91,6 +91,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // Lint runs on demand through 05-Lint.sh, not inside every release build: lintVitalAnalyze
+    // costs ~26 s of a ~48 s assembleRelease and repeats what the script already reports.
+    lint {
+        checkReleaseBuilds = false
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
