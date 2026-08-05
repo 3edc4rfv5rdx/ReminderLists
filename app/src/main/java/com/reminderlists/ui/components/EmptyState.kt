@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.dp
 fun EmptyState(
     icon: ImageVector,
     text: String,
-    hint: String? = null,
     modifier: Modifier = Modifier,
+    hint: String? = null,
 ) {
     Column(
         modifier = modifier.fillMaxSize().padding(32.dp),

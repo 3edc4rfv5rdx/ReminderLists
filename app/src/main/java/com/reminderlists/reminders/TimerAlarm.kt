@@ -1,5 +1,6 @@
 package com.reminderlists.reminders
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
@@ -39,6 +40,9 @@ object TimerAlarm {
 
     // Arm the countdown. Same exact-alarm path as reminders (setAlarmClock, TZ 4.10) — only the
     // payload differs: extras instead of a row id.
+    // USE_EXACT_ALARM is declared in the manifest and auto-granted to alarm-clock apps, so no
+    // runtime check applies here (TZ 4.10 / 9); lint only knows about SCHEDULE_EXACT_ALARM.
+    @SuppressLint("MissingPermission")
     fun start(context: Context, payload: FirePayload, fireAtMillis: Long) {
         val am = context.getSystemService(AlarmManager::class.java)
         val showIntent = ReminderNotifier.openApp(context)

@@ -1,5 +1,6 @@
 package com.reminderlists.reminders
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
@@ -184,6 +185,7 @@ object ReminderScheduler {
     // rank is the reminder's position among others firing the same minute (0 = fire exactly on
     // time). Only later positions get a stagger offset, so a lone reminder always fires at :00
     // (TZ 4.10). next_fire_at stays clean — the offset lives only on the armed alarm.
+    @SuppressLint("MissingPermission") // USE_EXACT_ALARM: declared, auto-granted, no runtime check
     fun schedule(context: Context, reminderId: Long, triggerAtMillis: Long, rank: Int = 0) {
         val am = context.getSystemService(AlarmManager::class.java)
         val pi = pendingIntent(context, reminderId)

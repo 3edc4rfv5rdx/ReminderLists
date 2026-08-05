@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Lint cleanup (33 findings): notifications post through one place that checks the grant, the missed-reminders summary is a real plural in every locale, and nothing of the app can be pulled off the device by cloud backup or device transfer.
 - Dev: 05-Lint.sh and 06-Test.sh added — lint findings and unit tests as a plain text summary, both always re-run so a stale report can't be printed as current.
 - Done on a period alert no longer switches Active off: it closes the current window, and a recurring day-window comes back on its own next month.
 - Periods are sorted by the window start and time again, not by the next fire, so ticking Active no longer reshuffles the cards under your finger.

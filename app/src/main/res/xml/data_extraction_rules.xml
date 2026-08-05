@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Nothing leaves the device (TZ 9): the database holds PIN-gated lists and notes in plain
+    form, so neither cloud backup nor device-to-device transfer may copy it. Backups are the
+    user's own zip in Documents/<AppName>/ (TZ 3.8). allowBackup=false already covers cloud
+    backup on older releases; this file is what Android 12+ reads.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="external" />
+        <exclude domain="device_root" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="external" />
+        <exclude domain="device_root" />
+    </device-transfer>
+</data-extraction-rules>

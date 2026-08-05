@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.RingtoneManager
 import android.net.Uri
 import android.provider.OpenableColumns
+import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -26,7 +27,7 @@ object SoundStore {
     // A system Uri plays as-is; anything else is a user file in sounds/.
     fun mediaUri(context: Context, name: String): Uri? =
         if (name.startsWith("content://") || name.startsWith("android.resource://")) {
-            Uri.parse(name)
+            name.toUri()
         } else {
             fileFor(context, name).takeIf { it.exists() }?.let { Uri.fromFile(it) }
         }

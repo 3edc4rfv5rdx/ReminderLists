@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -98,6 +99,12 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
         ActivityResultContracts.OpenDocument(),
     ) { uri -> if (uri != null) restoreUri = uri }
 
+    // Backup/restore snack texts, resolved in composition: the callbacks below run outside it,
+    // where a Context lookup would miss per-app locale and configuration changes.
+    val backupSuccessText = stringResource(R.string.backup_success)
+    val backupFailedText = stringResource(R.string.backup_failed)
+    val restoreFailedText = stringResource(R.string.restore_failed)
+
     val themeColor by vm.themeColor.collectAsState()
     val themeMode by vm.themeMode.collectAsState()
     val fontScale by vm.fontScale.collectAsState()
@@ -133,7 +140,7 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
 
             // App-wide font scale (TZ 5). Rebuilds Typography for the whole app, but only
             // once on release: drag updates a local value, persist on onValueChangeFinished.
-            var sliderScale by remember(fontScale) { mutableStateOf(fontScale) }
+            var sliderScale by remember(fontScale) { mutableFloatStateOf(fontScale) }
             Text(
                 "${stringResource(R.string.settings_font_size)}: ${(sliderScale * 100).toInt()}%",
                 Modifier.padding(top = 8.dp),
@@ -197,7 +204,7 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
                 onPick = { vm.setDefaultSound(it) },
             )
             // Like the font-scale slider: drag updates a local value, persist once on release.
-            var sliderDuration by remember(soundDuration) { mutableStateOf(soundDuration.toFloat()) }
+            var sliderDuration by remember(soundDuration) { mutableFloatStateOf(soundDuration.toFloat()) }
             Text(
                 "${stringResource(R.string.settings_sound_duration)}: ${sliderDuration.toInt()}s",
                 Modifier.padding(top = 8.dp),
@@ -209,7 +216,7 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
                 valueRange = 0f..Limits.MAX_SOUND_DURATION.toFloat(),
                 steps = 17, // snap every 5 s (0..90)
             )
-            var sliderLevel by remember(soundLevel) { mutableStateOf(soundLevel.toFloat()) }
+            var sliderLevel by remember(soundLevel) { mutableFloatStateOf(soundLevel.toFloat()) }
             Text("${stringResource(R.string.settings_sound_level)}: ${sliderLevel.toInt()}")
             Slider(
                 value = sliderLevel,
@@ -236,11 +243,11 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
                 onClick = {
                     scope.launch {
                         BackupManager.backupToDocuments(context)
-                            .onSuccess { snack?.success(context.getString(R.string.backup_success)) }
+                            .onSuccess { snack?.success(backupSuccessText) }
                             .onFailure {
                                 // Surface the real reason so a silent MediaStore failure is diagnosable.
                                 Logger.e("Backup failed", it)
-                                snack?.error("${context.getString(R.string.backup_failed)}: ${it.message}")
+                                snack?.error("$backupFailedText: ${it.message}")
                             }
                     }
                 },
@@ -268,7 +275,7 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
                         restoreUri = null
                         scope.launch {
                             if (BackupManager.restore(context, uri).isSuccess) restartApp(context)
-                            else snack?.error(context.getString(R.string.restore_failed))
+                            else snack?.error(restoreFailedText)
                         }
                     },
                 )

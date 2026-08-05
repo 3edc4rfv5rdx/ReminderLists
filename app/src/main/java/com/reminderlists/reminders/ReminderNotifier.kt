@@ -1,11 +1,14 @@
 package com.reminderlists.reminders
 
+import android.Manifest
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.reminderlists.MainActivity
 import com.reminderlists.R
 import com.reminderlists.data.db.entity.ReminderEntity
@@ -27,9 +30,21 @@ object ReminderNotifier {
     // and re-posts this very notification as its foreground one, so no service entry of its
     // own ever shows up (TZ 4.10).
     fun notifyFired(context: Context, payload: FirePayload) {
+        post(context, payload.notificationId, buildFired(context, payload))
+    }
+
+    // The single posting point of the app (TZ 8): the runtime grant (POST_NOTIFICATIONS,
+    // required since Android 13 — the whole minSdk range) and the user's notification switch
+    // are checked here, so a denied grant silently drops the post instead of throwing.
+    fun post(context: Context, id: Int, notification: Notification) {
         val nm = NotificationManagerCompat.from(context)
         if (!nm.areNotificationsEnabled()) return
-        nm.notify(payload.notificationId, buildFired(context, payload))
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        nm.notify(id, notification)
     }
 
     // The fired notification itself, so SoundService can hand the same object to
@@ -74,18 +89,14 @@ object ReminderNotifier {
     // alert itself is visible the activity cancels this entry (a shade duplicate) and re-posts
     // it via notifyAlertPending if it's left without an action.
     fun notifyFullScreen(context: Context, payload: FirePayload) {
-        val nm = NotificationManagerCompat.from(context)
-        if (!nm.areNotificationsEnabled()) return
-        nm.notify(payload.notificationId, buildAlert(context, payload, fullScreen = true))
+        post(context, payload.notificationId, buildAlert(context, payload, fullScreen = true))
     }
 
     // Shade fallback when the alert is left without acting (Home / back / screen off): the same
     // alert-opening entry but without the full-screen intent, so posting it can't relaunch the
     // alert by itself (an FSI re-post on screen-off would light the screen right back up).
     fun notifyAlertPending(context: Context, payload: FirePayload) {
-        val nm = NotificationManagerCompat.from(context)
-        if (!nm.areNotificationsEnabled()) return
-        nm.notify(payload.notificationId, buildAlert(context, payload, fullScreen = false))
+        post(context, payload.notificationId, buildAlert(context, payload, fullScreen = false))
     }
 
     // fullScreen = false is also what SoundService hands to startForeground: the alert entry
@@ -127,15 +138,16 @@ object ReminderNotifier {
 
     fun notifyMissed(context: Context, missed: List<ReminderEntity>) {
         if (missed.isEmpty()) return
-        val nm = NotificationManagerCompat.from(context)
-        if (!nm.areNotificationsEnabled()) return // POST_NOTIFICATIONS onboarding is TZ 4.10 (later)
-
         if (missed.size > MISSED_SUMMARY_THRESHOLD) {
-            val text = context.getString(R.string.notif_missed_summary, missed.size)
-            nm.notify(MISSED_SUMMARY_ID, build(context, context.getString(R.string.notif_missed_summary_title), text))
+            val text = context.resources.getQuantityString(
+                R.plurals.notif_missed_summary,
+                missed.size,
+                missed.size,
+            )
+            post(context, MISSED_SUMMARY_ID, build(context, context.getString(R.string.notif_missed_summary_title), text))
         } else {
             missed.forEach { r ->
-                nm.notify(notifId(r.id), build(context, r.title, context.getString(R.string.notif_missed_single)))
+                post(context, notifId(r.id), build(context, r.title, context.getString(R.string.notif_missed_single)))
             }
         }
     }

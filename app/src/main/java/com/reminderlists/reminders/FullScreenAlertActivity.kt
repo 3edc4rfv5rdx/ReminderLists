@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -393,7 +394,7 @@ private fun BoxScope.LockCircle(screenHeightPx: Float, onUnlock: () -> Unit) {
     val circlePx = with(LocalDensity.current) { CIRCLE_SIZE.toPx() }
     val baseY = screenHeightPx * 0.2f - circlePx / 2f
     val thresholdPx = screenHeightPx * 0.5f
-    var drag by remember { mutableStateOf(0f) }
+    var drag by remember { mutableFloatStateOf(0f) }
     val offset by animateFloatAsState(drag, label = "lockOffset")
     Box(
         Modifier

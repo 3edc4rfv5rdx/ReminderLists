@@ -14,7 +14,6 @@ import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.VibratorManager
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import com.reminderlists.R
 import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.sound.SoundStore
@@ -69,7 +68,7 @@ class SoundService : Service() {
         // Taking over the foreground slot drops the previous fire's entry, so put it back as an
         // ordinary notification — that fire is still unacknowledged.
         if (previous != null && previous.notificationId != fireId) {
-            NotificationManagerCompat.from(this).notify(previous.notificationId, notificationFor(previous))
+            ReminderNotifier.post(this, previous.notificationId, notificationFor(previous))
         }
         scope.launch { begin(payload?.soundUri, payload?.loopSound ?: true) }
         return START_NOT_STICKY

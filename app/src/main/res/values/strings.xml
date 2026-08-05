@@ -138,7 +138,6 @@
     <!-- Settings (TZ 5) -->
     <string name="settings_theme">Theme</string>
     <string name="settings_font_size">Font size</string>
-    <string name="settings_theme_color">Color</string>
     <string name="settings_theme_mode_light">Light</string>
     <string name="settings_theme_mode_dark">Dark</string>
     <string name="settings_theme_mode_system">System</string>
@@ -308,7 +307,10 @@
     <!-- Missed reminder notifications (TZ 4.10) -->
     <string name="notif_missed_single">Missed reminder</string>
     <string name="notif_missed_summary_title">Missed reminders</string>
-    <string name="notif_missed_summary">%1$d reminders were missed</string>
+    <plurals name="notif_missed_summary">
+        <item quantity="one">%1$d reminder was missed</item>
+        <item quantity="other">%1$d reminders were missed</item>
+    </plurals>
 
     <!-- Reminder sound service (TZ 4.10) -->
     <string name="notif_sound_playing">Reminder sound playing</string>

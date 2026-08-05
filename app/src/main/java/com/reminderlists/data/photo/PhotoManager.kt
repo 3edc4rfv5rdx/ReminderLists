@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
+import androidx.core.graphics.scale
 import androidx.exifinterface.media.ExifInterface
 import com.reminderlists.R
 import kotlinx.coroutines.Dispatchers
@@ -66,11 +67,9 @@ object PhotoManager {
             val maxSide = max(bitmap.width, bitmap.height)
             if (maxSide > MAX_SIDE) {
                 val scale = MAX_SIDE.toFloat() / maxSide
-                bitmap = Bitmap.createScaledBitmap(
-                    bitmap,
+                bitmap = bitmap.scale(
                     (bitmap.width * scale).roundToInt().coerceAtLeast(1),
                     (bitmap.height * scale).roundToInt().coerceAtLeast(1),
-                    true,
                 )
             }
 

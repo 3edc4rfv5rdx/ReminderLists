@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">ReminderLists</string>
     <string name="tab_lists">Списки</string>
     <string name="tab_reminders">Нагадування</string>
@@ -131,7 +131,6 @@
 
     <string name="settings_theme">Тема</string>
     <string name="settings_font_size">Розмір шрифту</string>
-    <string name="settings_theme_color">Колір</string>
     <string name="settings_theme_mode_light">Світла</string>
     <string name="settings_theme_mode_dark">Темна</string>
     <string name="settings_theme_mode_system">Системна</string>
@@ -233,31 +232,32 @@
         <item quantity="many">Кожні %d місяців</item>
         <item quantity="other">Кожні %d місяці</item>
     </plurals>
-    <plurals name="interval_noun_minutes">
+    <!-- Голий іменник без числа (число стоїть у полі поруч) — ImpliedQuantity не застосовний. -->
+    <plurals name="interval_noun_minutes" tools:ignore="ImpliedQuantity">
         <item quantity="one">хвилина</item>
         <item quantity="few">хвилини</item>
         <item quantity="many">хвилин</item>
         <item quantity="other">хвилини</item>
     </plurals>
-    <plurals name="interval_noun_hours">
+    <plurals name="interval_noun_hours" tools:ignore="ImpliedQuantity">
         <item quantity="one">година</item>
         <item quantity="few">години</item>
         <item quantity="many">годин</item>
         <item quantity="other">години</item>
     </plurals>
-    <plurals name="interval_noun_days">
+    <plurals name="interval_noun_days" tools:ignore="ImpliedQuantity">
         <item quantity="one">день</item>
         <item quantity="few">дні</item>
         <item quantity="many">днів</item>
         <item quantity="other">дні</item>
     </plurals>
-    <plurals name="interval_noun_weeks">
+    <plurals name="interval_noun_weeks" tools:ignore="ImpliedQuantity">
         <item quantity="one">тиждень</item>
         <item quantity="few">тижні</item>
         <item quantity="many">тижнів</item>
         <item quantity="other">тижні</item>
     </plurals>
-    <plurals name="interval_noun_months">
+    <plurals name="interval_noun_months" tools:ignore="ImpliedQuantity">
         <item quantity="one">місяць</item>
         <item quantity="few">місяці</item>
         <item quantity="many">місяців</item>
@@ -314,7 +314,12 @@
     <!-- Missed reminder notifications (TZ 4.10) -->
     <string name="notif_missed_single">Пропущене нагадування</string>
     <string name="notif_missed_summary_title">Пропущені нагадування</string>
-    <string name="notif_missed_summary">%1$d пропущених нагадувань</string>
+    <plurals name="notif_missed_summary">
+        <item quantity="one">%1$d пропущене нагадування</item>
+        <item quantity="few">%1$d пропущених нагадування</item>
+        <item quantity="many">%1$d пропущених нагадувань</item>
+        <item quantity="other">%1$d пропущених нагадування</item>
+    </plurals>
 
     <!-- Reminder sound service (TZ 4.10) -->
     <string name="notif_sound_playing">Звучить нагадування</string>
