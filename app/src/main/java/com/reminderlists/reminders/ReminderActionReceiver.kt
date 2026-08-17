@@ -16,6 +16,14 @@ import kotlinx.coroutines.launch
 class ReminderActionReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        // Cancel on the armed timer's countdown notification (TZ 4.2 c′): disarm and clear the
+        // entry. Carries no payload — there is nothing left to rebuild once it's gone.
+        if (intent.action == ACTION_TIMER_CANCEL) {
+            Logger.i("Notification Cancel for timer")
+            TimerAlarm.cancel(context)
+            return
+        }
+
         // Countdown timer (TZ 4.2 c′): no row behind it, so +10 min re-arms the alarm straight
         // from the carried payload and Stop just silences the sound.
         FirePayload.from(intent)?.takeIf { it.isTimer }?.let { spec ->
@@ -76,7 +84,11 @@ class ReminderActionReceiver : BroadcastReceiver() {
         private const val ACTION_POSTPONE = "com.reminderlists.action.POSTPONE_10"
         private const val ACTION_STOP = "com.reminderlists.action.STOP_ALERT"
         private const val ACTION_DISMISS = "com.reminderlists.action.STOP_REPEATING"
+        private const val ACTION_TIMER_CANCEL = "com.reminderlists.action.CANCEL_TIMER"
         private const val POSTPONE_MS = 10 * 60_000L
+
+        fun timerCancelIntent(context: Context): PendingIntent =
+            pendingIntent(context, TimerAlarm.TIMER_ID, ACTION_TIMER_CANCEL)
 
         fun postponeIntent(context: Context, reminderId: Long, timer: FirePayload? = null): PendingIntent =
             pendingIntent(context, reminderId, ACTION_POSTPONE, timer)

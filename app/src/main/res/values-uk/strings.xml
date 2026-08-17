@@ -327,6 +327,10 @@
     <string name="notif_postpone_10">+10 хв</string>
     <string name="notif_interval_stop">Припинити</string>
 
+    <!-- Armed countdown timer (TZ 4.2 c′) -->
+    <string name="notif_timer_running">Запущено таймер</string>
+    <string name="notif_timer_cancel">Скасувати</string>
+
     <!-- Notification permission onboarding (TZ 4.10) -->
     <string name="notif_perm_title">Увімкнути сповіщення</string>
     <string name="notif_perm_rationale">Нагадування попереджають вас сповіщеннями. Дозвольте сповіщення, щоб вони надходили</string>

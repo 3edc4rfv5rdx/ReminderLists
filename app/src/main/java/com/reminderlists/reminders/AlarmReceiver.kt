@@ -78,6 +78,9 @@ class AlarmReceiver : BroadcastReceiver() {
     // database touch is reading the global silence toggle (TZ 5), and nothing is written.
     private fun fireTimer(context: Context, payload: FirePayload) {
         Logger.i("AlarmReceiver fired for timer")
+        // The countdown reached zero — drop its notification even when reminders are globally
+        // off below, or it would tick on forever with nothing left to fire.
+        TimerAlarm.clearPending(context)
         val result = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {

@@ -122,6 +122,32 @@ object ReminderNotifier {
         NotificationManagerCompat.from(context).cancel(notifId(reminderId))
     }
 
+    // The armed countdown timer's presence (TZ 4.2 c′): a silent ongoing entry on the SERVICE
+    // channel counting down to the fire, with Cancel as its only action — a timer owns no row,
+    // so this notification is the sole place it can be seen and stopped from.
+    fun notifyTimerPending(context: Context, payload: FirePayload, fireAtMillis: Long) {
+        val builder = NotificationCompat.Builder(context, NotificationChannels.SERVICE)
+            .setSmallIcon(R.drawable.ic_stat_reminder)
+            .setContentTitle(payload.title.ifBlank { context.getString(R.string.repeat_timer) })
+            .setContentText(context.getString(R.string.notif_timer_running))
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setOngoing(true)
+            .setSilent(true)
+            // The countdown itself: the system ticks it down to the fire time on its own.
+            .setWhen(fireAtMillis)
+            .setUsesChronometer(true)
+            .setChronometerCountDown(true)
+            .setShowWhen(true)
+            .setContentIntent(openApp(context))
+            .addAction(0, context.getString(R.string.notif_timer_cancel), ReminderActionReceiver.timerCancelIntent(context))
+        post(context, NotificationIds.TIMER_PENDING, builder.build())
+    }
+
+    // Drop the countdown entry — the timer fired, was cancelled or got replaced by a new one.
+    fun cancelTimerPending(context: Context) {
+        NotificationManagerCompat.from(context).cancel(NotificationIds.TIMER_PENDING)
+    }
+
     private fun alertIntent(context: Context, reminderId: Long, timer: FirePayload? = null): PendingIntent {
         val intent = Intent(context, FullScreenAlertActivity::class.java)
             .putExtra(ReminderScheduler.EXTRA_REMINDER_ID, reminderId)

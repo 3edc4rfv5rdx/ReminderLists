@@ -8,4 +8,8 @@ object NotificationIds {
     const val MISSED_SUMMARY = -1
     const val SOUND_SERVICE = -2
     const val TIMER = -100
+
+    // The armed timer's countdown entry, live while it ticks — a slot of its own so the fire
+    // (TIMER) doesn't land on top of it.
+    const val TIMER_PENDING = -101
 }

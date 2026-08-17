@@ -47,11 +47,41 @@ object TimerAlarm {
         val am = context.getSystemService(AlarmManager::class.java)
         val showIntent = ReminderNotifier.openApp(context)
         am.setAlarmClock(AlarmManager.AlarmClockInfo(fireAtMillis, showIntent), firePendingIntent(context, payload))
+        // The only place an armed timer is visible from — and the only way to stop it, since it
+        // owns no card anywhere in the app.
+        ReminderNotifier.notifyTimerPending(context, payload, fireAtMillis)
         Logger.i("Timer armed at $fireAtMillis")
+    }
+
+    // Cancel the armed timer: drop the alarm and the countdown notification. A no-op when no
+    // timer is armed (FLAG_NO_CREATE gives back null then).
+    fun cancel(context: Context) {
+        armedPendingIntent(context)?.let { pi ->
+            context.getSystemService(AlarmManager::class.java).cancel(pi)
+            pi.cancel()
+            Logger.i("Timer cancelled")
+        }
+        ReminderNotifier.cancelTimerPending(context)
+    }
+
+    // The timer went off: the countdown is over, so its entry goes away and the fire's own
+    // notification / alert takes over.
+    fun clearPending(context: Context) {
+        ReminderNotifier.cancelTimerPending(context)
     }
 
     // FLAG_UPDATE_CURRENT with a fixed request code: arming a new timer overwrites the extras of
     // the armed one, which is exactly the "one timer at a time" behaviour.
+    // The armed timer's PendingIntent, or null when none is armed. Extras play no part in
+    // matching an existing PendingIntent (component + action + data do), so a bare intent finds
+    // whatever start() armed.
+    private fun armedPendingIntent(context: Context): PendingIntent? = PendingIntent.getBroadcast(
+        context,
+        TIMER_ID.toInt(),
+        Intent(context, AlarmReceiver::class.java),
+        PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
+    )
+
     private fun firePendingIntent(context: Context, payload: FirePayload): PendingIntent {
         val intent = payload.putInto(Intent(context, AlarmReceiver::class.java))
             .putExtra(ReminderScheduler.EXTRA_REMINDER_ID, TIMER_ID)
