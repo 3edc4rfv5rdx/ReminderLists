@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- New app icon: a white clipboard-and-bell glyph on the brand blue #013895, with the matching monochrome (themed-icon) layer; the splash screen takes the same blue.
 ## v0.3.20260831+180
 - Dialog buttons keep to one line: the confirm and cancel pair is padded tighter so a narrow dialog no longer stacks them.
 - A running timer is now visible and stoppable: an ongoing notification counts down to the fire and its Cancel button disarms it.
