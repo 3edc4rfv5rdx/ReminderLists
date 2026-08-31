@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Dialog buttons keep to one line: the confirm and cancel pair is padded tighter so a narrow dialog no longer stacks them.
 - A running timer is now visible and stoppable: an ongoing notification counts down to the fire and its Cancel button disarms it.
 - Build: the Gradle build cache is on, the daemon gets 4 GB, and Gradle no longer downloads JDKs of its own — a clean release build now reuses most of its tasks.
 - Build: release builds no longer run lint themselves — 05-Lint.sh covers it on demand.
