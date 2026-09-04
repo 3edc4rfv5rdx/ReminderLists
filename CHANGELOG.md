@@ -3,6 +3,7 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+- E: The version line looks only at release tags, so a tag like "duplex" can no longer answer which line the last release went out on
 - I: The project docs name the artifact the way the scripts really write it
 - I: The tag step refuses an untracked file too, so nothing can go into the APK without going into the tag
 - I: The release uploads the exact APKs built for its tag, never the newest file of that ABI lying around
