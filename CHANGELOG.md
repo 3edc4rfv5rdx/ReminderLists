@@ -3,6 +3,7 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+## v0.4.20260904-189
 - N: Settings carry a "Check for updates" entry, so a build published minutes ago can be fetched without waiting out the six-hour start-up interval
 - N: A backup is made once a day on its own and the newest three are kept, with a switch in settings; the manual button writes into the same rotation
 - I: 00-MakeAll.sh runs the whole build in one go, and 19-LinkOut.sh puts the build into OUT/ under its own name — the steps the sibling projects already had
