@@ -3,6 +3,11 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+- I: The tag step refuses an untracked file too, so nothing can go into the APK without going into the tag
+- I: The release uploads the exact APKs built for its tag, never the newest file of that ABI lying around
+- I: The version line moves by itself when a new feature is waiting in the changelog, as it does in the sibling projects
+- I: An install step with nothing to install on exits 3, the code the whole set uses for "nothing to work on"
+- I: The Wi-Fi debug helper is 02-DebugWiFiConn.sh, so 00 means the same thing in every project
 - E: A test run that produced no results is reported as a failure instead of a clean pass, and the previous run's results are cleared before this one starts
 - E: An emulator install that failed makes the run fail, instead of being hidden by the pause after it
 - E: The release push names the branch, and looks up the pushed tag by its full ref, so a tag whose name is a prefix of another is no longer taken for pushed
