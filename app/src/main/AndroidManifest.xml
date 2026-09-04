@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Reminder engine (TZ 4.10). No internet / Google services (TZ 9). -->
+    <!-- Reminder engine (TZ 4.10). No Google services and no cloud (TZ 9); the one
+         network use is the LAN update check declared below, and the app works
+         without it. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
@@ -14,8 +16,13 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- The in-app updater: it fetches a manifest from the home server and hands
+         the downloaded APK to the system installer. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
+        android:networkSecurityConfig="@xml/updater_network_security_config"
         android:name=".ReminderListsApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -84,6 +91,18 @@
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Hands the downloaded APK to the installer. Its own class rather than
+             androidx FileProvider, so an app that already declares one keeps it. -->
+        <provider
+            android:name="dev.updater.UpdaterFileProvider"
+            android:authorities="${applicationId}.updater.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/updater_file_paths" />
         </provider>
     </application>
 </manifest>

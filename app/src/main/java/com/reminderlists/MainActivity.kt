@@ -18,6 +18,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import dev.updater.Updater
+import dev.updater.UpdaterConfig
 import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.db.entity.SettingEntity
 import com.reminderlists.data.reminders.RemindersRepository
@@ -58,6 +60,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        // Looks for a newer build on the home server and asks before it downloads
+        // anything. Silent when there is nothing newer or the server is not there.
+        Updater.checkOnStart(
+            this,
+            UpdaterConfig(appKey = "reminderlists"),
+        )
         enableEdgeToEdge()
         if (!notificationsGranted()) notifPrompt = NotifPrompt.RATIONALE
         if (!Settings.canDrawOverlays(this)) {

@@ -17,6 +17,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Скрипты (пользователь запускает сам — не собирать/устанавливать автоматически):
 - `10-MakeRelease.sh` — бампит `build_number.txt`, `./gradlew assembleRelease`, ABI-сплиты + universal, переименование в `reminderlists-<version>-<build>-<abi>.apk`. Линия `major.minor` поднимается сама, когда в `CHANGELOG.md` под `Unreleased` ждёт запись `N`, а последний тег вышел на текущей линии — фича поднимает её один раз, а не на каждой следующей сборке.
 - `11-EmulRELEASE.sh` (x86_64 эмулятор) / `12-SamsRELEASE.sh` (arm64 устройство) — установка. `02-DebugWiFiConn.sh` — adb по Wi-Fi.
+- `18-ToUpdate.sh` — публикует arm64-релиз на сервер обновлений вместе с манифестом, который
+  читает встроенный updater. Наличие скрипта означает, что updater вписан в приложение.
+- `00-MakeAll.sh` — весь прогон одной командой: релиз, обе установки, сервер обновлений, ссылки в `OUT/`.
+- `19-LinkOut.sh` — жёсткие ссылки на arm64 и universal APK в `OUT/` под их собственными именами,
+  всё остальное из папки выметается.
 
 Конвенции: `build_number.txt` бампит только `10-MakeRelease.sh` — не редактировать вручную, но проверять его статус перед каждым коммитом и `git add`, чтобы версия в репозитории не расходилась со сборкой. Подпись release читает `/home/e/.my-safe/key.properties` (fallback — `key.properties` в корне); keystore и `key.properties` — в `.gitignore`, без них APK не подписан.
 

@@ -3,6 +3,9 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+- I: 00-MakeAll.sh runs the whole build in one go, and 19-LinkOut.sh puts the build into OUT/ under its own name — the steps the sibling projects already had
+- N: The app checks the home server for a newer build on start and offers it, the same updater the other projects here use
+- I: 18-ToUpdate.sh publishes the arm64 release to the update server
 - F: A quick duration in the timer adds its length to what is already entered, as its "+" promises, and the field stays in minutes unless the sum lands on a whole hour
 - I: The build number is folded into the previous commit only when nothing else is dirty, like everywhere else — the tree a release is tagged from has to be clean before the build, not after it
 - E: The version line looks only at release tags, so a tag like "duplex" can no longer answer which line the last release went out on

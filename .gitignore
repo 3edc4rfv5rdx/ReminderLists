@@ -20,3 +20,6 @@ key.properties
 
 # Local one-time migration data from memlists (personal data, large zips)
 IMPEX/
+
+# 19-LinkOut.sh puts the build here under its own name.
+/OUT
