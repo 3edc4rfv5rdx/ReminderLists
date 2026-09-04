@@ -159,6 +159,7 @@
     <string name="settings_backup_auto">Ежедневная копия, хранится три</string>
     <string name="settings_backup_create">Создать резервную копию</string>
     <string name="settings_backup_restore">Восстановить</string>
+    <string name="settings_check_updates">Проверить обновления</string>
     <string name="backup_success">Копия сохранена в Documents/ReminderLists</string>
     <string name="backup_failed">Не удалось создать копию</string>
     <string name="restore_confirm_title">Восстановление из копии</string>

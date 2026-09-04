@@ -166,6 +166,7 @@
     <string name="settings_backup_auto">Daily backup, three kept</string>
     <string name="settings_backup_create">Create backup</string>
     <string name="settings_backup_restore">Restore</string>
+    <string name="settings_check_updates">Check for updates</string>
     <string name="backup_success">Backup saved to Documents/ReminderLists</string>
     <string name="backup_failed">Backup failed</string>
     <string name="restore_confirm_title">Restore from backup</string>

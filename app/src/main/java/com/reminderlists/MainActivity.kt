@@ -20,7 +20,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import dev.backups.Backups
 import dev.updater.Updater
-import dev.updater.UpdaterConfig
 import com.reminderlists.data.backup.BackupManager
 import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.db.entity.SettingEntity
@@ -33,6 +32,7 @@ import com.reminderlists.ui.theme.DEFAULT_FONT_SCALE
 import com.reminderlists.ui.theme.ReminderListsTheme
 import com.reminderlists.ui.theme.ThemeMode
 import com.reminderlists.util.SettingsKeys
+import com.reminderlists.util.UPDATER_CONFIG
 import kotlinx.coroutines.launch
 
 // Single-Activity host. Splash via androidx.core.splashscreen (TZ 7); UI is AppRoot (TZ 3.9).
@@ -64,10 +64,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // Looks for a newer build on the home server and asks before it downloads
         // anything. Silent when there is nothing newer or the server is not there.
-        Updater.checkOnStart(
-            this,
-            UpdaterConfig(appKey = "reminderlists"),
-        )
+        Updater.checkOnStart(this, UPDATER_CONFIG)
         // One copy of everything into Documents/ReminderLists a day, the newest three kept
         // (TZ 3.8). Silent and off the main thread; nothing happens if today already has one
         // or the user turned it off in settings.

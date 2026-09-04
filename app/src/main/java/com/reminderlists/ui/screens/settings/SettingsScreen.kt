@@ -3,6 +3,7 @@ package com.reminderlists.ui.screens.settings
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -74,7 +75,9 @@ import com.reminderlists.util.Dates
 import com.reminderlists.util.Limits
 import com.reminderlists.util.Logger
 import com.reminderlists.util.SettingsKeys
+import com.reminderlists.util.UPDATER_CONFIG
 import dev.backups.Backups
+import dev.updater.Updater
 import kotlinx.coroutines.launch
 
 // Settings (TZ 5): theme (color + Light/Dark/System), language, dictionary, enable reminders,
@@ -90,6 +93,8 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
     var restoreUri by remember { mutableStateOf<Uri?>(null) }
 
     val context = LocalContext.current
+    // The updater puts its own dialog up, so it needs the activity and not the context.
+    val activity = LocalActivity.current
     var autoBackup by remember { mutableStateOf(Backups.isEnabled(context)) }
     val scope = rememberCoroutineScope()
     val snack = LocalSnackController.current
@@ -267,6 +272,16 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
             NavRow(
                 stringResource(R.string.settings_backup_restore),
                 onClick = { restoreLauncher.launch(arrayOf("application/zip", "application/octet-stream")) },
+            )
+
+            SectionDivider()
+
+            // The start-up check keeps six hours between two looks at the server, which is
+            // right for a phone and useless for testing a build published a minute ago. This
+            // one ignores the interval and reports what it found either way.
+            NavRow(
+                stringResource(R.string.settings_check_updates),
+                onClick = { activity?.let { Updater.checkNow(it, UPDATER_CONFIG) } },
             )
         }
     }
