@@ -3,6 +3,7 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+- I: The build number is folded into the previous commit only when nothing else is dirty, like everywhere else — the tree a release is tagged from has to be clean before the build, not after it
 - E: The version line looks only at release tags, so a tag like "duplex" can no longer answer which line the last release went out on
 - I: The project docs name the artifact the way the scripts really write it
 - I: The tag step refuses an untracked file too, so nothing can go into the APK without going into the tag
