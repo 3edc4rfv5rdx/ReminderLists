@@ -74,6 +74,7 @@ import com.reminderlists.util.Dates
 import com.reminderlists.util.Limits
 import com.reminderlists.util.Logger
 import com.reminderlists.util.SettingsKeys
+import dev.backups.Backups
 import kotlinx.coroutines.launch
 
 // Settings (TZ 5): theme (color + Light/Dark/System), language, dictionary, enable reminders,
@@ -89,6 +90,7 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
     var restoreUri by remember { mutableStateOf<Uri?>(null) }
 
     val context = LocalContext.current
+    var autoBackup by remember { mutableStateOf(Backups.isEnabled(context)) }
     val scope = rememberCoroutineScope()
     val snack = LocalSnackController.current
 
@@ -238,6 +240,16 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
 
             // Backup/Restore (TZ 3.8).
             SectionHeader(stringResource(R.string.menu_backup_restore))
+            // The daily copy lives in the shared module and in its own preferences file, not in
+            // the settings database, so it is read here rather than through the view model.
+            SwitchRow(
+                stringResource(R.string.settings_backup_auto),
+                checked = autoBackup,
+                onCheckedChange = {
+                    autoBackup = it
+                    Backups.setEnabled(context, it)
+                },
+            )
             NavRow(
                 stringResource(R.string.settings_backup_create),
                 onClick = {

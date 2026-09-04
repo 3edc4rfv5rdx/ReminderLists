@@ -18,8 +18,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import dev.backups.Backups
 import dev.updater.Updater
 import dev.updater.UpdaterConfig
+import com.reminderlists.data.backup.BackupManager
 import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.db.entity.SettingEntity
 import com.reminderlists.data.reminders.RemindersRepository
@@ -66,6 +68,10 @@ class MainActivity : ComponentActivity() {
             this,
             UpdaterConfig(appKey = "reminderlists"),
         )
+        // One copy of everything into Documents/ReminderLists a day, the newest three kept
+        // (TZ 3.8). Silent and off the main thread; nothing happens if today already has one
+        // or the user turned it off in settings.
+        Backups.checkOnStart(this, BackupManager.backupsConfig(this))
         enableEdgeToEdge()
         if (!notificationsGranted()) notifPrompt = NotifPrompt.RATIONALE
         if (!Settings.canDrawOverlays(this)) {

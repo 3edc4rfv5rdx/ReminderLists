@@ -163,6 +163,7 @@
     <string name="settings_sound_level">Sound level</string>
     <string name="settings_sound_system_default">System default</string>
     <string name="settings_default_pin">Default PIN</string>
+    <string name="settings_backup_auto">Daily backup, three kept</string>
     <string name="settings_backup_create">Create backup</string>
     <string name="settings_backup_restore">Restore</string>
     <string name="backup_success">Backup saved to Documents/ReminderLists</string>

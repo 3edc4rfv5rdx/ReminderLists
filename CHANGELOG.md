@@ -3,6 +3,7 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+- N: A backup is made once a day on its own and the newest three are kept, with a switch in settings; the manual button writes into the same rotation
 - I: 00-MakeAll.sh runs the whole build in one go, and 19-LinkOut.sh puts the build into OUT/ under its own name — the steps the sibling projects already had
 - N: The app checks the home server for a newer build on start and offers it, the same updater the other projects here use
 - I: 18-ToUpdate.sh publishes the arm64 release to the update server

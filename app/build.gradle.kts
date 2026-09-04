@@ -58,6 +58,9 @@ android {
         getByName("main") {
             kotlin.directories.add("$rootDir/../updater/android/src")
             res.directories.add("$rootDir/../updater/android/res")
+            // The shared daily-backup module, on the same terms. No res set: it has no
+            // resources, no strings and no permissions of its own.
+            kotlin.directories.add("$rootDir/../backups/android/src")
         }
     }
 

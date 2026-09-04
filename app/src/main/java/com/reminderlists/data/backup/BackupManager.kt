@@ -1,20 +1,20 @@
 package com.reminderlists.data.backup
 
-import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
-import android.os.Environment
-import android.provider.MediaStore
 import com.reminderlists.data.db.AppDatabase
 import com.reminderlists.data.photo.PhotoManager
 import com.reminderlists.util.Logger
+import dev.backups.Backups
+import dev.backups.BackupsConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
+import java.io.OutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -31,62 +31,58 @@ object BackupManager {
 
     class RestoreException(message: String) : Exception(message)
 
-    // Default backup location (TZ 3.8): Documents/ReminderLists/.
-    const val BACKUP_DIR = "Documents/ReminderLists"
+    // Default backup location (TZ 3.8): Documents/ReminderLists/. The folder name is stated
+    // once — the shared module builds the same path from it in backupsConfig below.
+    const val BACKUP_DIR_NAME = "ReminderLists"
+    const val BACKUP_DIR = "Documents/$BACKUP_DIR_NAME"
 
     private fun soundsDir(context: Context) = File(context.filesDir, "sounds")
     private fun logsDir(context: Context) = File(context.filesDir, "logs")
 
-    private fun backupFileName(): String {
-        val ts = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(java.util.Date())
-        return "backup_$ts.zip"
-    }
-
     // --- Backup ------------------------------------------------------------------------
 
+    // What the shared daily-backup module (../backups) needs to know about this app: which
+    // folder under Documents (TZ 3.8), what our files are called, and how to fill one. The
+    // module owns the file itself — creating it, naming it, and keeping only the newest three,
+    // manual copies included.
+    fun backupsConfig(context: Context): BackupsConfig {
+        val appContext = context.applicationContext
+        return BackupsConfig(
+            dirName = BACKUP_DIR_NAME,
+            filePrefix = "backup_",
+            write = { out -> writeArchive(appContext, out) },
+        )
+    }
+
     // Default backup: writes to Documents/ReminderLists/ via MediaStore (no storage permission,
-    // no picker — TZ 3.8 / 9). Returns the created file's display name.
+    // no picker — TZ 3.8 / 9). Returns the created file's display name. The same call the daily
+    // check makes, so a manual copy counts as the day's and takes part in the same rotation.
     suspend fun backupToDocuments(context: Context): Result<String> = withContext(Dispatchers.IO) {
-        runCatching {
-            val name = backupFileName()
-            val resolver = context.contentResolver
-            val values = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-                put(MediaStore.MediaColumns.MIME_TYPE, "application/zip")
-                put(MediaStore.MediaColumns.RELATIVE_PATH, "${Environment.DIRECTORY_DOCUMENTS}/ReminderLists")
-                put(MediaStore.MediaColumns.IS_PENDING, 1)
-            }
-            val collection = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            val uri = resolver.insert(collection, values) ?: error("Cannot create backup file")
-            try {
-                backup(context, uri).getOrThrow()
-            } catch (e: Exception) {
-                resolver.delete(uri, null, null) // don't leave a half-written pending file
-                throw e
-            }
-            values.clear()
-            values.put(MediaStore.MediaColumns.IS_PENDING, 0)
-            resolver.update(uri, values, null, null)
-            name
-        }
+        Backups.runNow(context, backupsConfig(context))
     }
 
     suspend fun backup(context: Context, dest: Uri): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            // Checkpoint the WAL so the plain .db file is complete before we copy it.
-            AppDatabase.get(context).query("PRAGMA wal_checkpoint(TRUNCATE)", null).use { it.moveToFirst() }
             val out = context.contentResolver.openOutputStream(dest)
                 ?: error("Cannot open destination")
-            ZipOutputStream(BufferedOutputStream(out)).use { zip ->
-                putText(zip, MANIFEST, manifestJson().toString())
-                val db = AppDatabase.databaseFile(context)
-                if (db.exists()) putFile(zip, db, DB_ENTRY)
-                putTree(zip, PhotoManager.photosDir(context), "photos")
-                putTree(zip, soundsDir(context), "sounds")
-                putTree(zip, logsDir(context), "logs")
-            }
-            Logger.i("Backup written")
+            out.use { writeArchive(context, it) }
         }
+    }
+
+    // The archive itself: manifest + database + photos + sounds + logs. Blocking, and the
+    // caller's business to keep off the main thread — the module calls it on its own.
+    fun writeArchive(context: Context, out: OutputStream) {
+        // Checkpoint the WAL so the plain .db file is complete before we copy it.
+        AppDatabase.get(context).query("PRAGMA wal_checkpoint(TRUNCATE)", null).use { it.moveToFirst() }
+        ZipOutputStream(BufferedOutputStream(out)).use { zip ->
+            putText(zip, MANIFEST, manifestJson().toString())
+            val db = AppDatabase.databaseFile(context)
+            if (db.exists()) putFile(zip, db, DB_ENTRY)
+            putTree(zip, PhotoManager.photosDir(context), "photos")
+            putTree(zip, soundsDir(context), "sounds")
+            putTree(zip, logsDir(context), "logs")
+        }
+        Logger.i("Backup written")
     }
 
     private fun manifestJson() = JSONObject().apply {

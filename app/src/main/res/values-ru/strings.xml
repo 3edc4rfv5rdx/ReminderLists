@@ -156,6 +156,7 @@
     <string name="settings_sound_level">Громкость звука</string>
     <string name="settings_sound_system_default">Системный по умолчанию</string>
     <string name="settings_default_pin">PIN по умолчанию</string>
+    <string name="settings_backup_auto">Ежедневная копия, хранится три</string>
     <string name="settings_backup_create">Создать резервную копию</string>
     <string name="settings_backup_restore">Восстановить</string>
     <string name="backup_success">Копия сохранена в Documents/ReminderLists</string>
