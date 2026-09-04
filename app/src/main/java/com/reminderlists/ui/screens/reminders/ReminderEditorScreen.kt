@@ -396,8 +396,7 @@ private fun TimerBlock(vm: ReminderEditorViewModel) {
         },
         onPick = { index ->
             val (count, unit) = TIMER_PRESETS[index]
-            vm.timerCount = count.toString()
-            vm.timerUnit = unit
+            vm.addTimerPreset(count, unit)
         },
     )
     // Re-read the clock every second so the preview stays honest while the form is open —
@@ -422,7 +421,7 @@ private fun TimerBlock(vm: ReminderEditorViewModel) {
 // Only short units make sense for a countdown — days and up are the Once/Interval types.
 private val TIMER_UNITS = listOf(IntervalUnit.MINUTES, IntervalUnit.HOURS)
 
-// Quick durations, in the order shown (TZ 4.2 c′). Picking one replaces the entered value.
+// Quick durations, in the order shown (TZ 4.2 c′). Picking one adds to the entered value.
 // Labels use tight suffixes («+10м», «+1ч») so all five buttons fit on one line.
 private val TIMER_PRESETS = listOf(
     10 to IntervalUnit.MINUTES,

@@ -251,6 +251,24 @@ class ReminderEditorViewModel(
         }
     }
 
+    // A duration preset («+10m», «+1h») adds to what is already entered, as its «+» promises:
+    // 5m plus «+20m» is 25m, not 20m. Both sides go through minutes and the sum comes back as
+    // hours only when it lands on a whole hour, so the field keeps the tighter unit otherwise
+    // (70 minutes stays minutes). Capped at the field's own 4-digit limit.
+    fun addTimerPreset(count: Int, unit: IntervalUnit) {
+        val current = timerCount.trim().toIntOrNull()?.takeIf { it >= 1 } ?: 0
+        val currentMinutes = if (timerUnit == IntervalUnit.HOURS) current * 60 else current
+        val addedMinutes = if (unit == IntervalUnit.HOURS) count * 60 else count
+        val total = currentMinutes + addedMinutes
+        if (total >= 60 && total % 60 == 0) {
+            timerUnit = IntervalUnit.HOURS
+            timerCount = (total / 60).coerceAtMost(9999).toString()
+        } else {
+            timerUnit = IntervalUnit.MINUTES
+            timerCount = total.coerceAtMost(9999).toString()
+        }
+    }
+
     // The moment a timer started now would fire at, or null when N is missing/invalid. Seconds
     // are rounded up to the next whole minute so the countdown never fires early (TZ 4.2 c′).
     fun timerFireAt(): LocalDateTime? {

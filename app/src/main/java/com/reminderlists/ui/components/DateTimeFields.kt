@@ -322,7 +322,7 @@ fun intervalSummary(count: Int, unit: IntervalUnit): String =
     else pluralStringResource(intervalEveryPlural(unit), count, count)
 
 // Row of equal-width quick-pick buttons, one label each — the Timer duration presets
-// «+5 / +15 / …» (TZ 4.2 c′). Picking one replaces the value, it does not add to it.
+// «+5 / +15 / …» (TZ 4.2 c′). What a pick does is the caller's business — the Timer adds it.
 @Composable
 fun QuickPickRow(
     labels: List<String>,
