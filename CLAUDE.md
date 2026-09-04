@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Отличие от myplayer/memlists:** здесь нужен Room (генерирует код через KSP). AGP 9 использует built-in Kotlin — плагин `org.jetbrains.kotlin.android` запрещён (AGP падает с ошибкой, если его применить). Поэтому применяются только `kotlin-compose` + `ksp` (как у сиблингов, плюс KSP). Версию Kotlin задаёт compose-плагин, и KSP обязан ей соответствовать: **Kotlin 2.3.20 + KSP 2.3.9 + Room 2.8.4** (KSP 2.3.9 собран ровно под Kotlin 2.3.20). Schema-export Room — `app/schemas` (`room.schemaLocation`).
 
 Скрипты (пользователь запускает сам — не собирать/устанавливать автоматически):
-- `10-MakeRelease.sh` — бампит `build_number.txt`, `./gradlew assembleRelease`, ABI-сплиты + universal, переименование в `reminderlists-<version>+<code>-release-*.apk`.
+- `10-MakeRelease.sh` — бампит `build_number.txt`, `./gradlew assembleRelease`, ABI-сплиты + universal, переименование в `reminderlists-<version>-<build>-<abi>.apk`. Линия `major.minor` поднимается сама, когда в `CHANGELOG.md` под `Unreleased` ждёт запись `N`, а последний тег вышел на текущей линии — фича поднимает её один раз, а не на каждой следующей сборке.
 - `11-EmulRELEASE.sh` (x86_64 эмулятор) / `12-SamsRELEASE.sh` (arm64 устройство) — установка. `02-DebugWiFiConn.sh` — adb по Wi-Fi.
 
 Конвенции: `build_number.txt` бампит только `10-MakeRelease.sh` — не редактировать вручную, но проверять его статус перед каждым коммитом и `git add`, чтобы версия в репозитории не расходилась со сборкой. Подпись release читает `/home/e/.my-safe/key.properties` (fallback — `key.properties` в корне); keystore и `key.properties` — в `.gitignore`, без них APK не подписан.
