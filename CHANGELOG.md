@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Build: every artifact carries one name — reminderlists-<version>-<build>-<abi>.apk, with -debug on the end of a debug build — and the tag it goes out under is v<version>-<build>.
+- Timer duration presets now add to the entered value, as their «+» promises: 5m plus «+20m» is 25m instead of 20m.
 - New app icon: a white clipboard-and-bell glyph on the brand blue #013895, with the matching monochrome (themed-icon) layer; the splash screen takes the same blue.
 ## v0.3.20260831+180
 - Dialog buttons keep to one line: the confirm and cancel pair is padded tighter so a narrow dialog no longer stacks them.
