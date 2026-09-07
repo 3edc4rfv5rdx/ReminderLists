@@ -3,6 +3,8 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+- N: Updates come from this app's own GitHub release instead of the home server, so it updates wherever it is — and one manifest names every ABI split, so the phone takes arm64 while an armeabi-v7a box takes v7a
+- I: 18-ToUpdate.sh is gone; 23-ToUpdate.sh writes that manifest into the release, run by hand after 22-RelUpload.sh
 ## v0.4.20260904-189
 - N: Settings carry a "Check for updates" entry, so a build published minutes ago can be fetched without waiting out the six-hour start-up interval
 - N: A backup is made once a day on its own and the newest three are kept, with a switch in settings; the manual button writes into the same rotation
