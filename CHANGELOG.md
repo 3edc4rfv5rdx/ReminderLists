@@ -3,6 +3,7 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+- F: The update check moved out of the settings list into the About dialog, next to the version it is about
 ## v0.5.191 (2026-09-08)
 - N: The About dialog shows the build date on a line of its own, where the build number used to be — the version already ends in that number
 - I: The version is major.minor.build — the date left it — so the tag is v0.4.190 and an artifact reminderlists-0.4.190-arm64-v8a.apk, each number written once; 20-MakeTag.sh puts the build date after the tag in the CHANGELOG heading, for the reader
