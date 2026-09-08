@@ -159,7 +159,6 @@
     <string name="settings_backup_auto">Щоденна копія, зберігається три</string>
     <string name="settings_backup_create">Створити резервну копію</string>
     <string name="settings_backup_restore">Відновити</string>
-    <string name="about_update">Оновити</string>
     <string name="backup_success">Копію збережено в Documents/ReminderLists</string>
     <string name="backup_failed">Не вдалося створити копію</string>
     <string name="restore_confirm_title">Відновлення з копії</string>
@@ -167,8 +166,6 @@
     <string name="restore_failed">Не вдалося відновити — поточні дані збережено</string>
 
     <string name="about_description">Списки, нагадування та нотатки. Локально, без хмари</string>
-    <string name="about_version">Версія</string>
-    <string name="about_build_date">Дата збірки</string>
 
     <!-- Reminders (TZ 4.2 / 4.6) -->
     <string name="editor_new_note">Нова нотатка</string>

@@ -166,7 +166,6 @@
     <string name="settings_backup_auto">Daily backup, three kept</string>
     <string name="settings_backup_create">Create backup</string>
     <string name="settings_backup_restore">Restore</string>
-    <string name="about_update">Update</string>
     <string name="backup_success">Backup saved to Documents/ReminderLists</string>
     <string name="backup_failed">Backup failed</string>
     <string name="restore_confirm_title">Restore from backup</string>
@@ -175,8 +174,6 @@
 
     <!-- About (TZ 4.9) -->
     <string name="about_description">Lists, Reminders and Notes. Local, no cloud</string>
-    <string name="about_version">Version</string>
-    <string name="about_build_date">Build date</string>
 
     <!-- Reminders (TZ 4.2 / 4.6) -->
     <string name="editor_new_memo">New memo</string>

@@ -1,16 +1,12 @@
 package com.reminderlists.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
@@ -69,20 +65,5 @@ private fun DialogButton(
         contentPadding = DialogButtonPadding,
     ) {
         Text(text, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
-    }
-}
-
-/**
- * Two dialog buttons pushed to opposite corners. Use it in the AlertDialog confirmButton slot with
- * no dismissButton, or Material clusters both against the right edge.
- */
-@Composable
-fun DialogButtonRow(start: @Composable () -> Unit, end: @Composable () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        start()
-        end()
     }
 }

@@ -3,6 +3,7 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+- R: The About screen is the shared module's now — one dialog for every project here, with the version, build date, GitHub page, mailbox and the update check on it
 - F: The update check moved out of the settings list into the About dialog, next to the version it is about
 ## v0.5.191 (2026-09-08)
 - N: The About dialog shows the build date on a line of its own, where the build number used to be — the version already ends in that number

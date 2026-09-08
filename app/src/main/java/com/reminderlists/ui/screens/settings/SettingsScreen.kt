@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.LocalActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -56,7 +57,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.reminderlists.BuildConfig
 import com.reminderlists.R
+import com.reminderlists.util.UPDATER_CONFIG
 import com.reminderlists.data.backup.BackupManager
 import com.reminderlists.ui.components.AppTopBar
 import com.reminderlists.ui.components.DialogConfirmButton
@@ -67,13 +70,14 @@ import com.reminderlists.ui.components.PinSetupDialog
 import com.reminderlists.ui.components.SoundField
 import com.reminderlists.ui.components.TimePickerDialog
 import com.reminderlists.ui.navigation.Routes
-import com.reminderlists.ui.screens.about.AboutDialog
 import com.reminderlists.ui.theme.AppTheme
 import com.reminderlists.ui.theme.ThemeMode
 import com.reminderlists.util.Dates
 import com.reminderlists.util.Limits
 import com.reminderlists.util.Logger
 import com.reminderlists.util.SettingsKeys
+import dev.about.About
+import dev.about.AboutConfig
 import dev.backups.Backups
 import kotlinx.coroutines.launch
 
@@ -85,7 +89,6 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
     // Two-step for the default PIN: verify the current one (if any) before the setup editor.
     var pinGateOpen by remember { mutableStateOf(false) }
     var pinDialogOpen by remember { mutableStateOf(false) }
-    var aboutOpen by remember { mutableStateOf(false) }
     var languageDialogOpen by remember { mutableStateOf(false) }
     var restoreUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -121,13 +124,33 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
     val defaultSoundUri by vm.defaultSoundUri.collectAsState()
     val defaultPin by vm.defaultPin.collectAsState()
 
+    // The About dialog is the platform's, drawn by the shared module, so it needs
+    // the activity; the sentence it shows is a resource and has to be read here.
+    val activity = LocalActivity.current
+    val aboutDescription = stringResource(R.string.about_description)
+
     // Settings is a bottom-bar tab (TZ 3.9): no back arrow, content inset from the bar.
     Column(Modifier.fillMaxSize().padding(contentPadding)) {
         AppTopBar(
             title = stringResource(R.string.menu_settings),
             actions = {
                 // About moved here from the Lists/Reminders menus (TZ 4.9).
-                IconButton(onClick = { aboutOpen = true }) {
+                IconButton(onClick = {
+                    // The shared About dialog: it reads the name and the version
+                    // off the package and the GitHub address out of the updater
+                    // config, so only the build date and this app's own sentence
+                    // are handed over.
+                    activity?.let {
+                        About.show(
+                            it,
+                            AboutConfig(
+                                updater = UPDATER_CONFIG,
+                                buildDate = BuildConfig.BUILD_DATE,
+                                description = aboutDescription,
+                            ),
+                        )
+                    }
+                }) {
                     Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.menu_about))
                 }
             },
@@ -336,9 +359,6 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
         )
     }
 
-    if (aboutOpen) {
-        AboutDialog(onDismiss = { aboutOpen = false })
-    }
 }
 
 // Section heading with generous top space so groups read as blocks (TZ 8: not cramped).
