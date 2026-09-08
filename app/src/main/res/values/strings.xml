@@ -176,7 +176,7 @@
     <!-- About (TZ 4.9) -->
     <string name="about_description">Lists, Reminders and Notes. Local, no cloud</string>
     <string name="about_version">Version</string>
-    <string name="about_build">Build</string>
+    <string name="about_build_date">Build date</string>
 
     <!-- Reminders (TZ 4.2 / 4.6) -->
     <string name="editor_new_memo">New memo</string>

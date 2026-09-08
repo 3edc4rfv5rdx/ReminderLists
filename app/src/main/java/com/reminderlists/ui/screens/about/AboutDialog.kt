@@ -12,7 +12,9 @@ import com.reminderlists.BuildConfig
 import com.reminderlists.R
 import com.reminderlists.ui.components.DialogConfirmButton
 
-// About dialog (TZ 4.9). Version/build come from Gradle (BuildConfig), not the DB.
+// About dialog (TZ 4.9). Version and build date come from Gradle (BuildConfig),
+// not the DB. The build number is the version's last component, so what is
+// worth a line of its own is the day it was built.
 @Composable
 fun AboutDialog(onDismiss: () -> Unit) {
     AlertDialog(
@@ -25,7 +27,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
                     "${stringResource(R.string.about_version)}: ${BuildConfig.VERSION_NAME}",
                     Modifier.padding(top = 16.dp),
                 )
-                Text("${stringResource(R.string.about_build)}: ${BuildConfig.VERSION_CODE}")
+                Text("${stringResource(R.string.about_build_date)}: ${BuildConfig.BUILD_DATE}")
             }
         },
         confirmButton = {

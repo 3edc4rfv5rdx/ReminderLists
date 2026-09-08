@@ -168,7 +168,7 @@
 
     <string name="about_description">Списки, нагадування та нотатки. Локально, без хмари</string>
     <string name="about_version">Версія</string>
-    <string name="about_build">Збірка</string>
+    <string name="about_build_date">Дата збірки</string>
 
     <!-- Reminders (TZ 4.2 / 4.6) -->
     <string name="editor_new_note">Нова нотатка</string>
