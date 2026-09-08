@@ -12,6 +12,7 @@ import com.reminderlists.data.db.entity.ItemEntity
 import com.reminderlists.data.db.entity.ItemPhotoEntity
 import com.reminderlists.data.db.entity.ListEntity
 import com.reminderlists.data.photo.PhotoManager
+import com.reminderlists.util.ParsedItem
 import kotlinx.coroutines.flow.Flow
 
 // Lists module data operations (TZ 3.1 / 3.2 / 3.3). Holds a context because deleting
@@ -159,6 +160,28 @@ class ListsRepository(private val db: AppDatabase, context: Context) {
                 ),
             )
         }
+
+    // Bulk add (TZ 3.3): every parsed item lands at the end of the active group, input order
+    // kept, in one transaction — a half-inserted list is never shown.
+    suspend fun addItems(listId: Long, items: List<ParsedItem>) {
+        if (items.isEmpty()) return
+        db.withTransaction {
+            var position = dao.nextActivePosition(listId)
+            val now = System.currentTimeMillis()
+            for (item in items) {
+                dao.insertItem(
+                    ItemEntity(
+                        listId = listId,
+                        text = item.text,
+                        quantity = item.quantity,
+                        unit = item.unit,
+                        position = position++,
+                        createdAt = now,
+                    ),
+                )
+            }
+        }
+    }
 
     suspend fun editItem(item: ItemEntity, text: String, quantity: String?, unit: String?) {
         dao.updateItem(

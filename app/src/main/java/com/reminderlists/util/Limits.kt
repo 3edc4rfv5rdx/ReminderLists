@@ -6,6 +6,7 @@ object Limits {
     const val ITEM_TEXT = 200
     const val CONTENT = 2000
     const val COMMENT = 500
+    const val BULK_INPUT = 2000 // whole "add from a line" field (TZ 3.3)
     const val TAG = 30
     const val TAGS_FIELD = 200 // whole comma-separated tags input (TZ 4.2)
     const val QUANTITY = 20

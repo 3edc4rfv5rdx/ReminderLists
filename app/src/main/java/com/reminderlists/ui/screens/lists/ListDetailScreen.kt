@@ -79,6 +79,8 @@ import com.reminderlists.ui.components.EditTextDialog
 import com.reminderlists.ui.components.EditDeleteMenuButton
 import com.reminderlists.ui.components.DragReorderState
 import com.reminderlists.ui.components.FabLevel
+import com.reminderlists.ui.components.FloatingLabelTextField
+import com.reminderlists.ui.components.LocalSnackController
 import com.reminderlists.ui.components.EmptyState
 import com.reminderlists.ui.components.PhotoViewerDialog
 import com.reminderlists.ui.components.PinDialog
@@ -88,6 +90,7 @@ import com.reminderlists.ui.navigation.Routes
 import com.reminderlists.ui.theme.LargeItemDoneTextStyle
 import com.reminderlists.ui.theme.LargeItemTextStyle
 import com.reminderlists.util.Limits
+import com.reminderlists.util.ParsedItem
 import com.reminderlists.util.ShareUtils
 import com.reminderlists.util.TextFormat
 
@@ -111,8 +114,11 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
     val photoCounts by vm.photoCounts.collectAsState()
     val context = LocalContext.current
 
+    val snackController = LocalSnackController.current
+
     var topMenuOpen by remember { mutableStateOf(false) }
     var shareDialogOpen by remember { mutableStateOf(false) }
+    var bulkAddOpen by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<ItemEntity?>(null) }
     var confirmDeleteChecked by remember { mutableStateOf(false) }
     var photoViewerItem by remember { mutableStateOf<ItemEntity?>(null) }
@@ -154,6 +160,13 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                         // Items needing something to act on are disabled while the list is empty;
                         // "Delete checked" / "Uncheck all" also need at least one done item.
                         val hasItems = activeItems.isNotEmpty() || doneItems.isNotEmpty()
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.menu_bulk_add)) },
+                            onClick = {
+                                topMenuOpen = false
+                                bulkAddOpen = true
+                            },
+                        )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_move)) },
                             enabled = hasItems,
@@ -302,6 +315,24 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
         )
     }
 
+    // Add several items from one comma-separated line (TZ 3.3).
+    if (bulkAddOpen) {
+        val existingKeys = remember(activeItems, doneItems) {
+            (activeItems + doneItems).mapTo(mutableSetOf()) { TextFormat.bulkKey(it.text) }
+        }
+        BulkAddDialog(
+            existingKeys = existingKeys,
+            onConfirm = { items ->
+                vm.addItems(items)
+                bulkAddOpen = false
+                snackController?.success(
+                    context.resources.getQuantityString(R.plurals.bulk_added, items.size, items.size),
+                )
+            },
+            onDismiss = { bulkAddOpen = false },
+        )
+    }
+
     // Move/copy items to another list (TZ 3.3): one dialog with item selection,
     // a Copy checkbox and a target list dropdown.
     if (moveDialogOpen) {
@@ -400,6 +431,112 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                 onPicked = { uri -> vm.addPhoto(item, uri) },
                 onDelete = { index -> loaded.getOrNull(index)?.let(vm::deletePhoto) },
                 onDismiss = { photoViewerItem = null },
+            )
+        }
+    }
+}
+
+// Bulk add (TZ 3.3): one field of "bread, milk 2/l", then a checklist of what was parsed out
+// of it. Items already in the list are shown unchecked and labelled, not silently dropped.
+@Composable
+private fun BulkAddDialog(
+    existingKeys: Set<String>,
+    onConfirm: (List<ParsedItem>) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var raw by rememberSaveable { mutableStateOf("") }
+    var checking by rememberSaveable { mutableStateOf(false) }
+    // Unchecked rows, by the same key the parser de-duplicates with — so a re-parse after
+    // going back keeps no stale selection.
+    var excluded by rememberSaveable { mutableStateOf(emptySet<String>()) }
+    val parsed = remember(raw) { TextFormat.parseBulkItems(raw) }
+    val selected = parsed.filter { TextFormat.bulkKey(it.text) !in excluded }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(stringResource(if (checking) R.string.bulk_check_title else R.string.menu_bulk_add))
+        },
+        text = {
+            if (!checking) {
+                FloatingLabelTextField(
+                    value = raw,
+                    onValueChange = { raw = it },
+                    label = stringResource(R.string.bulk_field_label),
+                    maxLength = Limits.BULK_INPUT,
+                    singleLine = false,
+                    maxLines = 8,
+                    supportingText = stringResource(R.string.bulk_hint),
+                    autoFocus = true,
+                )
+            } else {
+                // Same 7-row cap as the move dialog (user rule), scrollable beyond that.
+                Column(
+                    Modifier
+                        .heightIn(max = MOVE_DIALOG_LIST_MAX_HEIGHT)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    parsed.forEach { item ->
+                        val key = TextFormat.bulkKey(item.text)
+                        val checked = key !in excluded
+                        val toggle = { excluded = if (checked) excluded + key else excluded - key }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().clickable(onClick = toggle),
+                        ) {
+                            Checkbox(checked = checked, onCheckedChange = { toggle() })
+                            BulkItemTexts(item, duplicate = key in existingKeys)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            if (!checking) {
+                DialogConfirmButton(
+                    text = stringResource(R.string.action_next),
+                    enabled = parsed.isNotEmpty(),
+                    onClick = {
+                        // What the list already has starts unchecked — adding it again is a
+                        // deliberate second tap, not the default.
+                        excluded = parsed.map { TextFormat.bulkKey(it.text) }
+                            .filterTo(mutableSetOf()) { it in existingKeys }
+                        checking = true
+                    },
+                )
+            } else {
+                DialogConfirmButton(
+                    text = stringResource(R.string.action_ok),
+                    enabled = selected.isNotEmpty(),
+                    onClick = { onConfirm(selected) },
+                )
+            }
+        },
+        dismissButton = {
+            if (checking) {
+                DialogDismissButton(stringResource(R.string.action_back)) { checking = false }
+            } else {
+                DialogDismissButton(stringResource(R.string.action_cancel), onDismiss)
+            }
+        },
+    )
+}
+
+// Parsed row: text + "5/kg" amount on one line, with a note under the ones the list already has.
+@Composable
+private fun RowScope.BulkItemTexts(item: ParsedItem, duplicate: Boolean) {
+    val amount = TextFormat.formatAmount(item.quantity, item.unit)
+    Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
+        Text(
+            text = if (amount.isEmpty()) item.text else "${item.text} $amount",
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (duplicate) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+        )
+        if (duplicate) {
+            Text(
+                text = stringResource(R.string.bulk_duplicate),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

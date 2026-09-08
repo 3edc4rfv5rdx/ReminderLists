@@ -14,6 +14,7 @@ import com.reminderlists.data.lists.DictionaryRepository
 import com.reminderlists.data.lists.ListsRepository
 import com.reminderlists.data.photo.PhotoManager
 import com.reminderlists.ui.appViewModelFactory
+import com.reminderlists.util.ParsedItem
 import com.reminderlists.util.SettingsKeys
 import com.reminderlists.util.TextFormat
 import kotlinx.coroutines.flow.Flow
@@ -119,6 +120,11 @@ class ListDetailViewModel(
     // Dictionary entry includes the unit as a " /unit" suffix when present (TZ 3.4).
     fun addToDictionary(item: ItemEntity) {
         viewModelScope.launch { dictRepo.add(TextFormat.toDictionaryEntry(item.text, item.unit)) }
+    }
+
+    // Bulk add from the "add from a line" dialog (TZ 3.3).
+    fun addItems(items: List<ParsedItem>) {
+        viewModelScope.launch { repo.addItems(listId, items) }
     }
 
     fun deleteItem(item: ItemEntity) {

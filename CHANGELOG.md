@@ -3,6 +3,7 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+- N: A list takes a whole line at once — "Add from a line" splits "bread, milk 2/l" on commas, semicolons or line breaks into items, amounts and all, and shows what it parsed for checking before anything is added
 - F: In large font mode the done items below the divider are a size smaller and dimmer, and the divider itself is thicker and in the accent colour
 - R: The About screen is the shared module's now — one dialog for every project here, with the version, build date, GitHub page, mailbox and the update check on it
 - F: The update check moved out of the settings list into the About dialog, next to the version it is about
