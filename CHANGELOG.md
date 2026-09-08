@@ -3,6 +3,7 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+## v0.5.191 (2026-09-08)
 - N: The About dialog shows the build date on a line of its own, where the build number used to be — the version already ends in that number
 - I: The version is major.minor.build — the date left it — so the tag is v0.4.190 and an artifact reminderlists-0.4.190-arm64-v8a.apk, each number written once; 20-MakeTag.sh puts the build date after the tag in the CHANGELOG heading, for the reader
 - N: Updates come from this app's own GitHub release instead of the home server, so it updates wherever it is — and one manifest names every ABI split, so the phone takes arm64 while an armeabi-v7a box takes v7a
