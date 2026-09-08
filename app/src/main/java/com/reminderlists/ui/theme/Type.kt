@@ -40,3 +40,11 @@ val LargeItemTextStyle = TextStyle(
     lineHeight = 45.sp,
     fontWeight = FontWeight.Medium,
 )
+
+// Done items in large font mode sit below the divider and are past business — a step smaller
+// than the active rows above (TZ 3.5).
+val LargeItemDoneTextStyle = TextStyle(
+    fontSize = 28.sp,
+    lineHeight = 35.sp,
+    fontWeight = FontWeight.Normal,
+)

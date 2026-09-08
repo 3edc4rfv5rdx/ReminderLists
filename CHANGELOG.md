@@ -3,6 +3,7 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+- F: In large font mode the done items below the divider are a size smaller and dimmer, and the divider itself is thicker and in the accent colour
 - R: The About screen is the shared module's now — one dialog for every project here, with the version, build date, GitHub page, mailbox and the update check on it
 - F: The update check moved out of the settings list into the About dialog, next to the version it is about
 ## v0.5.191 (2026-09-08)

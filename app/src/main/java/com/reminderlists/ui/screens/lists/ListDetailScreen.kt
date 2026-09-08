@@ -51,12 +51,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -83,6 +85,7 @@ import com.reminderlists.ui.components.PinDialog
 import com.reminderlists.ui.components.SwipeActionsRow
 import com.reminderlists.ui.components.rememberDragReorderState
 import com.reminderlists.ui.navigation.Routes
+import com.reminderlists.ui.theme.LargeItemDoneTextStyle
 import com.reminderlists.ui.theme.LargeItemTextStyle
 import com.reminderlists.util.Limits
 import com.reminderlists.util.ShareUtils
@@ -90,6 +93,9 @@ import com.reminderlists.util.TextFormat
 
 private const val ACTIVE_KEY_PREFIX = "a-"
 private const val DONE_KEY_PREFIX = "d-"
+
+// How far the done items fade below the divider in large font mode (TZ 3.5).
+private const val DONE_ALPHA = 0.65f
 
 // Move dialog item list: 7 rows of 48dp (checkbox touch target) before it scrolls (user rule).
 private val MOVE_DIALOG_LIST_MAX_HEIGHT = 336.dp
@@ -204,11 +210,12 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                         LargeFontRow(item = item, onToggle = { vm.toggleDone(item) })
                     }
                     if (doneItems.isNotEmpty()) {
+                        // Brighter and thicker here: in large font mode the divider is read from
+                        // across the room (TZ 3.5).
                         item(key = "divider") {
-                            HorizontalDivider(
-                                thickness = 3.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant,
-                                modifier = Modifier.padding(vertical = 4.dp),
+                            GroupDivider(
+                                color = MaterialTheme.colorScheme.primary,
+                                thickness = 4.dp,
                             )
                         }
                     }
@@ -241,14 +248,7 @@ fun ListDetailScreen(navController: NavController, listId: Long) {
                         )
                     }
                     if (doneItems.isNotEmpty()) {
-                        item(key = "divider") {
-                            // Divider between active and done groups (TZ 3.3, 2–4 px).
-                            HorizontalDivider(
-                                thickness = 3.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant,
-                                modifier = Modifier.padding(vertical = 4.dp),
-                            )
-                        }
+                        item(key = "divider") { GroupDivider() }
                     }
                     items(doneItems, key = { DONE_KEY_PREFIX + it.id }) { item ->
                         ItemRow(
@@ -561,11 +561,27 @@ private fun MoveItemsDialog(
 private fun pickerLabel(entry: ListPickerEntry): String =
     entry.folderName?.let { "$it / ${entry.name}" } ?: entry.name
 
+// Divider between the active and done groups (TZ 3.3, 2-4 px).
+@Composable
+private fun GroupDivider(
+    color: Color = MaterialTheme.colorScheme.outlineVariant,
+    thickness: Dp = 3.dp,
+) {
+    HorizontalDivider(
+        thickness = thickness,
+        color = color,
+        modifier = Modifier.padding(vertical = 4.dp),
+    )
+}
+
 // Large font mode row (TZ 3.5): thick bullet dot + huge text, tap toggles done, nothing else.
 @Composable
 private fun LargeFontRow(item: ItemEntity, onToggle: () -> Unit) {
     val amount = TextFormat.formatAmount(item.quantity, item.unit)
-    val firstLineHeight = with(LocalDensity.current) { LargeItemTextStyle.lineHeight.toDp() }
+    // Done items are already dealt with: a smaller, dimmer step below the divider (TZ 3.5).
+    val style = if (item.isDone) LargeItemDoneTextStyle else LargeItemTextStyle
+    val markerSize = if (item.isDone) 11.dp else 14.dp
+    val firstLineHeight = with(LocalDensity.current) { style.lineHeight.toDp() }
     Row(
         verticalAlignment = Alignment.Top,
         modifier = Modifier
@@ -578,22 +594,30 @@ private fun LargeFontRow(item: ItemEntity, onToggle: () -> Unit) {
             if (item.isDone) {
                 Box(
                     Modifier
-                        .size(14.dp)
-                        .border(2.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape),
+                        .size(markerSize)
+                        .border(
+                            width = 2.dp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = DONE_ALPHA),
+                            shape = CircleShape,
+                        ),
                 )
             } else {
                 Box(
                     Modifier
-                        .size(14.dp)
+                        .size(markerSize)
                         .background(MaterialTheme.colorScheme.primary, CircleShape),
                 )
             }
         }
         Text(
             text = if (amount.isEmpty()) item.text else "${item.text} $amount",
-            style = LargeItemTextStyle,
+            style = style,
             textDecoration = if (item.isDone) TextDecoration.LineThrough else null,
-            color = if (item.isDone) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+            color = if (item.isDone) {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = DONE_ALPHA)
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
             modifier = Modifier.padding(start = 14.dp),
         )
     }
