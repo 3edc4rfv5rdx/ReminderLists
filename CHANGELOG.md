@@ -3,6 +3,7 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+- N: A "Check for updates at launch" switch in Settings, on by default — ../updater's own flag, so it stops the check at launch and leaves the About dialog's button alone
 - F: The About dialog's update button no longer promises an update that is not there: it opens as a check, asks the server as the card comes up, and turns into an inverted Update only when a newer build is published
 - N: A list takes a whole line at once — "Add from a line" splits "bread, milk 2/l" on commas, semicolons or line breaks into items, amounts and all, and shows what it parsed for checking before anything is added
 - F: In large font mode the done items below the divider are a size smaller and dimmer, and the divider itself is thicker and in the accent colour

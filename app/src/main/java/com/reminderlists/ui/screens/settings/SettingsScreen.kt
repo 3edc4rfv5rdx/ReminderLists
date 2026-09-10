@@ -79,6 +79,7 @@ import com.reminderlists.util.SettingsKeys
 import dev.about.About
 import dev.about.AboutConfig
 import dev.backups.Backups
+import dev.updater.Updater
 import kotlinx.coroutines.launch
 
 // Settings (TZ 5): theme (color + Light/Dark/System), language, dictionary, enable reminders,
@@ -94,6 +95,8 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
 
     val context = LocalContext.current
     var autoBackup by remember { mutableStateOf(Backups.isEnabled(context)) }
+    // Likewise the start-up update check: ../updater keeps that flag, in its own file.
+    var updateCheck by remember { mutableStateOf(Updater.isEnabled(context)) }
     val scope = rememberCoroutineScope()
     val snack = LocalSnackController.current
 
@@ -290,6 +293,18 @@ fun SettingsScreen(navController: NavController, contentPadding: PaddingValues) 
             NavRow(
                 stringResource(R.string.settings_backup_restore),
                 onClick = { restoreLauncher.launch(arrayOf("application/zip", "application/octet-stream")) },
+            )
+
+            SectionDivider()
+
+            SectionHeader(stringResource(R.string.settings_updates))
+            SwitchRow(
+                stringResource(R.string.settings_update_check),
+                checked = updateCheck,
+                onCheckedChange = {
+                    updateCheck = it
+                    Updater.setEnabled(context, it)
+                },
             )
         }
     }

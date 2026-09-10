@@ -169,6 +169,8 @@
     <string name="settings_sound_system_default">Системний за замовчуванням</string>
     <string name="settings_default_pin">PIN за замовчуванням</string>
     <string name="settings_backup_auto">Щоденна копія, зберігається три</string>
+    <string name="settings_updates">Оновлення</string>
+    <string name="settings_update_check">Перевіряти оновлення при старті</string>
     <string name="settings_backup_create">Створити резервну копію</string>
     <string name="settings_backup_restore">Відновити</string>
     <string name="backup_success">Копію збережено в Documents/ReminderLists</string>
