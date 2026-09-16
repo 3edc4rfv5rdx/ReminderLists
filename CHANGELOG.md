@@ -3,6 +3,8 @@
 > N=new feature, E=error fix, F=fine-tune, R=refactor, I=infrastructure
 
 ## Unreleased
+- E: A build published just after the app last looked is offered on the next launch instead of up to six hours later
+- E: The start-up update check is no longer silenced for six hours by the About screen's own check button
 - I: The README catches up with the app: what Settings now holds, the About dialog and the update check, the three shared modules compiled in from beside it, adding a list from one line, the Timer reminder, and every build step the repository has
 - N: A "Check for updates at launch" switch in Settings, on by default — ../updater's own flag, so it stops the check at launch and leaves the About dialog's button alone
 - F: The About dialog's update button no longer promises an update that is not there: it opens as a check, asks the server as the card comes up, and turns into an inverted Update only when a newer build is published
